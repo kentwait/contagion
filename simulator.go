@@ -72,8 +72,41 @@ type Simulator interface {
 	Run(DataRecorder interface{})
 }
 
+// StatusUpdate is a struct for sending and receiving
+// host status updates.
+type StatusUpdate struct {
+	hostID int
+	status int
+	timer  int
+}
+
+// InfectiveParams is a struct for sending and receiving
+// infective host information.
+type InfectiveParams struct {
+	source  Host
+	popSize int
+}
+
+// Unpack returns the property values of InfectiveParams.
+func (p *InfectiveParams) Unpack() (Host, int) {
+	return p.source, p.popSize
+}
+
+// TransParams is a struct for sending and receiving
+// transmission event information.
+type TransParams struct {
+	destination Host
+	pathogen    interface{}
+}
+
+// Unpack returns the property values of TransParams.
+func (p *TransParams) Unpack() (Host, interface{}) {
+	return p.destination, p.pathogen
+}
+
 // SISSimulator create and runs an SIS epidemiological simulation. Within this
-// simulation, hosts may or may not run independent genetic evolution simulations.
+// simulation, hosts may or may not run independent genetic evolution
+// simulations.
 type SISSimulator struct {
 	Simulation
 	numGenerations      int
@@ -92,12 +125,6 @@ func (s *SISSimulator) Run(DataRecorder interface{}) {
 		s.update()
 		s.record(DataRecorder)
 	}
-}
-
-type statusUpdate struct {
-	hostID int
-	status int
-	timer  int
 }
 
 func (s *SISSimulator) statusFunc(host EpidemicHost, status, timer int, c chan<- statusUpdate, wg *sync.WaitGroup) {
@@ -121,18 +148,18 @@ func (s *SISSimulator) update() {
 	// Update status first
 	updates := make(chan statusUpdate)
 	hosts := s.HostMap()
-	var wg1 sync.WaitGroup
+	var wg sync.WaitGroup
 	// Read all hosts and process hosts concurrently
 	// These succeeding steps connects the simulation's record of each host's
 	// status and timer with the host's internal state
-	wg1.Add(len(hosts))
+	wg.Add(len(hosts))
 	for hostID, host := range hosts {
 		status := s.HostStatus(hostID)
 		timer := s.HostTimer(hostID)
-		go s.statusFunc(host, status, timer, updates, &wg1)
+		go s.statusFunc(host, status, timer, updates, &wg)
 	}
 	go func() {
-		wg1.Wait()
+		wg.Wait()
 		close(updates)
 	}()
 	// If host status changed, update the simulation's record of the particular
@@ -143,21 +170,23 @@ func (s *SISSimulator) update() {
 	}
 }
 
-// !CONTINUE HERE
 func (s *SISSimulator) record(DataRecorder interface{}) {
 	// TODO: Record data
 }
 
 func (s *SISSimulator) process() {
-	// Process each host internally
+	hosts := s.HostMap()
 	var wg sync.WaitGroup
-	for hostID, host := range s.HostMap() {
+	// Read all hosts and process based on the current status of the host
+	wg.Add(len(hosts))
+	for hostID, host := range hosts {
 		switch s.HostStatus(hostID) {
 		case SusceptibleStatusCode:
 			go s.SusceptibleProcess(host, &wg)
 		case InfectedStatusCode:
 			go s.InfectedProcess(host, &wg)
 			timer := s.HostTimer(hostID)
+			// Update simulator's record of infection times
 			s.SetHostTimer(hostID, timer-1)
 		}
 	}
@@ -167,25 +196,25 @@ func (s *SISSimulator) process() {
 func (s *SISSimulator) transmit(DataRecorder interface{}) {
 	// Process infective hosts and transmit
 	transmissions := make(chan TransParams)
-	var wg2 sync.WaitGroup
-	for hostID, source := range s.HostMap() {
+	var wg sync.WaitGroup
+	for hostID, src := range s.HostMap() {
 		if s.HostStatus(hostID) == InfectedStatusCode {
-			popSize := source.PathogenPopSize()
+			popSize := src.PathogenPopSize()
 			for _, neighbor := range s.HostNeighbors(hostID) {
 				// Spawn a new goroutine for every neighbor of the host
 				neighborStatus := s.HostStatus(neighbor.HostID())
-				wg2.Add(1)
-				go PathogenTransmitter(source, neighbor, popSize, neighborStatus, transmissions, &wg2, s.infectableStatuses...)
+				wg.Add(1)
+				go PathogenTransmitter(src, neighbor, popSize, neighborStatus, transmissions, &wg, s.infectableStatuses...)
 			}
 		}
 	}
 	go func() {
-		wg2.Wait()
+		wg.Wait()
 		close(transmissions)
 	}()
 	// Add the new pathogen to the destination host
 	for params := range transmissions {
-		dest, pathogen := params.Unpack()
-		dest.AddPathogen(pathogen)
+		dst, pathogen := params.Unpack()
+		dst.AddPathogen(pathogen)
 	}
 }
