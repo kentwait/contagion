@@ -136,7 +136,7 @@ type SequenceNode interface {
 	Sequence() []int
 	// Fitness returns the fitness value of this node based on its current
 	// sequence and the given fitness function.
-	Fitness(landscape SequenceLandscape) float64
+	Fitness(landscape SequenceFitness) float64
 	// NumSites returns the number of sites being modeled in this pathogen node.
 	NumSites() int
 	// NumStates returns the number of sites by state, postion corresponds to the state from 0 to n.
@@ -168,7 +168,7 @@ func (n *sequenceNode) Sequence() []int {
 	return n.sequence
 }
 
-func (n *sequenceNode) Fitness(landscape SequenceLandscape) float64 {
+func (n *sequenceNode) Fitness(landscape SequenceFitness) float64 {
 	fitness, _ := landscape.Fitness(n.sequence...)
 	return fitness
 }
