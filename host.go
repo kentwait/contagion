@@ -12,6 +12,8 @@ type Host interface {
 	// HostID returns the unique ID of the host.
 	HostID() int
 
+	HostTypeID() int
+
 	// Pathogen returns one pathogen from a specific host. Returns nil
 	// if no pathogen exists in the specified position.
 	Pathogen(i int) interface{}
@@ -54,7 +56,7 @@ type EpidemicHost interface {
 }
 
 // SequenceHost is type of host that implements the Host interface and embeds
-// a Spreader, Colonizer, Mutator, and SequenceLandscape.
+// a Spreader, Colonizer, Mutator, and SequenceFitness.
 // The SequenceHost is identified by its hostID and can be accessed using the
 // HostID method.
 // Pathogens associated with the host are listed under the pathogen property
@@ -66,7 +68,7 @@ type SequenceHost struct {
 	Spreader
 	Colonizer
 	Mutator
-	SequenceLandscape
+	SequenceFitness
 
 	hostID        int
 	pathogens     []SequenceNode
@@ -156,7 +158,7 @@ func (h *SequenceHost) SetModel(keyword string, model interface{}) error {
 	case "mutator":
 		h.Mutator = model.(Mutator)
 	case "landscape":
-		h.SequenceLandscape = model.(SequenceLandscape)
+		h.SequenceFitness = model.(SequenceFitness)
 	default:
 		return fmt.Errorf("unknown keyword")
 	}

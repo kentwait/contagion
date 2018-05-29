@@ -8,6 +8,7 @@ import "sync"
 type SISSimulator struct {
 	Simulation
 	numGenerations      int
+	timeIntervals       map[int]map[int]int
 	infectableStatuses  []int
 	pathogenLoggingFreq int
 	statusLoggingFreq   int
@@ -25,7 +26,7 @@ func (s *SISSimulator) Run(DataRecorder interface{}) {
 	}
 }
 
-func (s *SISSimulator) statusFunc(host EpidemicHost, status, timer int, c chan<- statusUpdate, wg *sync.WaitGroup) {
+func (s *SISSimulator) statusFunc(host EpidemicHost, status, timer int, c chan<- StatusUpdate, wg *sync.WaitGroup) {
 	// Status is updated only if the internal host time is less than 1.
 	hostID := host.HostID()
 	// Add cases depending on the compartmental model being used
@@ -33,10 +34,10 @@ func (s *SISSimulator) statusFunc(host EpidemicHost, status, timer int, c chan<-
 	if timer < 1 {
 		switch status {
 		case SusceptibleStatusCode:
-			c <- statusUpdate{hostID, InfectedStatusCode, host.TimeInterval(InfectedStatusCode)}
+			c <- StatusUpdate{hostID, InfectedStatusCode, s.timeIntervals[InfectedStatusCode][host.HostTypeID()]}
 		case InfectedStatusCode:
 			host.ClearPathogens()
-			c <- statusUpdate{hostID, SusceptibleStatusCode, host.TimeInterval(SusceptibleStatusCode)}
+			c <- StatusUpdate{hostID, SusceptibleStatusCode, s.timeIntervals[SusceptibleStatusCode][host.HostTypeID()]}
 		}
 	}
 	wg.Done()
@@ -44,7 +45,7 @@ func (s *SISSimulator) statusFunc(host EpidemicHost, status, timer int, c chan<-
 
 func (s *SISSimulator) update() {
 	// Update status first
-	updates := make(chan statusUpdate)
+	updates := make(chan StatusUpdate)
 	hosts := s.HostMap()
 	var wg sync.WaitGroup
 	// Read all hosts and process hosts concurrently
