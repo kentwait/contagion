@@ -43,7 +43,7 @@ type Host interface {
 	// DecrementTimer decreases the internal timer by 1.
 	DecrementTimer()
 
-	// SetModel sets the type of spreader, colonizer, mutator, and fitness to
+	// SetModel sets the type of spreader, Replicator, mutator, and fitness to
 	// be used by the host.
 	SetModel(name string, model interface{}) error
 }
@@ -51,12 +51,12 @@ type Host interface {
 type EpidemicHost interface {
 	Host
 	Spreader
-	Colonizer
+	Replicator
 	Mutator
 }
 
 // SequenceHost is type of host that implements the Host interface and embeds
-// a Spreader, Colonizer, Mutator, and SequenceFitness.
+// a Spreader, Replicator, Mutator, and SequenceFitness.
 // The SequenceHost is identified by its hostID and can be accessed using the
 // HostID method.
 // Pathogens associated with the host are listed under the pathogen property
@@ -66,7 +66,7 @@ type EpidemicHost interface {
 // can be removed fromt the host using the ClearPathogens method.
 type SequenceHost struct {
 	Spreader
-	Colonizer
+	Replicator
 	Mutator
 	SequenceFitness
 
@@ -75,7 +75,7 @@ type SequenceHost struct {
 	internalTimer int
 }
 
-// NewEmptySequenceHost creates a new host without spreader, colonizer, and
+// NewEmptySequenceHost creates a new host without spreader, replicator, and
 // mutator features. It also has no status time intervals and
 // lacks any pathogens.
 func NewEmptySequenceHost(id int) *SequenceHost {
@@ -147,14 +147,14 @@ func (h *SequenceHost) DecrementTimer() {
 	h.internalTimer--
 }
 
-// SetModel sets the type of spreader, colonizer, mutator, and fitness to
+// SetModel sets the type of spreader, Replicator, mutator, and fitness to
 // be used by the host.
 func (h *SequenceHost) SetModel(keyword string, model interface{}) error {
 	switch strings.ToLower(keyword) {
 	case "spreader":
 		h.Spreader = model.(Spreader)
-	case "colonizer":
-		h.Colonizer = model.(Colonizer)
+	case "Replicator":
+		h.Replicator = model.(Replicator)
 	case "mutator":
 		h.Mutator = model.(Mutator)
 	case "landscape":

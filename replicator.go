@@ -5,10 +5,10 @@ import (
 	"math"
 )
 
-// Colonizer is an interface for methods related to the intrahost population.
-type Colonizer interface {
-	// ColonizerDescription returns a short description about the colonizer type
-	ColonizerDescription() string
+// Replicator is an interface for methods related to the intrahost population.
+type Replicator interface {
+	// ReplicatorDescription returns a short description about the Replicator type
+	ReplicatorDescription() string
 
 	// MaxPathogenPopSize returns the maximum number of pathogens allowed within
 	// a single host of this particular host type.
@@ -24,15 +24,15 @@ type Colonizer interface {
 	// TimeInterval(status int) int
 }
 
-type bhtColonizer struct {
+type bhtReplicator struct {
 	desc string
 	r    float64 // growth rate
 	k    int     // carrying capacity
 }
 
-// NewBhtColonizer creates a new bhtColonizer with growth rate r and
+// NewBhtReplicator creates a new bhtReplicator with growth rate r and
 // maximum population size k.
-func NewBhtColonizer(r float64, k int, desc ...string) (Colonizer, error) {
+func NewBhtReplicator(r float64, k int, desc ...string) (Replicator, error) {
 	var description string
 	if len(desc) > 0 {
 		description = desc[0]
@@ -43,22 +43,22 @@ func NewBhtColonizer(r float64, k int, desc ...string) (Colonizer, error) {
 	if k < 0 {
 		return nil, fmt.Errorf(InvalidIntParameterError, "maximum population size", k, "k < 0")
 	}
-	return &bhtColonizer{description, r, k}, nil
+	return &bhtReplicator{description, r, k}, nil
 }
 
-func (c *bhtColonizer) ColonizerDescription() string {
+func (c *bhtReplicator) ReplicatorDescription() string {
 	return c.desc
 }
 
-func (c *bhtColonizer) GrowthRate() float64 {
+func (c *bhtReplicator) GrowthRate() float64 {
 	return c.r
 }
 
-func (c *bhtColonizer) MaxPathogenPopSize() int {
+func (c *bhtReplicator) MaxPathogenPopSize() int {
 	return c.k
 }
 
-func (c *bhtColonizer) NextPathogenPopSize(n int) int {
+func (c *bhtReplicator) NextPathogenPopSize(n int) int {
 	n64 := float64(n)
 	k64 := float64(c.k)
 	res := (c.r * n64 * k64) / (k64 + ((c.r - 1.0) * n64))
@@ -69,13 +69,13 @@ func (c *bhtColonizer) NextPathogenPopSize(n int) int {
 	return c.k
 }
 
-type constColonizer struct {
+type constReplicator struct {
 	desc string
 	k    int
 }
 
-// NewConstColonizer creates a new constColonizer with maximum population size k.
-func NewConstColonizer(k int, desc ...string) (Colonizer, error) {
+// NewConstReplicator creates a new constReplicator with maximum population size k.
+func NewConstReplicator(k int, desc ...string) (Replicator, error) {
 	var description string
 	if len(desc) > 0 {
 		description = desc[0]
@@ -83,18 +83,18 @@ func NewConstColonizer(k int, desc ...string) (Colonizer, error) {
 	if k < 0 {
 		return nil, fmt.Errorf(InvalidIntParameterError, "maximum population size", k, "k < 0")
 	}
-	return &constColonizer{description, k}, nil
+	return &constReplicator{description, k}, nil
 }
 
-func (c *constColonizer) ColonizerDescription() string {
+func (c *constReplicator) ReplicatorDescription() string {
 	return c.desc
 }
 
-func (c *constColonizer) MaxPathogenPopSize() int {
+func (c *constReplicator) MaxPathogenPopSize() int {
 	return c.k
 }
 
-func (c *constColonizer) NextPathogenPopSize(n int) int {
+func (c *constReplicator) NextPathogenPopSize(n int) int {
 	if n == 0 {
 		return 0
 	}
