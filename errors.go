@@ -28,6 +28,8 @@ const (
 const (
 	UnequalFloatParameterError  = "expected %s %f, instead got %f"
 	UnequalIntParameterError    = "expected %s %d, instead got %d"
+	FloatNotBetweenError        = "expected %s between %f and %f, instead got %f"
+	IntNotBetweenError          = "expected %s between %d and %d, instead got %d"
 	UnequalStringParameterError = "expected %s %s, instead got %s"
 	UnexpectedErrorWhileError   = "encountered error while %s: %s"
 	ExpectedErrorWhileError     = "expected an error while %s, instead got none"
