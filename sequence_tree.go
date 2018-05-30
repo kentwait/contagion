@@ -138,9 +138,15 @@ func NewGenotypeNode(sequence []int, set *GenotypeSet, parents ...*GenotypeNode)
 	n := new(GenotypeNode)
 	n.uid = ksuid.New()
 	// Assign its parent
-	n.parents = make([]*GenotypeNode, len(parents))
-	copy(n.parents, parents)
+	if len(parents) {
+		n.parents = make([]*GenotypeNode, len(parents))
+		copy(n.parents, parents)
+	} else {
+		n.parents = []*GenotypeNode{}
+	}
+	// Initialize children
 	n.children = []*GenotypeNode{}
+	// Assign genotype
 	n.genotype = genotype
 	// Copy sequence
 	n.sequence = make([]int, len(sequence))
