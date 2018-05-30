@@ -8,13 +8,15 @@ import (
 // EvoEpiConfig contains parameters to create a simulated infection
 // in a connected network of hosts.
 type EvoEpiConfig struct {
-	NumGenerations uint `toml:"num_generations"`
-	NumReplicates  uint `toml:"num_replicates"`
+	NumGenerations uint   `toml:"num_generations"`
+	NumReplicates  uint   `toml:"num_replicates"`
+	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs
 
 	IntrahostModels []IntrahostModelConfig `toml:"intrahost_models"`
 	FitnessModels   []FitnessModelConfig   `toml:"fitness_models"`
 
 	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
+	HostNetworkPath      string `toml:"host_network_path"`
 
 	LogFreq         uint   `toml:"log_freq"`
 	PathogenLogPath string `toml:"pathogen_log_path"`
@@ -38,6 +40,7 @@ func (c *EvoEpiConfig) Validate() error {
 			return err
 		}
 	}
+	// TODO: validate file paths
 	c.validated = true
 	return nil
 }
@@ -62,6 +65,16 @@ func (c *EvoEpiConfig) NewSimulation() (*EvoEpiSimulation, error) {
 		}
 		model.SetModelID(i)
 		sim.FitnessModels[i] = model
+	}
+	// Create epidemic simulation
+	switch c.EpidemicModel {
+	case "si":
+	case "sis":
+	case "sir":
+	case "sirs":
+	case "sei":
+	case "seir":
+	case "seirs":
 	}
 	return sim, nil
 }
@@ -96,6 +109,9 @@ func (c *IntrahostModelConfig) Validate() error {
 
 // CreateModel creates an IntrahostModel based on the configuration.
 func (c *IntrahostModelConfig) CreateModel() (IntrahostModel, error) {
+	if !c.validated {
+		return nil, fmt.Errorf("validate model parameters first")
+	}
 	switch c.ReplicationModel {
 	case "constant":
 		model := new(ConstantPopModel)
@@ -162,6 +178,9 @@ func (c *FitnessModelConfig) Validate() error {
 
 // CreateModel creates an FitnessModel based on the configuration.
 func (c *FitnessModelConfig) CreateModel() (FitnessModel, error) {
+	if !c.validated {
+		return nil, fmt.Errorf("validate model parameters first")
+	}
 	// Create FitnessModel
 	switch c.FitnessModel {
 	case "multiplicative":
