@@ -9,8 +9,8 @@ import (
 
 // SequenceNode represents a sequence genotype in the sequence tree.
 type SequenceNode interface {
-	// ID returns the unique ID of the pathogen node.
-	ID() int
+	// UID returns the unique ID of the pathogen node. Uses KSUID to generate random unique IDs with effectively no collision.
+	UID() ksuid.KSUID
 	// Parent returns the parent of the node.
 	Parent() SequenceNode
 	// Children returns the children of the node.
@@ -42,7 +42,7 @@ type sequenceNode struct {
 	fitness     map[int]float64 // key is the fitness model id
 }
 
-func (n *sequenceNode) ID() ksuid.KSUID {
+func (n *sequenceNode) UID() ksuid.KSUID {
 	return n.uid
 }
 
