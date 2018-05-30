@@ -22,7 +22,7 @@ type SequenceNode interface {
 	// sequence and the given fitness model. If the fitness of the node has
 	// been computed before using the same fitness model, then the value is
 	// returned from memory and is not recomputed.
-	Fitness(landscape SequenceFitness) float64
+	Fitness(landscape FitnessModel) float64
 	// NumSites returns the number of sites being modeled in this pathogen node.
 	NumSites() int
 	// StateCounts returns the number of sites by state, postion corresponds to the state from 0 to n.
@@ -66,11 +66,11 @@ func (n *sequenceNode) Sequence() []int {
 	return n.sequence
 }
 
-func (n *sequenceNode) Fitness(f SequenceFitness) float64 {
+func (n *sequenceNode) Fitness(f FitnessModel) float64 {
 	id := f.ID()
 	fitness, ok := n.fitness[id]
 	if !ok {
-		fitness, _ := f.Fitness(n.sequence...)
+		fitness, _ := f.ComputeFitness(n.sequence...)
 		return fitness
 	}
 	return fitness
@@ -141,6 +141,8 @@ func NewSequenceTree(rootSequence []int) SequenceTree {
 	tree := new(sequenceTree)
 	tree.pathogens = make(map[ksuid.KSUID]*sequenceNode)
 	tree.roots = make(map[ksuid.KSUID]*sequenceNode)
+	tree.subHits = make(map[int]int)
+	tree.recombHits = make(map[int]int)
 	// Add the node to the tree and make it a root node
 	tree.pathogens[n.UID()] = n
 	tree.roots[n.UID()] = n
