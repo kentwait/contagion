@@ -10,6 +10,7 @@ const (
 	// IntrahostModelExists is the message printed when an intrahost model has
 	// already been assigned to a host.
 	IntrahostModelExistsError = "Intrahost model %s (%d) already exists"
+	EmptyIntrahostModelError  = "Intrahost model does not exist"
 
 	// GraphPathogenTypeAssertionError is the message printed when
 	// an GraphPathogen cannot be asserted for an interface
