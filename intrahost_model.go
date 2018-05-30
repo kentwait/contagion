@@ -70,3 +70,15 @@ type recombinationParams struct {
 func (params *recombinationParams) RecombinationRate() float64 {
 	return params.recombinationRate
 }
+
+type constantPopModel struct {
+	popSize int
+}
+
+func (m *constantPopModel) MaxPathogenPopSize() int {
+	return m.popSize
+}
+
+func (m *constantPopModel) NextPathogenPopSize(n int) int {
+	return m.popSize
+}
