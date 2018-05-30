@@ -9,7 +9,7 @@ import (
 
 func TestNewSequenceTree_panic(t *testing.T) {
 	defer func() {
-		if err := recover(); err == nil {
+		if err := recover(); err != nil {
 			t.Fatalf(UnexpectedErrorWhileError, "calling NewSequenceTree constructor", err)
 		}
 	}()
@@ -19,7 +19,7 @@ func TestNewSequenceTree_panic(t *testing.T) {
 
 func TestNewSequenceTree(t *testing.T) {
 	defer func() {
-		if err := recover(); err == nil {
+		if err := recover(); err != nil {
 			t.Fatalf(UnexpectedErrorWhileError, "calling NewSequenceTree constructor", err)
 		}
 	}()
