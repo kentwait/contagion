@@ -96,7 +96,7 @@ func (h *sequenceHost) AddPathogen(p interface{}) int {
 	return len(h.pathogens)
 }
 
-func (h *sequenceHost) RemovePathogensByID(ids ...int) (n int, err error) {
+func (h *sequenceHost) RemovePathogens(ids ...int) (n int, err error) {
 	sort.Ints(ids)
 	// Check if the largest ID is less than the number of pathogens
 	lastID := ids[len(ids)-1]
@@ -125,9 +125,10 @@ func (h *sequenceHost) DecrementTimer() {
 	h.internalTimer--
 }
 
-func (h *sequenceHost) SetModel(intrahostModel IntrahostModel) error {
+func (h *sequenceHost) SetIntrahostModel(intrahostModel IntrahostModel) error {
 	if h.intrahostModel != nil {
 		return fmt.Errorf(IntrahostModelExistsError, h.intrahostModel.Name(), h.intrahostModel.ID())
 	}
 	h.intrahostModel = intrahostModel
+	return nil
 }
