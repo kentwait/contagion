@@ -70,7 +70,8 @@ type GenotypeSet struct {
 func (set *GenotypeSet) Add(g *Genotype) {
 	key := fmt.Sprintf("%v", g.Sequence())
 	key = key[1 : len(key)-1]
-	set.set[key] = g
+	set.Lock()
+	defer set.Unlock()
 	if _, exists := set.set[key]; !exists {
 		set.set[key] = g
 	}
@@ -81,6 +82,8 @@ func (set *GenotypeSet) Add(g *Genotype) {
 func (set *GenotypeSet) AddSequence(s []int) *Genotype {
 	key := fmt.Sprintf("%v", s)
 	key = key[1 : len(key)-1]
+	set.Lock()
+	defer set.Unlock()
 	g, exists := set.set[key]
 	if !exists {
 		g := NewGenotype(s)
@@ -92,8 +95,53 @@ func (set *GenotypeSet) AddSequence(s []int) *Genotype {
 
 // Remove removes Genotype of a particular sequence from the set.
 func (set *GenotypeSet) Remove(key string) {
+	set.Lock()
+	defer set.Unlock()
 	set.set[key] = nil
 	delete(set.set, key)
+}
+
+// GenotypeNode represents a genotype together with its relationship to its parents and children.
+type GenotypeNode struct {
+	sync.RWMutex
+	sequence []int
+	parents  []*GenotypeNode
+	children []*GenotypeNode
+}
+
+// Parents returns the parent of the node.
+func (n *GenotypeNode) Parents() []*GenotypeNode {
+	return n.parents
+}
+
+// Children returns the children of the node.
+func (n *GenotypeNode) Children() []*GenotypeNode {
+	n.RLock()
+	defer n.RUnlock()
+	return n.children
+}
+
+// AddChild appends a child to the list of children.
+func (n *GenotypeNode) AddChild(child *GenotypeNode) {
+	n.Lock()
+	defer n.Unlock()
+	n.children = append(n.children, child)
+}
+
+// Sequence returns the sequence of the current node.
+func (n *GenotypeNode) Sequence() []int {
+	return n.sequence
+}
+
+// History returns the list of sequences that resulted into the extant
+// sequence.
+func (n *GenotypeNode) History(h [][]int) [][]int {
+	h = append(h, n.sequence)
+	if len(n.parents) == 0 {
+		return h
+	}
+	// TODO: Assumes no recombination. Only follows the first parent
+	return n.parents[0].History(h)
 }
 
 // SequenceNode represents a sequence genotype in the sequence tree.
@@ -147,8 +195,8 @@ func (n *sequenceNode) Children() []SequenceNode {
 }
 
 func (n *sequenceNode) AddChild(child SequenceNode) {
-	defer n.Unlock()
 	n.Lock()
+	defer n.Unlock()
 	n.children = append(n.children, child)
 }
 
