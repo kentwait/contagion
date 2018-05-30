@@ -109,14 +109,14 @@ func (c *SingleHostConfig) NewSimulation() (*SingleHostSimulation, error) {
 		if err != nil {
 			return nil, err
 		}
-		fm := NewMultiplicativeFM(0, "multiplicative fitness matrix", matrix)
+		fm := NewMultiplicativeFM(0, "multiplicative", matrix)
 		sim.fitnessModel = fm
 	case "additive":
 		matrix, err := LoadFitnessMatrix(c.FitnessModelPath)
 		if err != nil {
 			return nil, err
 		}
-		fm := NewAdditiveFM(0, "multiplicative fitness matrix", matrix)
+		fm := NewAdditiveFM(0, "additive", matrix)
 		sim.fitnessModel = fm
 	case "additive_motif":
 		return nil, fmt.Errorf("additive_motif not yet implemented")
