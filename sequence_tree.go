@@ -12,9 +12,11 @@ type SequenceNode interface {
 	// UID returns the unique ID of the pathogen node. Uses KSUID to generate random unique IDs with effectively no collision.
 	UID() ksuid.KSUID
 	// Parent returns the parent of the node.
-	Parent() SequenceNode
+	Parents() []SequenceNode
 	// Children returns the children of the node.
 	Children() []SequenceNode
+	// AddChild appends a child to the list of children.
+	AddChild(n SequenceNode)
 	// Sequence returns the sequence of the current node.
 	Sequence() []int
 	// Fitness returns the fitness value of this node based on its current
@@ -32,6 +34,7 @@ type SequenceNode interface {
 }
 
 type sequenceNode struct {
+	sync.RWMutex
 	uid      ksuid.KSUID
 	parents  []SequenceNode
 	children []SequenceNode
@@ -54,17 +57,24 @@ func (n *sequenceNode) Children() []SequenceNode {
 	return n.children
 }
 
+func (n *sequenceNode) AddChild(child SequenceNode) {
+	defer n.Unlock()
+	n.Lock()
+	n.children = append(n.children, child)
+}
+
 func (n *sequenceNode) Sequence() []int {
 	return n.sequence
 }
 
 func (n *sequenceNode) Fitness(f SequenceFitness) float64 {
 	id := f.ID()
-	if _, ok := n.fitness[id]; !ok {
+	fitness, ok := n.fitness[id]
+	if !ok {
 		fitness, _ := f.Fitness(n.sequence...)
 		return fitness
 	}
-	return n.fitness[id]
+	return fitness
 }
 
 func (n *sequenceNode) NumSites() int {
@@ -87,15 +97,15 @@ func (n *sequenceNode) History(h [][]int) [][]int {
 // SequenceTree represents the pathogen as a series of one-hit differences
 // from its ancestor.
 type SequenceTree interface {
-	// Sequence returns a node in the tree.
-	Sequence(id int) (SequenceNode, error)
+	// Sequence returns a node in the tree. If uid is not found, returns nil.
+	Sequence(uid ksuid.KSUID) *sequenceNode
 	// NewSub creates a new node based on the parent and the
 	// position and new state of the substitution.
-	NewSub(parent SequenceNode, position, state int) SequenceNode
+	NewSub(parent SequenceNode, position, state int) *sequenceNode
 	// NewRecomb creates a new node given two parents and the position at which recombination occurred.
-	NewRecomb(parent1, parent2 SequenceNode, position int) SequenceNode
+	NewRecomb(parent1, parent2 SequenceNode, position int) *sequenceNode
 	// NewRoot adds a new root sequence node.
-	NewRoot(id int, sequence []int) (SequenceNode, error)
+	NewRoot(sequence []int) *sequenceNode
 }
 
 // TODO: Create inf sites, fixed sites, multiple hit trees
@@ -103,83 +113,78 @@ type SequenceTree interface {
 // Depend on NewHit method
 type sequenceTree struct {
 	sync.RWMutex
-	roots     map[int]*sequenceNode
-	pathogens map[int]*sequenceNode
-	lastID    int
-	hits      map[int]int
+	roots      map[ksuid.KSUID]*sequenceNode
+	pathogens  map[ksuid.KSUID]*sequenceNode
+	subHits    map[int]int
+	recombHits map[int]int
 }
 
 // NewSequenceTree creates a new pathogen tree with a single root.
-func NewSequenceTree(rootID int, rootSequence []int) (SequenceTree, error) {
+func NewSequenceTree(rootSequence []int) (SequenceTree, error) {
 	// Create new root node
-	// A root node does not have a parent.
+	// Assign unique ID
 	n := new(sequenceNode)
-	n.parent = nil
+	n.uid = ksuid.New()
+	// A root node does not have any parents.
+	n.parents = []SequenceNode{}
 	n.children = []SequenceNode{}
-	n.hits = make(map[int]int)
-	n.sequence = rootSequence
-	n.numStates = make(map[int]int)
+	// Copy sequence
+	n.sequence = make([]int, len(rootSequence))
+	copy(n.sequence, rootSequence)
 	// Count the initial number of states across all sites
 	for _, s := range n.sequence {
-		n.numStates[s]++
+		n.stateCounts[s]++
 	}
-	// Assign ID
-	n.id = rootID
-
-	// Create new tree
+	// Create new tree and initialize maps
 	tree := new(sequenceTree)
-	tree.pathogens = make(map[int]*sequenceNode)
-	tree.roots = make(map[int]*sequenceNode)
-	tree.lastID = 0
+	tree.pathogens = make(map[ksuid.KSUID]*sequenceNode)
+	tree.roots = make(map[ksuid.KSUID]*sequenceNode)
 	// Add the node to the tree and make it a root node
-	tree.pathogens[rootID] = n
-	tree.roots[rootID] = n
+	tree.pathogens[n.UID()] = n
+	tree.roots[n.UID()] = n
 	return tree, nil
 }
 
-// Sequence returns a node in the tree.
-func (t *sequenceTree) Sequence(id int) (SequenceNode, error) {
+func (t *sequenceTree) Sequence(uid ksuid.KSUID) *sequenceNode {
 	t.RLock()
 	defer t.RUnlock()
-	p, ok := t.pathogens[id]
+	n, ok := t.pathogens[uid]
 	if !ok {
-		return nil, fmt.Errorf("sequence tree "+IntKeyNotFoundError, id)
+		return nil
 	}
-	return p, nil
+	return n
 }
 
-// NewHit creates a new node based on the parent and the position and the
-// new state of the substitution.
-func (t *sequenceTree) NewHit(parent SequenceNode, position, state int) SequenceNode {
+func (t *sequenceTree) NewSub(parent SequenceNode, position, state int) *sequenceNode {
 	// Create new node
 	n := new(sequenceNode)
+	n.uid = ksuid.New()
 	// Assign its parent
-	n.parent = parent.(*sequenceNode)
-	// Change sequence from parent
-	n.numStates = make(map[int]int)
-	n.sequence = make([]int, len(n.parent.sequence))
-	copy(n.sequence, n.parent.sequence)
-	for i, s := range n.sequence {
-		if i == position {
-			n.sequence[i] = state
-			n.numStates[state]++
-		} else {
-			n.numStates[s]++
-		}
+	n.parents = []SequenceNode{parent.(*sequenceNode)}
+	// Copy sequence from parent, then change at specified position
+	n.sequence = make([]int, len(n.parents[0].Sequence()))
+	copy(n.sequence, n.parents[0].Sequence())
+	// Copy state counts
+	n.stateCounts = make(map[int]int)
+	for s, cnt := range n.parents[0].(*sequenceNode).stateCounts {
+		n.stateCounts[s] = cnt
 	}
+	// Decrement count of original state, increase count in new state
+	n.stateCounts[n.parents[0].Sequence()[position]]--
+	n.stateCounts[state]++
 
-	// Assign ID and update pathogen map
+	// Add new sequence as child of its parent
+	parent.AddChild(n)
+	// Add new sequence to map of tree
 	t.Lock()
-	t.lastID++
-	n.id = t.lastID
-	t.pathogens[n.id] = n
-	// Add new pathogen to parent
-	n.parent.children = append(n.parent.children, n)
+	t.pathogens[n.uid] = n
 	t.Unlock()
 	return n
 }
 
-func (t *sequenceTree) NewRoot(id int, sequence []int) (SequenceNode, error) {
+func (t *sequenceTree) NewRecomb(parent1, parent2 SequenceNode, position int) *sequenceNode {}
+
+func (t *sequenceTree) NewRoot(sequence []int) *sequenceNode {
 	t.Lock()
 	defer t.Unlock()
 	_, exists := t.pathogens[id]
