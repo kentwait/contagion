@@ -37,6 +37,24 @@ type IntrahostModel interface {
 	RecombinationRate() float64
 }
 
+type ConstantPopModel struct {
+	mutationParams
+	recombinationParams
+	constantIntrahostPopModel
+}
+
+type BevertonHoltThresholdPopModel struct {
+	mutationParams
+	recombinationParams
+	bhtIntrahostPopModel
+}
+
+type FitnessDependentPopModel struct {
+	mutationParams
+	recombinationParams
+	fitnessIntrahostPopModel
+}
+
 type mutationParams struct {
 	mutationRate     float64
 	transitionMatrix [][]float64
@@ -73,28 +91,28 @@ func (params *recombinationParams) RecombinationRate() float64 {
 	return params.recombinationRate
 }
 
-type constantPopModel struct {
+type constantIntrahostPopModel struct {
 	popSize int
 }
 
-func (m *constantPopModel) MaxPathogenPopSize() int {
+func (m *constantIntrahostPopModel) MaxPathogenPopSize() int {
 	return m.popSize
 }
 
-func (m *constantPopModel) NextPathogenPopSize(n int) int {
+func (m *constantIntrahostPopModel) NextPathogenPopSize(n int) int {
 	return m.popSize
 }
 
-type bhtPopModel struct {
+type bhtIntrahostPopModel struct {
 	maxPopSize int
 	growthRate float64
 }
 
-func (m *bhtPopModel) MaxPathogenPopSize() int {
+func (m *bhtIntrahostPopModel) MaxPathogenPopSize() int {
 	return m.maxPopSize
 }
 
-func (m *bhtPopModel) NextPathogenPopSize(n int) int {
+func (m *bhtIntrahostPopModel) NextPathogenPopSize(n int) int {
 	n64 := float64(n)
 	k64 := float64(m.maxPopSize)
 	res := (m.growthRate * n64 * k64) / (k64 + ((m.growthRate - 1.0) * n64))
@@ -105,19 +123,19 @@ func (m *bhtPopModel) NextPathogenPopSize(n int) int {
 	return m.maxPopSize
 }
 
-func (m *bhtPopModel) GrowthRate() float64 {
+func (m *bhtIntrahostPopModel) GrowthRate() float64 {
 	return m.growthRate
 }
 
-type fitnessPopModel struct {
+type fitnessIntrahostPopModel struct {
 	maxPopSize int
 }
 
-func (m *fitnessPopModel) MaxPathogenPopSize() int {
+func (m *fitnessIntrahostPopModel) MaxPathogenPopSize() int {
 	return m.maxPopSize
 }
 
-func (m *fitnessPopModel) NextPathogenPopSize(n int) int {
+func (m *fitnessIntrahostPopModel) NextPathogenPopSize(n int) int {
 	// Not applicable
 	return -1
 }
