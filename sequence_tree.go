@@ -1,7 +1,6 @@
 package contagiongo
 
 import (
-	"fmt"
 	"sync"
 
 	"github.com/segmentio/ksuid"
@@ -177,35 +176,58 @@ func (t *sequenceTree) NewSub(parent SequenceNode, position, state int) *sequenc
 	parent.AddChild(n)
 	// Add new sequence to map of tree
 	t.Lock()
+	defer t.Unlock()
 	t.pathogens[n.uid] = n
-	t.Unlock()
 	return n
 }
 
-func (t *sequenceTree) NewRecomb(parent1, parent2 SequenceNode, position int) *sequenceNode {}
+func (t *sequenceTree) NewRecomb(parent1, parent2 SequenceNode, position int) *sequenceNode {
+	// Create new node
+	n := new(sequenceNode)
+	n.uid = ksuid.New()
+	// Assign its parent
+	n.parents = []SequenceNode{parent1.(*sequenceNode), parent2.(*sequenceNode)}
+	// Copy sequence from parent1, then append sequence of parent2 at the given
+	// position
+	n.sequence = make([]int, len(n.parents[0].Sequence()))
+	copy(n.sequence, n.parents[0].Sequence())
+	n.sequence = append(n.sequence[0:position], parent2.Sequence()[position:len(parent2.Sequence())]...)
+	// Create fresh count of states
+	n.stateCounts = make(map[int]int)
+	for _, s := range n.sequence {
+		n.stateCounts[s]++
+	}
 
-func (t *sequenceTree) NewRoot(sequence []int) *sequenceNode {
+	// Add new sequence as child of both parents
+	parent1.AddChild(n)
+	parent2.AddChild(n)
+	// Add new sequence to map of tree
 	t.Lock()
 	defer t.Unlock()
-	_, exists := t.pathogens[id]
-	if exists {
-		return nil, fmt.Errorf("sequence tree "+IntKeyExists, id)
-	}
-	// Create new node in tree
+	t.pathogens[n.uid] = n
+	return n
+}
+
+func (t *sequenceTree) NewRoot(rootSequence []int) *sequenceNode {
+	// Create new root node
+	// Assign unique ID
 	n := new(sequenceNode)
-	n.parent = nil
+	n.uid = ksuid.New()
+	// A root node does not have any parents.
+	n.parents = []SequenceNode{}
 	n.children = []SequenceNode{}
-	n.hits = make(map[int]int)
-	n.sequence = sequence
-	n.numStates = make(map[int]int)
+	// Copy sequence
+	n.sequence = make([]int, len(rootSequence))
+	copy(n.sequence, rootSequence)
+	// Count the initial number of states across all sites
 	for _, s := range n.sequence {
-		n.numStates[s]++
+		n.stateCounts[s]++
 	}
-	// Assign ID
-	n.id = id
 
 	// Add to pathogen and root maps
-	t.pathogens[id] = n
-	t.roots[id] = n
-	return n, nil
+	t.Lock()
+	defer t.Unlock()
+	t.pathogens[n.uid] = n
+	t.roots[n.uid] = n
+	return n
 }
