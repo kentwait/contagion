@@ -94,7 +94,7 @@ type additiveFM struct {
 
 // NewAdditiveFM create a new additive fitness matrix using a map of maps.
 // Assumes that the values are in decimal form.
-func NewAdditiveFM(matrix map[int]map[int]float64) FitnessMatrix {
+func NewAdditiveFM(id int, name string, matrix map[int]map[int]float64) FitnessMatrix {
 	// Copy map of maps
 	fm := new(additiveFM)
 	fm.id = id
@@ -107,6 +107,14 @@ func NewAdditiveFM(matrix map[int]map[int]float64) FitnessMatrix {
 		}
 	}
 	return fm
+}
+
+func (fm *additiveFM) ID() int {
+	return fm.id
+}
+
+func (fm *additiveFM) Name() string {
+	return fm.name
 }
 
 func (fm *additiveFM) ComputeFitness(chars ...int) (fitness float64, err error) {
