@@ -1,8 +1,10 @@
 package contagiongo
 
-import (
-	"sync"
-)
+import "sync"
+
+// import (
+// 	"sync"
+// )
 
 // The following are status codes for different preset compartments that
 // describe the current epidemiological status of a host in the simulation.
@@ -22,9 +24,9 @@ const (
 // a simulated epidemic.
 type Simulation interface {
 	// Host returns a single host based on the given host ID.
-	Host(id int) EpidemicHost
+	Host(id int) Host
 	// HostMap returns the map of all hosts in the simulation.
-	HostMap() map[int]EpidemicHost
+	HostMap() map[int]Host
 	// HostStatus returns the status of a particular host that matches
 	// the given host ID.
 	HostStatus(id int) int
@@ -36,32 +38,32 @@ type Simulation interface {
 	SetHostTimer(id, interval int)
 	// HostNeighbors returns the list of hosts that are directly connected to
 	// the host with the given host ID.
-	HostNeighbors(id int) []EpidemicHost
+	HostNeighbors(id int) []Host
 
 	// SusceptibleProcess runs the processes associated with the "susceptible"
 	// host status.
-	SusceptibleProcess(host EpidemicHost, wg *sync.WaitGroup)
+	SusceptibleProcess(host Host, wg *sync.WaitGroup)
 	// ExposedProcess runs the processes associated with the "exposed"
 	// host status.
-	ExposedProcess(host EpidemicHost, wg *sync.WaitGroup)
+	ExposedProcess(host Host, wg *sync.WaitGroup)
 	// InfectedProcess runs the processes associated with the "infected"
 	// host status.
-	InfectedProcess(host EpidemicHost, wg *sync.WaitGroup)
+	InfectedProcess(host Host, wg *sync.WaitGroup)
 	// InfectiveProcess runs the processes associated with the "infective"
 	// host status.
-	InfectiveProcess(host EpidemicHost, wg *sync.WaitGroup)
+	InfectiveProcess(host Host, wg *sync.WaitGroup)
 	// RemovedProcess runs the processes associated with the "removed"
 	// host status.
-	RemovedProcess(host EpidemicHost, wg *sync.WaitGroup)
+	RemovedProcess(host Host, wg *sync.WaitGroup)
 	// RecoveredProcess runs the processes associated with the "recovered"
 	// host status.
-	RecoveredProcess(host EpidemicHost, wg *sync.WaitGroup)
+	RecoveredProcess(host Host, wg *sync.WaitGroup)
 	// DeadProcess runs the processes associated with the "dead"
 	// host status.
-	DeadProcess(host EpidemicHost, wg *sync.WaitGroup)
+	DeadProcess(host Host, wg *sync.WaitGroup)
 	// VaccinatedProcess runs the processes associated with the "vaccinated"
 	// host status.
-	VaccinatedProcess(host EpidemicHost, wg *sync.WaitGroup)
+	VaccinatedProcess(host Host, wg *sync.WaitGroup)
 }
 
 // Simulator is a Simulation with a Run method to perform the simulation and
