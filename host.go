@@ -19,8 +19,7 @@ type Host interface {
 	// Returns nil if no pathogen exists in the specified position.
 	Pathogen(i int) interface{}
 	// Pathogens returns a list of all pathogens present in the host.
-	// This elements of the list are pointers to SequenceNodes or
-	// PathogenNodes (not implemented).
+	// This elements of the list are pointers to GenotypeNodes.
 	Pathogens() []interface{}
 	// PathogenPopSize returns the number of pathogens inside the host.
 	PathogenPopSize() int
@@ -31,8 +30,7 @@ type Host interface {
 	// Returns the number of pathogens remaining and any errors encountered.
 	RemovePathogens(ids ...int) (n int, err error)
 	// RemoveAllPathogens removes all the pathogens from the host.
-	// Internally, this removes all the pointers that refer to SequenceNodes
-	// or PathogenNodes.
+	// Internally, this removes all the pointers that refer to GenotypeNodes.
 	RemoveAllPathogens()
 	// DecrementTimer decreases the internal timer by 1.
 	DecrementTimer()
@@ -50,7 +48,7 @@ type sequenceHost struct {
 	id            int
 	typeID        int
 	internalTimer int
-	pathogens     []SequenceNode
+	pathogens     []*GenotypeNode
 }
 
 // NewEmptySequenceHost creates a new host without an intrahost model and
@@ -63,7 +61,7 @@ func NewEmptySequenceHost(ids ...int) Host {
 		h.typeID = ids[1]
 	}
 	h.internalTimer = -1
-	h.pathogens = []SequenceNode{}
+	h.pathogens = []*GenotypeNode{}
 	h.IntrahostModel = nil
 	h.FitnessModel = nil
 	return h
@@ -94,7 +92,7 @@ func (h *sequenceHost) PathogenPopSize() int {
 }
 
 func (h *sequenceHost) AddPathogen(p interface{}) int {
-	h.pathogens = append(h.pathogens, p.(SequenceNode))
+	h.pathogens = append(h.pathogens, p.(*GenotypeNode))
 	return len(h.pathogens)
 }
 
