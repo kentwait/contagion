@@ -85,53 +85,47 @@ func TestIntrinsicRateReplication(t *testing.T) {
 	}
 }
 
-// func TestSequenceMutate(t *testing.T) {
-// 	// Create a mock root
-// 	root := sampleGenotypeNode(100)
-// 	// Create mock IntrahostModel
-// 	model := new(ConstantPopModel)
-// 	model.mutationRate = 0.1
-// 	model.transitionMatrix = [][]float64{
-// 		[]float64{0, 1},
-// 		[]float64{1, 0},
-// 	}
-// 	model.recombinationRate = 0
-// 	model.popSize = 5
-// 	// Send root 4 times to simulate population of 4
-// 	c := make(chan GenotypeNode)
-// 	go func() {
-// 		for _, pathogen := range []GenotypeNode{root, root, root, root, root, root, root, root, root, root} {
-// 			c <- pathogen
-// 		}
-// 		close(c)
-// 	}()
-// 	pathogens := MutateSequence(c, tree, model)
-// 	pathogenCounter := make(map[ksuid.KSUID]int)
-// 	counter := 0
-// 	fmt.Println(root.UID())
-// 	for pathogen := range pathogens {
-// 		pathogenCounter[pathogen.UID()]++
-// 		if pathogen.UID() != root.UID() {
-// 			fmt.Print(pathogen.UID())
-// 			fmt.Print(" ")
-// 			cnt := 0
-// 			for pathogen.UID() != root.UID() {
-// 				pathogen = pathogen.Parents()[0]
-// 				cnt++
-// 			}
-// 			fmt.Println(cnt)
-// 			if cnt > 120 || cnt < 80 {
-// 				t.Errorf(IntNotBetweenError, "number of mutations", 80, 120, cnt)
-// 			}
-// 		} else {
-// 			fmt.Println(pathogen.UID())
-// 		}
-// 		counter++
-// 	}
-
-// 	if counter != 10 {
-// 		t.Errorf(UnequalIntParameterError, "number of pathogens", 4, counter)
-// 	}
-// 	// TODO: test whether mutation took place, and if the number is correct
-// 	// TODO: Add scenarios for binomial hits
-// }
+func TestSequenceMutate(t *testing.T) {
+	// Create a mock tree
+	tree := EmptyGenotypeTree()
+	root := tree.NewNode(sampleSequenceShort())
+	// Create mock IntrahostModel
+	model := new(ConstantPopModel)
+	model.mutationRate = 0.5
+	model.transitionMatrix = [][]float64{
+		[]float64{0, 1},
+		[]float64{1, 0},
+	}
+	model.recombinationRate = 0
+	model.popSize = 10
+	// Send root 4 times to simulate population of 4
+	c := make(chan GenotypeNode)
+	go func() {
+		for _, pathogen := range []GenotypeNode{root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root} {
+			c <- pathogen
+		}
+		close(c)
+	}()
+	pathogens := MutateSequence(c, tree, model)
+	counter := 0
+	diffMean := 0.0
+	for pathogen := range pathogens {
+		diff := 0
+		for i := 0; i < len(pathogen.StringSequence()); i++ {
+			if pathogen.StringSequence()[i] != root.StringSequence()[i] {
+				diff++
+			}
+		}
+		diffMean += float64(diff)
+		counter++
+	}
+	diffMean = diffMean / float64(counter)
+	if counter != 20 {
+		t.Errorf(UnequalIntParameterError, "number of pathogens", 4, counter)
+	}
+	if diffMean < 4 || diffMean > 6 {
+		t.Errorf(FloatNotBetweenError, "number of mutations", 4., 6., diffMean)
+	}
+	// TODO: test whether mutation took place, and if the number is correct
+	// TODO: Add scenarios for binomial hits
+}
