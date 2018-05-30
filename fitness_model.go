@@ -6,9 +6,11 @@ import "fmt"
 // associated to a particular genotype.
 type FitnessModel interface {
 	// ID returns the ID for this fitness model.
-	ID() int
+	ModelID() int
 	// Name returns the name for this fitness model.
-	Name() string
+	ModelName() string
+	SetModelID(id int)
+	SetModelName(name string)
 	// ComputeFitness returns the corresponding fitness value given
 	// a set of sequences as integers.
 	ComputeFitness(chars ...int) (fitness float64, err error)
@@ -18,9 +20,11 @@ type FitnessModel interface {
 // character at every site is specified.
 type FitnessMatrix interface {
 	// ID returns the ID for this fitness model.
-	ID() int
+	ModelID() int
 	// Name returns the name for this fitness model.
-	Name() string
+	ModelName() string
+	SetModelID(id int)
+	SetModelName(name string)
 	// ComputeFitness returns the corresponding fitness value given
 	// a set of sequences as integers.
 	ComputeFitness(chars ...int) (fitness float64, err error)
@@ -56,12 +60,20 @@ func NewMultiplicativeFM(id int, name string, matrix map[int]map[int]float64) Fi
 	return fm
 }
 
-func (fm *multiplicativeFM) ID() int {
+func (fm *multiplicativeFM) ModelID() int {
 	return fm.id
 }
 
-func (fm *multiplicativeFM) Name() string {
+func (fm *multiplicativeFM) ModelName() string {
 	return fm.name
+}
+
+func (fm *multiplicativeFM) SetModelID(id int) {
+	fm.id = id
+}
+
+func (fm *multiplicativeFM) SetModelName(name string) {
+	fm.name = name
 }
 
 func (fm *multiplicativeFM) ComputeFitness(chars ...int) (fitness float64, err error) {
@@ -109,12 +121,20 @@ func NewAdditiveFM(id int, name string, matrix map[int]map[int]float64) FitnessM
 	return fm
 }
 
-func (fm *additiveFM) ID() int {
+func (fm *additiveFM) ModelID() int {
 	return fm.id
 }
 
-func (fm *additiveFM) Name() string {
+func (fm *additiveFM) ModelName() string {
 	return fm.name
+}
+
+func (fm *additiveFM) SetModelID(id int) {
+	fm.id = id
+}
+
+func (fm *additiveFM) SetModelName(name string) {
+	fm.name = name
 }
 
 func (fm *additiveFM) ComputeFitness(chars ...int) (fitness float64, err error) {

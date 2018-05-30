@@ -4,8 +4,10 @@ import "math"
 
 // IntrahostModel is an interface for any type of intrahost model.
 type IntrahostModel interface {
-	ID() int
-	Name() string
+	ModelID() int
+	ModelName() string
+	SetModelID(id int)
+	SetModelName(name string)
 
 	// Mutation
 
@@ -73,12 +75,19 @@ type intrahostMetadata struct {
 	name string
 }
 
-func (meta *intrahostMetadata) ID() int {
+func (meta *intrahostMetadata) ModelID() int {
 	return meta.id
 }
 
-func (meta *intrahostMetadata) Name() string {
+func (meta *intrahostMetadata) ModelName() string {
 	return meta.name
+}
+
+func (meta *intrahostMetadata) SetModelID(id int) {
+	meta.id = id
+}
+func (meta *intrahostMetadata) SetModelName(name string) {
+	meta.name = name
 }
 
 type mutationParams struct {

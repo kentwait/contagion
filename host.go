@@ -128,7 +128,7 @@ func (h *sequenceHost) DecrementTimer() {
 
 func (h *sequenceHost) SetIntrahostModel(intrahostModel IntrahostModel) error {
 	if h.IntrahostModel != nil {
-		return fmt.Errorf(IntrahostModelExistsError, h.IntrahostModel.Name(), h.IntrahostModel.ID())
+		return fmt.Errorf(IntrahostModelExistsError, h.IntrahostModel.ModelName(), h.IntrahostModel.ModelID())
 	}
 	h.IntrahostModel = intrahostModel
 	return nil

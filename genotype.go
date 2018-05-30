@@ -60,7 +60,7 @@ func (n *genotype) StringSequence() string {
 }
 
 func (n *genotype) Fitness(f FitnessModel) float64 {
-	id := f.ID()
+	id := f.ModelID()
 	fitness, ok := n.fitness[id]
 	if !ok {
 		fitness, _ := f.ComputeFitness(n.sequence...)

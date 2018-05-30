@@ -49,7 +49,7 @@ func TestSequenceHost_SetIntrahostModel(t *testing.T) {
 	model := sampleIntrahostModel()
 
 	if seqH.IntrahostModel != nil {
-		t.Errorf(IntrahostModelExistsError, seqH.IntrahostModel.Name(), seqH.IntrahostModel.ID())
+		t.Errorf(IntrahostModelExistsError, seqH.IntrahostModel.ModelName(), seqH.IntrahostModel.ModelID())
 	}
 	// Add model
 	h.SetIntrahostModel(model)
