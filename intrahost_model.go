@@ -1,5 +1,7 @@
 package contagiongo
 
+import "math"
+
 // IntrahostModel is an interface for any type of intrahost model.
 type IntrahostModel interface {
 	ID() int
@@ -81,4 +83,28 @@ func (m *constantPopModel) MaxPathogenPopSize() int {
 
 func (m *constantPopModel) NextPathogenPopSize(n int) int {
 	return m.popSize
+}
+
+type bhtPopModel struct {
+	maxPopSize int
+	growthRate float64
+}
+
+func (m *bhtPopModel) MaxPathogenPopSize() int {
+	return m.maxPopSize
+}
+
+func (m *bhtPopModel) NextPathogenPopSize(n int) int {
+	n64 := float64(n)
+	k64 := float64(m.maxPopSize)
+	res := (m.growthRate * n64 * k64) / (k64 + ((m.growthRate - 1.0) * n64))
+	roundedRes := int(math.Ceil(res))
+	if m.maxPopSize > roundedRes {
+		return roundedRes
+	}
+	return m.maxPopSize
+}
+
+func (m *bhtPopModel) GrowthRate() float64 {
+	return m.growthRate
 }
