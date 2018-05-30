@@ -6,6 +6,50 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
+// Genotype represents a unique pathogen sequence.
+type Genotype interface {
+	// Sequence returns the sequence of the current node.
+	Sequence() []int
+	// Fitness returns the fitness value of this node based on its current
+	// sequence and the given fitness model. If the fitness of the node has
+	// been computed before using the same fitness model, then the value is
+	// returned from memory and is not recomputed.
+	Fitness(landscape FitnessModel) float64
+	// NumSites returns the number of sites being modeled in this pathogen node.
+	NumSites() int
+	// StateCounts returns the number of sites by state, postion corresponds to the state from 0 to n.
+	StateCounts() map[int]int
+}
+
+type genotype struct {
+	sync.RWMutex
+	sequence    []int
+	stateCounts map[int]int     // key is the state
+	fitness     map[int]float64 // key is the fitness model id
+}
+
+func (n *genotype) Sequence() []int {
+	return n.sequence
+}
+
+func (n *genotype) Fitness(f FitnessModel) float64 {
+	id := f.ID()
+	fitness, ok := n.fitness[id]
+	if !ok {
+		fitness, _ := f.ComputeFitness(n.sequence...)
+		return fitness
+	}
+	return fitness
+}
+
+func (n *genotype) NumSites() int {
+	return len(n.sequence)
+}
+
+func (n *genotype) StateCounts() map[int]int {
+	return n.stateCounts
+}
+
 // SequenceNode represents a sequence genotype in the sequence tree.
 type SequenceNode interface {
 	// UID returns the unique ID of the pathogen node. Uses KSUID to generate random unique IDs with effectively no collision.
