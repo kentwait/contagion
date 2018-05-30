@@ -33,4 +33,6 @@ const (
 	UnequalStringParameterError = "expected %s %s, instead got %s"
 	UnexpectedErrorWhileError   = "encountered error while %s: %s"
 	ExpectedErrorWhileError     = "expected an error while %s, instead got none"
+	UnrecognizedKeywordError    = "unrecognized keyword %s for %s"
+	FileParsingError            = "error in line %d: %s"
 )
