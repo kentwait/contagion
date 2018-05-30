@@ -15,6 +15,10 @@ const (
 	// an GraphPathogen cannot be asserted for an interface
 	GraphPathogenTypeAssertionError = "error asserting PathogenNode interface"
 
+	// ZeroItemsError is the message for errors where at least one item must be
+	// passed into the function.
+	ZeroItemsError = "one or more items are required"
+
 	InvalidFloatParameterError  = "invalid %s %f, %s"
 	InvalidIntParameterError    = "invalid %s %d, %s"
 	InvalidStringParameterError = "invalid %s %s, %s"
