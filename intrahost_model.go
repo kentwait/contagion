@@ -108,3 +108,16 @@ func (m *bhtPopModel) NextPathogenPopSize(n int) int {
 func (m *bhtPopModel) GrowthRate() float64 {
 	return m.growthRate
 }
+
+type fitnessPopModel struct {
+	maxPopSize int
+}
+
+func (m *fitnessPopModel) MaxPathogenPopSize() int {
+	return m.maxPopSize
+}
+
+func (m *fitnessPopModel) NextPathogenPopSize(n int) int {
+	// Not applicable
+	return -1
+}
