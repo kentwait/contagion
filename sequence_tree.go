@@ -8,16 +8,31 @@ import (
 )
 
 // Genotype represents a unique pathogen sequence.
-type Genotype struct {
+type Genotype interface {
+	// Sequence returns the sequence of the current node.
+	Sequence() []int
+	// Fitness returns the fitness value of this node based on its current
+	// sequence and the given fitness model. If the fitness of the node has
+	// been computed before using the same fitness model, then the value is
+	// returned from memory and is not recomputed.
+	Fitness(f FitnessModel) float64
+	// NumSites returns the number of sites being modeled in this pathogen node.
+	NumSites() int
+	// StateCounts returns the number of sites by state, postion corresponds
+	// to the state from 0 to n.
+	StateCounts() map[int]int
+}
+
+type genotype struct {
 	sync.RWMutex
 	sequence    []int
 	stateCounts map[int]int     // key is the state
 	fitness     map[int]float64 // key is the fitness model id
 }
 
-// NewGenotype returns a new Genotype given a sequence.
-func NewGenotype(s []int) *Genotype {
-	g := new(Genotype)
+// NewGenotype creates a new genotype from sequence.
+func NewGenotype(s []int) Genotype {
+	g := new(genotype)
 	// Copy sequence
 	g.sequence = make([]int, len(s))
 	copy(g.sequence, s)
@@ -31,16 +46,11 @@ func NewGenotype(s []int) *Genotype {
 	return g
 }
 
-// Sequence returns the sequence of the current node.
-func (n *Genotype) Sequence() []int {
+func (n *genotype) Sequence() []int {
 	return n.sequence
 }
 
-// Fitness returns the fitness value of this node based on its current
-// sequence and the given fitness model. If the fitness of the node has
-// been computed before using the same fitness model, then the value is
-// returned from memory and is not recomputed.
-func (n *Genotype) Fitness(f FitnessModel) float64 {
+func (n *genotype) Fitness(f FitnessModel) float64 {
 	id := f.ID()
 	fitness, ok := n.fitness[id]
 	if !ok {
@@ -50,31 +60,40 @@ func (n *Genotype) Fitness(f FitnessModel) float64 {
 	return fitness
 }
 
-// NumSites returns the number of sites being modeled in this pathogen node.
-func (n *Genotype) NumSites() int {
+func (n *genotype) NumSites() int {
 	return len(n.sequence)
 }
 
-// StateCounts returns the number of sites by state, postion corresponds to the state from 0 to n.
-func (n *Genotype) StateCounts() map[int]int {
+func (n *genotype) StateCounts() map[int]int {
 	return n.stateCounts
 }
 
-// GenotypeSet is a collection of Genotypes
-type GenotypeSet struct {
+// GenotypeSet is a collection of genotypes.
+type GenotypeSet interface {
+	// Add adds the genotype to the set if the sequence does not exist yet.
+	Add(g Genotype)
+	// AddSequence creates a new genotype from the sequence if it is not present
+	// in the set. Otherwise, returns the existing genotype in the set.
+	AddSequence(s []int) Genotype
+	// Remove removes genotype of a particular sequence from the set.
+	Remove(s []int)
+	// Size returns the size of the set.
+	Size() int
+}
+
+type genotypeSet struct {
 	sync.RWMutex
-	set map[string]*Genotype
+	set map[string]Genotype
 }
 
 // EmptyGenotypeSet creates a new empty set.
-func EmptyGenotypeSet() *GenotypeSet {
-	set := new(GenotypeSet)
-	set.set = make(map[string]*Genotype)
+func EmptyGenotypeSet() GenotypeSet {
+	set := new(genotypeSet)
+	set.set = make(map[string]Genotype)
 	return set
 }
 
-// Add adds the genotype to the set if the sequence does not exist yet.
-func (set *GenotypeSet) Add(g *Genotype) {
+func (set *genotypeSet) Add(g Genotype) {
 	key := fmt.Sprintf("%v", g.Sequence())
 	key = key[1 : len(key)-1]
 	set.Lock()
@@ -84,9 +103,7 @@ func (set *GenotypeSet) Add(g *Genotype) {
 	}
 }
 
-// AddSequence creates a new Genotype from the sequence if it is not present
-// in the set. Otherwise, returns the existing Genotype in the set.
-func (set *GenotypeSet) AddSequence(s []int) *Genotype {
+func (set *genotypeSet) AddSequence(s []int) Genotype {
 	key := fmt.Sprintf("%v", s)
 	key = key[1 : len(key)-1]
 	set.Lock()
@@ -100,8 +117,7 @@ func (set *GenotypeSet) AddSequence(s []int) *Genotype {
 	return g
 }
 
-// Remove removes Genotype of a particular sequence from the set.
-func (set *GenotypeSet) Remove(s []int) {
+func (set *genotypeSet) Remove(s []int) {
 	key := fmt.Sprintf("%v", s)
 	key = key[1 : len(key)-1]
 	set.Lock()
@@ -112,40 +128,56 @@ func (set *GenotypeSet) Remove(s []int) {
 	}
 }
 
-// Size returns the size of the set.
-func (set *GenotypeSet) Size() {
+func (set *genotypeSet) Size() int {
 	set.RLock()
 	defer set.RUnlock()
 	return len(set.set)
 }
 
 // GenotypeNode represents a genotype together with its relationship to its parents and children.
-type GenotypeNode struct {
+type GenotypeNode interface {
+	// UID returns the unique ID of the node. Uses KSUID to generate
+	// random unique IDs with effectively no collision.
+	UID() ksuid.KSUID
+	// Parents returns the parent of the node.
+	Parents() []GenotypeNode
+	// Children returns the children of the node.
+	Children() []GenotypeNode
+	// AddChild appends a child to the list of children.
+	AddChild(child GenotypeNode)
+	// Sequence returns the sequence of the current node.
+	Sequence() []int
+	// History returns the list of sequences that resulted into the extant
+	// sequence.
+	History(h [][]int) [][]int
+}
+
+type genotypeNode struct {
 	sync.RWMutex
 	uid      ksuid.KSUID
 	sequence []int
-	genotype *Genotype
-	parents  []*GenotypeNode
-	children []*GenotypeNode
+	genotype Genotype
+	parents  []GenotypeNode
+	children []GenotypeNode
 }
 
-// NewGenotypeNode creates a new Genotype node from a sequence.
-// Automatically adds sequence to the GenotypeSet if it is not yet present.
-func NewGenotypeNode(sequence []int, set *GenotypeSet, parents ...*GenotypeNode) *GenotypeNode {
+// NewGenotypeNode creates a new genotype node from a sequence.
+// Automatically adds sequence to the genotypeSet if it is not yet present.
+func NewGenotypeNode(sequence []int, set GenotypeSet, parents ...GenotypeNode) GenotypeNode {
 	genotype := set.AddSequence(sequence)
 
 	// Create new node
-	n := new(GenotypeNode)
+	n := new(genotypeNode)
 	n.uid = ksuid.New()
 	// Assign its parent
-	if len(parents) {
-		n.parents = make([]*GenotypeNode, len(parents))
+	if len(parents) > 0 {
+		n.parents = make([]GenotypeNode, len(parents))
 		copy(n.parents, parents)
 	} else {
-		n.parents = []*GenotypeNode{}
+		n.parents = []GenotypeNode{}
 	}
 	// Initialize children
-	n.children = []*GenotypeNode{}
+	n.children = []GenotypeNode{}
 	// Assign genotype
 	n.genotype = genotype
 	// Copy sequence
@@ -159,38 +191,31 @@ func NewGenotypeNode(sequence []int, set *GenotypeSet, parents ...*GenotypeNode)
 	return n
 }
 
-// UID returns the unique ID of the node. Uses KSUID to generate random unique IDs with effectively no collision.
-func (n *GenotypeNode) UID() ksuid.KSUID {
+func (n *genotypeNode) UID() ksuid.KSUID {
 	return n.uid
 }
 
-// Parents returns the parent of the node.
-func (n *GenotypeNode) Parents() []*GenotypeNode {
+func (n *genotypeNode) Parents() []GenotypeNode {
 	return n.parents
 }
 
-// Children returns the children of the node.
-func (n *GenotypeNode) Children() []*GenotypeNode {
+func (n *genotypeNode) Children() []GenotypeNode {
 	n.RLock()
 	defer n.RUnlock()
 	return n.children
 }
 
-// AddChild appends a child to the list of children.
-func (n *GenotypeNode) AddChild(child *GenotypeNode) {
+func (n *genotypeNode) AddChild(child GenotypeNode) {
 	n.Lock()
 	defer n.Unlock()
 	n.children = append(n.children, child)
 }
 
-// Sequence returns the sequence of the current node.
-func (n *GenotypeNode) Sequence() []int {
+func (n *genotypeNode) Sequence() []int {
 	return n.sequence
 }
 
-// History returns the list of sequences that resulted into the extant
-// sequence.
-func (n *GenotypeNode) History(h [][]int) [][]int {
+func (n *genotypeNode) History(h [][]int) [][]int {
 	h = append(h, n.sequence)
 	if len(n.parents) == 0 {
 		return h
