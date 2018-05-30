@@ -119,3 +119,21 @@ func TestSequenceTree_NewSub(t *testing.T) {
 		t.Errorf(UnequalIntParameterError, "state at position 0", state, res)
 	}
 }
+
+func TestSequenceTree_NewRoot(t *testing.T) {
+	tree := sampleSequenceTree()
+	rootSequence := []int{1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	tree.NewRoot(rootSequence)
+
+	if l := len(tree.roots); l != 2 {
+		t.Errorf(UnequalIntParameterError, "number of roots", 2, l)
+	}
+
+	var key ksuid.KSUID
+	for k := range tree.pathogens {
+		key = k
+	}
+	if fmt.Sprintf("%v", tree.roots[key].sequence) != fmt.Sprintf("%v", rootSequence) {
+		t.Errorf(UnequalStringParameterError, "integer sequence", fmt.Sprintf("%v", rootSequence), fmt.Sprintf("%v", tree.roots[key].sequence))
+	}
+}
