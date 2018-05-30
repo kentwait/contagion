@@ -7,6 +7,10 @@ const (
 	// IntKeyExists is the message printed when a given key already exists
 	IntKeyExists = "key %d already exists"
 
+	// IntrahostModelExists is the message printed when an intrahost model has
+	// already been assigned to a host.
+	IntrahostModelExistsError = "Intrahost model %s (%d) already exists"
+
 	// GraphPathogenTypeAssertionError is the message printed when
 	// an GraphPathogen cannot be asserted for an interface
 	GraphPathogenTypeAssertionError = "error asserting PathogenNode interface"
