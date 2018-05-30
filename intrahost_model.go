@@ -34,3 +34,31 @@ type IntrahostModel interface {
 	// RecombinationRate returns the recombination rate for this model.
 	RecombinationRate() float64
 }
+
+type mutationParams struct {
+	mutationRate     float64
+	transitionMatrix [][]float64
+}
+
+func (params *mutationParams) MutationRate() float64 {
+	return params.mutationRate
+}
+
+func (params *mutationParams) TransitionMatrix() [][]float64 {
+	return params.transitionMatrix
+}
+
+func (params *mutationParams) TransitionProbs(char int) []float64 {
+	return params.transitionMatrix[char]
+}
+
+func (params *mutationParams) States() []int {
+	if params.transitionMatrix == nil {
+		return []int{}
+	}
+	states := make([]int, len(params.transitionMatrix))
+	for i := range params.transitionMatrix {
+		states[i] = i
+	}
+	return states
+}
