@@ -118,6 +118,7 @@ func TestSequenceTree_NewSub(t *testing.T) {
 	if res := child.Sequence()[position]; res != state {
 		t.Errorf(UnequalIntParameterError, "state at position 0", state, res)
 	}
+	// TODO: Add test to check if keys duplicate
 }
 
 func TestSequenceTree_NewRoot(t *testing.T) {
@@ -136,4 +137,5 @@ func TestSequenceTree_NewRoot(t *testing.T) {
 	if fmt.Sprintf("%v", tree.roots[key].sequence) != fmt.Sprintf("%v", rootSequence) {
 		t.Errorf(UnequalStringParameterError, "integer sequence", fmt.Sprintf("%v", rootSequence), fmt.Sprintf("%v", tree.roots[key].sequence))
 	}
+	// TODO: Add test to check if keys duplicate
 }
