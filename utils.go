@@ -8,7 +8,20 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/BurntSushi/toml"
 )
+
+// LoadSingleHostConfig parses a TOML config file and
+// creates a SingleHostConfig configuration.
+func LoadSingleHostConfig(path string) (*SingleHostConfig, error) {
+	spec := new(SingleHostConfig)
+	_, err := toml.DecodeFile(path, spec)
+	if err != nil {
+		return nil, err
+	}
+	return spec, nil
+}
 
 // LoadSequences parses a specially-formatted FASTA file to
 // get the sequences, encode sequences into integers, and distribute
