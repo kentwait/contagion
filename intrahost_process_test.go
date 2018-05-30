@@ -59,6 +59,34 @@ func TestSequenceMultinomialReplication(t *testing.T) {
 	}
 }
 
+func TestIntrinsicRateReplication(t *testing.T) {
+	p1 := sampleSequenceNode(100)
+	p2 := sampleSequenceNode(100)
+	p3 := sampleSequenceNode(100)
+	p4 := sampleSequenceNode(100)
+	uids := []ksuid.KSUID{p1.UID(), p2.UID(), p3.UID(), p4.UID()}
+	// Only p4 should be present
+	growthRates := []int{0, 0, 0, 10}
+	pathogens := IntrinsicRateReplication([]SequenceNode{p1, p2, p3, p4}, growthRates, nil)
+
+	pathogenCounter := make(map[int]int)
+	for pathogen := range pathogens {
+		i := -1
+		for idx, uid := range uids {
+			if uid == pathogen.UID() {
+				i = idx
+				break
+			}
+		}
+		pathogenCounter[i]++
+	}
+	for i, growthRate := range growthRates {
+		if pathogenCounter[i] != growthRate {
+			t.Errorf(UnequalIntParameterError, fmt.Sprintf("number of pathogen %d", i), growthRate, pathogenCounter[i])
+		}
+	}
+}
+
 func TestSequenceMutate(t *testing.T) {
 	// Create a mock tree with one root
 	tree := sampleSequenceTree()
