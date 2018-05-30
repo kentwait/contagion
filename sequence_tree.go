@@ -1,38 +1,46 @@
 package contagiongo
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/segmentio/ksuid"
 )
 
 // Genotype represents a unique pathogen sequence.
-type Genotype interface {
-	// Sequence returns the sequence of the current node.
-	Sequence() []int
-	// Fitness returns the fitness value of this node based on its current
-	// sequence and the given fitness model. If the fitness of the node has
-	// been computed before using the same fitness model, then the value is
-	// returned from memory and is not recomputed.
-	Fitness(landscape FitnessModel) float64
-	// NumSites returns the number of sites being modeled in this pathogen node.
-	NumSites() int
-	// StateCounts returns the number of sites by state, postion corresponds to the state from 0 to n.
-	StateCounts() map[int]int
-}
-
-type genotype struct {
+type Genotype struct {
 	sync.RWMutex
 	sequence    []int
 	stateCounts map[int]int     // key is the state
 	fitness     map[int]float64 // key is the fitness model id
 }
 
-func (n *genotype) Sequence() []int {
+// NewGenotype returns a new Genotype given a sequence.
+func NewGenotype(s []int) *Genotype {
+	g := new(Genotype)
+	// Copy sequence
+	g.sequence = make([]int, len(s))
+	copy(g.sequence, s)
+	// Initial count of states
+	g.stateCounts = make(map[int]int)
+	for _, state := range g.sequence {
+		g.stateCounts[state]++
+	}
+	// Initialize other maps
+	g.fitness = make(map[int]float64)
+	return g
+}
+
+// Sequence returns the sequence of the current node.
+func (n *Genotype) Sequence() []int {
 	return n.sequence
 }
 
-func (n *genotype) Fitness(f FitnessModel) float64 {
+// Fitness returns the fitness value of this node based on its current
+// sequence and the given fitness model. If the fitness of the node has
+// been computed before using the same fitness model, then the value is
+// returned from memory and is not recomputed.
+func (n *Genotype) Fitness(f FitnessModel) float64 {
 	id := f.ID()
 	fitness, ok := n.fitness[id]
 	if !ok {
@@ -42,12 +50,50 @@ func (n *genotype) Fitness(f FitnessModel) float64 {
 	return fitness
 }
 
-func (n *genotype) NumSites() int {
+// NumSites returns the number of sites being modeled in this pathogen node.
+func (n *Genotype) NumSites() int {
 	return len(n.sequence)
 }
 
-func (n *genotype) StateCounts() map[int]int {
+// StateCounts returns the number of sites by state, postion corresponds to the state from 0 to n.
+func (n *Genotype) StateCounts() map[int]int {
 	return n.stateCounts
+}
+
+// GenotypeSet is a collection of Genotypes
+type GenotypeSet struct {
+	sync.RWMutex
+	set map[string]*Genotype
+}
+
+// Add adds the genotype to the set if the sequence does not exist yet.
+func (set *GenotypeSet) Add(g *Genotype) {
+	key := fmt.Sprintf("%v", g.Sequence())
+	key = key[1 : len(key)-1]
+	set.set[key] = g
+	if _, exists := set.set[key]; !exists {
+		set.set[key] = g
+	}
+}
+
+// AddSequence creates a new Genotype from the sequence if it is not present
+// in the set. Otherwise, returns the existing Genotype in the set.
+func (set *GenotypeSet) AddSequence(s []int) *Genotype {
+	key := fmt.Sprintf("%v", s)
+	key = key[1 : len(key)-1]
+	g, exists := set.set[key]
+	if !exists {
+		g := NewGenotype(s)
+		set.set[key] = g
+		return g
+	}
+	return g
+}
+
+// Remove removes Genotype of a particular sequence from the set.
+func (set *GenotypeSet) Remove(key string) {
+	set.set[key] = nil
+	delete(set.set, key)
 }
 
 // SequenceNode represents a sequence genotype in the sequence tree.
