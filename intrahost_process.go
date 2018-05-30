@@ -37,7 +37,7 @@ func IntrinsicRateReplication(pathogens []SequenceNode, replFitness []int, immun
 	for i, pathogen := range pathogens {
 		go func(pathogen SequenceNode, fitness int, wg *sync.WaitGroup) {
 			defer wg.Done()
-			growthRate := rv.PoissonXL(float64(fitness))
+			growthRate := rv.Poisson(float64(fitness))
 			for i := 0; i < growthRate; i++ {
 				c <- pathogen
 			}
