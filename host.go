@@ -44,12 +44,13 @@ type Host interface {
 }
 
 type sequenceHost struct {
-	id             int
-	typeID         int
-	intrahostModel IntrahostModel
-	fitnessModel   FitnessModel
-	internalTimer  int
-	pathogens      []SequenceNode
+	IntrahostModel
+	FitnessModel
+
+	id            int
+	typeID        int
+	internalTimer int
+	pathogens     []SequenceNode
 }
 
 // NewEmptySequenceHost creates a new host without an intrahost model and
@@ -61,9 +62,10 @@ func NewEmptySequenceHost(ids ...int) Host {
 	if len(ids) > 1 {
 		h.typeID = ids[1]
 	}
-	h.intrahostModel = nil
 	h.internalTimer = -1
 	h.pathogens = []SequenceNode{}
+	h.IntrahostModel = nil
+	h.FitnessModel = nil
 	return h
 }
 
@@ -126,9 +128,9 @@ func (h *sequenceHost) DecrementTimer() {
 }
 
 func (h *sequenceHost) SetIntrahostModel(intrahostModel IntrahostModel) error {
-	if h.intrahostModel != nil {
-		return fmt.Errorf(IntrahostModelExistsError, h.intrahostModel.Name(), h.intrahostModel.ID())
+	if h.IntrahostModel != nil {
+		return fmt.Errorf(IntrahostModelExistsError, h.IntrahostModel.Name(), h.IntrahostModel.ID())
 	}
-	h.intrahostModel = intrahostModel
+	h.IntrahostModel = intrahostModel
 	return nil
 }
