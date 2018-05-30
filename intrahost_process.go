@@ -9,8 +9,8 @@ import (
 )
 
 // MultinomialReplication replicates and selects sequences based on normalized fitness values used as probabilities.
-func MultinomialReplication(pathogens []SequenceNode, normedFitnesses []float64, newPopSize int) <-chan SequenceNode {
-	c := make(chan SequenceNode)
+func MultinomialReplication(pathogens []GenotypeNode, normedFitnesses []float64, newPopSize int) <-chan GenotypeNode {
+	c := make(chan GenotypeNode)
 	var wg sync.WaitGroup
 	wg.Add(len(pathogens))
 	for i, count := range rv.Multinomial(newPopSize, normedFitnesses) {
@@ -30,12 +30,12 @@ func MultinomialReplication(pathogens []SequenceNode, normedFitnesses []float64,
 
 // IntrinsicRateReplication replicates pathogens by considering their
 // fitness value as the growth rate.
-func IntrinsicRateReplication(pathogens []SequenceNode, replFitness []int, immuneSystem interface{}) <-chan SequenceNode {
-	c := make(chan SequenceNode)
+func IntrinsicRateReplication(pathogens []GenotypeNode, replFitness []int, immuneSystem interface{}) <-chan GenotypeNode {
+	c := make(chan GenotypeNode)
 	var wg sync.WaitGroup
 	wg.Add(len(pathogens))
 	for i, pathogen := range pathogens {
-		go func(pathogen SequenceNode, fitness int, wg *sync.WaitGroup) {
+		go func(pathogen GenotypeNode, fitness int, wg *sync.WaitGroup) {
 			defer wg.Done()
 			growthRate := rv.Poisson(float64(fitness))
 			for i := 0; i < growthRate; i++ {
@@ -63,16 +63,16 @@ func MutateSite(transitionProbs ...float64) int {
 }
 
 // MutateSequence adds substitution mutations to sequenceNode.
-func MutateSequence(sequences <-chan SequenceNode, tree SequenceTree, model IntrahostModel) <-chan SequenceNode {
-	c := make(chan SequenceNode)
+func MutateSequence(sequences <-chan GenotypeNode, set GenotypeSet, model IntrahostModel) <-chan GenotypeNode {
+	c := make(chan GenotypeNode)
 	var wg sync.WaitGroup
 	for sequence := range sequences {
 		wg.Add(1)
-		go func(n SequenceNode, model IntrahostModel, wg *sync.WaitGroup) {
+		go func(n GenotypeNode, model IntrahostModel, wg *sync.WaitGroup) {
 			defer wg.Done()
 			mu := model.MutationRate()
 			stateCounts := n.StateCounts()
-			newNode := n
+			sequence := n.Sequence()
 			// Add mutations by state to account for unequal rates
 			for state, numSites := range stateCounts {
 				probs := model.TransitionProbs(state)
@@ -90,12 +90,11 @@ func MutateSequence(sequences <-chan SequenceNode, tree SequenceTree, model Intr
 				hitPositions := pickSites(hits, numSites)
 
 				// Create new node per hit
-				for i := 0; i < hits; i++ {
-					newState := MutateSite(probs...)
-					newNode = tree.NewSub(newNode, hitPositions[i], newState)
+				for _, pos := range hitPositions {
+					sequence[pos] = MutateSite(probs...)
 				}
 			}
-			c <- newNode
+			c <- NewGenotypeNode(sequence, set, n.Parents()...)
 		}(sequence, model, &wg)
 	}
 	go func() {
