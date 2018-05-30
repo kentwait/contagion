@@ -37,18 +37,26 @@ type IntrahostModel interface {
 	RecombinationRate() float64
 }
 
+// ConstantPopModel models a constant pathogen population size within the host.
 type ConstantPopModel struct {
 	mutationParams
 	recombinationParams
 	constantIntrahostPopModel
 }
 
+// BevertonHoltThresholdPopModel uses the Beverton-Holt population model
+// modified to have a constant threshold population size.
 type BevertonHoltThresholdPopModel struct {
 	mutationParams
 	recombinationParams
 	bhtIntrahostPopModel
 }
 
+// FitnessDependentPopModel does not use a population model to determine the
+// population of pathogens. Instead population size is dependent on fitness
+// which is implemented outside of this model.
+// The NextPathogenPopSize method for this model always returns -1 regardless
+// of the input value.
 type FitnessDependentPopModel struct {
 	mutationParams
 	recombinationParams
