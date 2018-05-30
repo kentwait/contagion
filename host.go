@@ -47,6 +47,7 @@ type sequenceHost struct {
 	id             int
 	typeID         int
 	intrahostModel IntrahostModel
+	fitnessModel   FitnessModel
 	internalTimer  int
 	pathogens      []SequenceNode
 }
