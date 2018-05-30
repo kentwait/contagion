@@ -119,7 +119,7 @@ type sequenceTree struct {
 }
 
 // NewSequenceTree creates a new pathogen tree with a single root.
-func NewSequenceTree(rootSequence []int) (SequenceTree, error) {
+func NewSequenceTree(rootSequence []int) SequenceTree {
 	// Create new root node
 	// Assign unique ID
 	n := new(sequenceNode)
@@ -130,6 +130,9 @@ func NewSequenceTree(rootSequence []int) (SequenceTree, error) {
 	// Copy sequence
 	n.sequence = make([]int, len(rootSequence))
 	copy(n.sequence, rootSequence)
+	// Initialize maps
+	n.stateCounts = make(map[int]int)
+	n.fitness = make(map[int]float64)
 	// Count the initial number of states across all sites
 	for _, s := range n.sequence {
 		n.stateCounts[s]++
@@ -141,7 +144,7 @@ func NewSequenceTree(rootSequence []int) (SequenceTree, error) {
 	// Add the node to the tree and make it a root node
 	tree.pathogens[n.UID()] = n
 	tree.roots[n.UID()] = n
-	return tree, nil
+	return tree
 }
 
 func (t *sequenceTree) Sequence(uid ksuid.KSUID) *sequenceNode {
@@ -163,8 +166,11 @@ func (t *sequenceTree) NewSub(parent SequenceNode, position, state int) *sequenc
 	// Copy sequence from parent, then change at specified position
 	n.sequence = make([]int, len(n.parents[0].Sequence()))
 	copy(n.sequence, n.parents[0].Sequence())
-	// Copy state counts
+	n.sequence[position] = state
+	// Initialize maps
 	n.stateCounts = make(map[int]int)
+	n.fitness = make(map[int]float64)
+	// Copy state counts
 	for s, cnt := range n.parents[0].(*sequenceNode).stateCounts {
 		n.stateCounts[s] = cnt
 	}
@@ -192,8 +198,10 @@ func (t *sequenceTree) NewRecomb(parent1, parent2 SequenceNode, position int) *s
 	n.sequence = make([]int, len(n.parents[0].Sequence()))
 	copy(n.sequence, n.parents[0].Sequence())
 	n.sequence = append(n.sequence[0:position], parent2.Sequence()[position:len(parent2.Sequence())]...)
-	// Create fresh count of states
+	// Initialize maps
 	n.stateCounts = make(map[int]int)
+	n.fitness = make(map[int]float64)
+	// Create fresh count of states
 	for _, s := range n.sequence {
 		n.stateCounts[s]++
 	}
@@ -219,6 +227,9 @@ func (t *sequenceTree) NewRoot(rootSequence []int) *sequenceNode {
 	// Copy sequence
 	n.sequence = make([]int, len(rootSequence))
 	copy(n.sequence, rootSequence)
+	// Initialize maps
+	n.stateCounts = make(map[int]int)
+	n.fitness = make(map[int]float64)
 	// Count the initial number of states across all sites
 	for _, s := range n.sequence {
 		n.stateCounts[s]++
