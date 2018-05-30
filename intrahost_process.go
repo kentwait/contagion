@@ -30,14 +30,14 @@ func MultinomialReplication(pathogens []GenotypeNode, normedFitnesses []float64,
 
 // IntrinsicRateReplication replicates pathogens by considering their
 // fitness value as the growth rate.
-func IntrinsicRateReplication(pathogens []GenotypeNode, replFitness []int, immuneSystem interface{}) <-chan GenotypeNode {
+func IntrinsicRateReplication(pathogens []GenotypeNode, replFitness []float64, immuneSystem interface{}) <-chan GenotypeNode {
 	c := make(chan GenotypeNode)
 	var wg sync.WaitGroup
 	wg.Add(len(pathogens))
 	for i, pathogen := range pathogens {
-		go func(pathogen GenotypeNode, fitness int, wg *sync.WaitGroup) {
+		go func(pathogen GenotypeNode, fitness float64, wg *sync.WaitGroup) {
 			defer wg.Done()
-			growthRate := rv.Poisson(float64(fitness))
+			growthRate := rv.Poisson(fitness)
 			for i := 0; i < growthRate; i++ {
 				c <- pathogen
 			}
