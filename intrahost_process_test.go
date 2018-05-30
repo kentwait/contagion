@@ -86,6 +86,7 @@ func TestIntrinsicRateReplication(t *testing.T) {
 }
 
 func TestSequenceMutate(t *testing.T) {
+	rand.Seed(0)
 	// Create a mock tree
 	tree := EmptyGenotypeTree()
 	root := tree.NewNode(sampleSequenceShort())
