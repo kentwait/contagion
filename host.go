@@ -17,15 +17,15 @@ type Host interface {
 	// Pathogen returns one pathogen from the current host based on
 	// its given position in the list of pathogens.
 	// Returns nil if no pathogen exists in the specified position.
-	Pathogen(i int) interface{}
+	Pathogen(i int) GenotypeNode
 	// Pathogens returns a list of all pathogens present in the host.
 	// This elements of the list are pointers to GenotypeNodes.
-	Pathogens() []interface{}
+	Pathogens() []GenotypeNode
 	// PathogenPopSize returns the number of pathogens inside the host.
 	PathogenPopSize() int
 	// AddPathogen appends a pathogen to the pathogen space of the host.
 	// Returns the new pathogen population size.
-	AddPathogen(p interface{}) int
+	AddPathogen(p GenotypeNode) int
 	// RemovePathogens removes pathogens based on the list of positions given.
 	// Returns the number of pathogens remaining and any errors encountered.
 	RemovePathogens(ids ...int) (n int, err error)
@@ -48,7 +48,7 @@ type sequenceHost struct {
 	id            int
 	typeID        int
 	internalTimer int
-	pathogens     []*GenotypeNode
+	pathogens     []GenotypeNode
 }
 
 // NewEmptySequenceHost creates a new host without an intrahost model and
@@ -61,7 +61,7 @@ func NewEmptySequenceHost(ids ...int) Host {
 		h.typeID = ids[1]
 	}
 	h.internalTimer = 0
-	h.pathogens = []*GenotypeNode{}
+	h.pathogens = []GenotypeNode{}
 	h.IntrahostModel = nil
 	h.FitnessModel = nil
 	return h
@@ -75,24 +75,25 @@ func (h *sequenceHost) TypeID() int {
 	return h.typeID
 }
 
-func (h *sequenceHost) Pathogen(i int) interface{} {
+func (h *sequenceHost) Pathogen(i int) GenotypeNode {
 	return h.pathogens[i]
 }
 
-func (h *sequenceHost) Pathogens() []interface{} {
-	pathogens := make([]interface{}, len(h.pathogens))
-	for i, p := range h.pathogens {
-		pathogens[i] = p
-	}
-	return pathogens
+func (h *sequenceHost) Pathogens() []GenotypeNode {
+	// pathogens := make([]GenotypeNode, len(h.pathogens))
+	// for i, p := range h.pathogens {
+	// 	pathogens[i] = p
+	// }
+	// return pathogens
+	return h.pathogens
 }
 
 func (h *sequenceHost) PathogenPopSize() int {
 	return len(h.pathogens)
 }
 
-func (h *sequenceHost) AddPathogen(p interface{}) int {
-	h.pathogens = append(h.pathogens, p.(*GenotypeNode))
+func (h *sequenceHost) AddPathogen(p GenotypeNode) int {
+	h.pathogens = append(h.pathogens, p)
 	return len(h.pathogens)
 }
 
