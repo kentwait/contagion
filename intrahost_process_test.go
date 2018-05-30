@@ -64,7 +64,7 @@ func TestIntrinsicRateReplication(t *testing.T) {
 	p4 := sampleGenotypeNode(100, set)
 	uids := []ksuid.KSUID{p1.UID(), p2.UID(), p3.UID(), p4.UID()}
 	// Only p4 should be present
-	growthRates := []int{0, 0, 0, 10}
+	growthRates := []float64{0., 0., 0., 10.}
 	pathogens := IntrinsicRateReplication([]GenotypeNode{p1, p2, p3, p4}, growthRates, nil)
 
 	pathogenCounter := make(map[int]int)
@@ -79,8 +79,8 @@ func TestIntrinsicRateReplication(t *testing.T) {
 		pathogenCounter[i]++
 	}
 	for i, growthRate := range growthRates {
-		if pathogenCounter[i] != growthRate {
-			t.Errorf(UnequalIntParameterError, fmt.Sprintf("number of pathogen %d", i), growthRate, pathogenCounter[i])
+		if pathogenCounter[i] != int(growthRate) {
+			t.Errorf(UnequalIntParameterError, fmt.Sprintf("number of pathogen %d", i), int(growthRate), pathogenCounter[i])
 		}
 	}
 }
