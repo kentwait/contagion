@@ -60,7 +60,7 @@ func NewEmptySequenceHost(ids ...int) Host {
 	if len(ids) > 1 {
 		h.typeID = ids[1]
 	}
-	h.internalTimer = -1
+	h.internalTimer = 0
 	h.pathogens = []*GenotypeNode{}
 	h.IntrahostModel = nil
 	h.FitnessModel = nil
