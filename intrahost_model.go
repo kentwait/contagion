@@ -62,3 +62,11 @@ func (params *mutationParams) States() []int {
 	}
 	return states
 }
+
+type recombinationParams struct {
+	recombinationRate float64
+}
+
+func (params *recombinationParams) RecombinationRate() float64 {
+	return params.recombinationRate
+}
