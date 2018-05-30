@@ -101,11 +101,22 @@ func (set *GenotypeSet) AddSequence(s []int) *Genotype {
 }
 
 // Remove removes Genotype of a particular sequence from the set.
-func (set *GenotypeSet) Remove(key string) {
+func (set *GenotypeSet) Remove(s []int) {
+	key := fmt.Sprintf("%v", s)
+	key = key[1 : len(key)-1]
 	set.Lock()
 	defer set.Unlock()
-	set.set[key] = nil
-	delete(set.set, key)
+	if _, exists := set.set[key]; exists {
+		set.set[key] = nil
+		delete(set.set, key)
+	}
+}
+
+// Size returns the size of the set.
+func (set *GenotypeSet) Size() {
+	set.RLock()
+	defer set.RUnlock()
+	return len(set.set)
 }
 
 // GenotypeNode represents a genotype together with its relationship to its parents and children.
