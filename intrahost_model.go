@@ -30,6 +30,8 @@ type IntrahostModel interface {
 	// This is used in conjunction with a population model under
 	// relative fitness.
 	NextPathogenPopSize(n int) int
+	// ReplicationMethod returns whether relative, or absolute is used.
+	ReplicationMethod() string
 
 	// Recombination
 
@@ -127,6 +129,10 @@ func (m *constantIntrahostPopModel) NextPathogenPopSize(n int) int {
 	return m.popSize
 }
 
+func (m *constantIntrahostPopModel) ReplicationMethod() string {
+	return "relative"
+}
+
 type bhtIntrahostPopModel struct {
 	maxPopSize int
 	growthRate float64
@@ -151,6 +157,10 @@ func (m *bhtIntrahostPopModel) GrowthRate() float64 {
 	return m.growthRate
 }
 
+func (m *bhtIntrahostPopModel) ReplicationMethod() string {
+	return "relative"
+}
+
 type fitnessIntrahostPopModel struct {
 	maxPopSize int
 }
@@ -162,4 +172,8 @@ func (m *fitnessIntrahostPopModel) MaxPathogenPopSize() int {
 func (m *fitnessIntrahostPopModel) NextPathogenPopSize(n int) int {
 	// Not applicable
 	return -1
+}
+
+func (m *fitnessIntrahostPopModel) ReplicationMethod() string {
+	return "absolute"
 }
