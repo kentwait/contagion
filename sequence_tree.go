@@ -104,9 +104,40 @@ func (set *GenotypeSet) Remove(key string) {
 // GenotypeNode represents a genotype together with its relationship to its parents and children.
 type GenotypeNode struct {
 	sync.RWMutex
+	uid      ksuid.KSUID
 	sequence []int
+	genotype *Genotype
 	parents  []*GenotypeNode
 	children []*GenotypeNode
+}
+
+// NewGenotypeNode creates a new Genotype node from a sequence.
+// Automatically adds sequence to the GenotypeSet if it is not yet present.
+func NewGenotypeNode(sequence []int, set *GenotypeSet, parents ...*GenotypeNode) *GenotypeNode {
+	genotype := set.AddSequence(sequence)
+
+	// Create new node
+	n := new(GenotypeNode)
+	n.uid = ksuid.New()
+	// Assign its parent
+	n.parents = make([]*GenotypeNode, len(parents))
+	copy(n.parents, parents)
+	n.children = []*GenotypeNode{}
+	n.genotype = genotype
+	// Copy sequence
+	n.sequence = make([]int, len(sequence))
+	copy(n.sequence, sequence)
+
+	// Add new sequence as child of its parent
+	for _, parent := range parents {
+		parent.AddChild(n)
+	}
+	return n
+}
+
+// UID returns the unique ID of the node. Uses KSUID to generate random unique IDs with effectively no collision.
+func (n *GenotypeNode) UID() ksuid.KSUID {
+	return n.uid
 }
 
 // Parents returns the parent of the node.
