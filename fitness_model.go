@@ -36,7 +36,6 @@ type multiplicativeFM struct {
 	id     int
 	name   string
 	matrix map[int]map[int]float64
-	isLog  bool
 }
 
 // NewMultiplicativeFM create a new multiplicative fitness matrix using a map of maps.
@@ -84,5 +83,50 @@ func (fm *multiplicativeFM) SiteCharFitness(position, state int) (fitness float6
 }
 
 func (fm *multiplicativeFM) Log() bool {
-	return fm.isLog
+	return true
+}
+
+type additiveFM struct {
+	id     int
+	name   string
+	matrix map[int]map[int]float64
+}
+
+// NewAdditiveFM create a new additive fitness matrix using a map of maps.
+// Assumes that the values are in decimal form.
+func NewAdditiveFM(matrix map[int]map[int]float64) FitnessMatrix {
+	// Copy map of maps
+	fm := new(additiveFM)
+	fm.id = id
+	fm.name = name
+	fm.matrix = make(map[int]map[int]float64)
+	for k1, row := range matrix {
+		fm.matrix[k1] = make(map[int]float64)
+		for k2, v := range row {
+			fm.matrix[k1][k2] = v
+		}
+	}
+	return fm
+}
+
+func (fm *additiveFM) ComputeFitness(chars ...int) (fitness float64, err error) {
+	// Assume coords are sequence of ints representing a sequence
+	// Matrix values are in decimal
+	// Returns decimal fitness total
+	if len(chars) < 0 {
+		return 0, fmt.Errorf(ZeroItemsError)
+	}
+	var decFitness float64
+	for i, v := range chars {
+		decFitness += fm.matrix[i][v]
+	}
+	return decFitness, nil
+}
+
+func (fm *additiveFM) SiteCharFitness(position, state int) (fitness float64, err error) {
+	return fm.matrix[position][state], nil
+}
+
+func (fm *additiveFM) Log() bool {
+	return false
 }
