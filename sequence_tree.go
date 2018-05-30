@@ -11,6 +11,9 @@ import (
 type Genotype interface {
 	// Sequence returns the sequence of the current node.
 	Sequence() []int
+	// StringSequence returns the string representation of the
+	// integer-coded sequence of the current node.
+	StringSequence() string
 	// Fitness returns the fitness value of this node based on its current
 	// sequence and the given fitness model. If the fitness of the node has
 	// been computed before using the same fitness model, then the value is
@@ -48,6 +51,12 @@ func NewGenotype(s []int) Genotype {
 
 func (n *genotype) Sequence() []int {
 	return n.sequence
+}
+
+func (n *genotype) StringSequence() string {
+	key := fmt.Sprintf("%v", n.sequence)
+	key = key[1 : len(key)-1]
+	return key
 }
 
 func (n *genotype) Fitness(f FitnessModel) float64 {
@@ -147,6 +156,9 @@ type GenotypeNode interface {
 	AddChild(child GenotypeNode)
 	// Sequence returns the sequence of the current node.
 	Sequence() []int
+	// StringSequence returns the string representation of the
+	// integer-coded sequence of the current node.
+	StringSequence() string
 	// CurrentGenotype returns the current genotype of the current node.
 	CurrentGenotype() Genotype
 	// History returns the list of sequences that resulted into the extant
