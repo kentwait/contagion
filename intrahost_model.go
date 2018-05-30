@@ -2,6 +2,9 @@ package contagiongo
 
 // IntrahostModel is an interface for any type of intrahost model.
 type IntrahostModel interface {
+	ID() int
+	Name() string
+
 	// Mutation
 
 	// MutationRate returns the mutation rate for this model.
