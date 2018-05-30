@@ -63,7 +63,7 @@ func MutateSite(transitionProbs ...float64) int {
 }
 
 // MutateSequence adds substitution mutations to sequenceNode.
-func MutateSequence(sequences <-chan GenotypeNode, set GenotypeSet, model IntrahostModel) <-chan GenotypeNode {
+func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model IntrahostModel) <-chan GenotypeNode {
 	c := make(chan GenotypeNode)
 	var wg sync.WaitGroup
 	for sequence := range sequences {
@@ -94,7 +94,7 @@ func MutateSequence(sequences <-chan GenotypeNode, set GenotypeSet, model Intrah
 					sequence[pos] = MutateSite(probs...)
 				}
 			}
-			c <- NewGenotypeNode(sequence, set, n.Parents()...)
+			c <- tree.NewNode(sequence, n)
 		}(sequence, model, &wg)
 	}
 	go func() {
