@@ -8,12 +8,12 @@ import (
 
 // SingleHostSimulation simulates pathogens infection within a single host.
 type SingleHostSimulation struct {
-	host           Host
-	hostStatus     int
-	statusDuration map[int]int
-	intrahostModel IntrahostModel
-	fitnessModel   FitnessModel
-	tree           GenotypeTree
+	Host           Host
+	Status         int
+	StatusDuration map[int]int
+	IntrahostModel IntrahostModel
+	FitnessModel   FitnessModel
+	Tree           GenotypeTree
 }
 
 // SusceptibleProcess executes within-host processes that occurs when a host
@@ -32,7 +32,7 @@ func (sim *SingleHostSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) 
 	defer wg.Done()
 	pathogens := host.Pathogens()
 	var replicatedC <-chan GenotypeNode
-	switch strings.ToLower(sim.intrahostModel.ReplicationMethod()) {
+	switch strings.ToLower(sim.IntrahostModel.ReplicationMethod()) {
 	case "relative":
 		// Get log fitness values for each pathogen
 		logFitnesses := make([]float64, len(pathogens))
@@ -71,11 +71,53 @@ func (sim *SingleHostSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) 
 		replicatedC = IntrinsicRateReplication(pathogens, replicativeFitnesses, nil)
 	}
 	// Mutate replicated pathogens
-	mutatedC := MutateSequence(replicatedC, sim.tree, host.(*sequenceHost).IntrahostModel)
+	mutatedC := MutateSequence(replicatedC, sim.Tree, host.(*sequenceHost).IntrahostModel)
 	// Clear current set of pathogens and get new set from the channel
 	host.RemoveAllPathogens()
 	for pathogen := range mutatedC {
 		host.AddPathogen(pathogen)
 	}
+	host.DecrementTimer()
+}
+
+// InfectiveProcess executes within-host processes that occurs when a host
+// is in the infective state. By default, it is same as InfectedProcess.
+func (sim *SingleHostSimulation) InfectiveProcess(host Host, wg *sync.WaitGroup) {
+	// timer decrement is done within the InfectedProcess function
+	// Done() signal also executed within the InfectedProcess function
+	sim.InfectedProcess(host, wg)
+}
+
+// RemovedProcess executes within-host processes that occurs when a host
+// is in the removed state that is perpetually uninfectable.
+func (sim *SingleHostSimulation) RemovedProcess(host Host, wg *sync.WaitGroup) {
+	defer wg.Done()
+	host.RemoveAllPathogens()
+}
+
+// RecoveredProcess executes within-host processes that occurs when a host
+// is in the recovered state that is perpetually uninfectable.
+// This state is identically to Removed but is used to distinguish from
+// a dead state.
+func (sim *SingleHostSimulation) RecoveredProcess(host Host, wg *sync.WaitGroup) {
+	defer wg.Done()
+	host.RemoveAllPathogens()
+}
+
+// DeadProcess executes within-host processes that occurs when a host
+// is in the dead state state that is perpetually uninfectable.
+// This state is identically to Removed but is used to distinguish from
+// a recovered, but perpetually immune state.
+func (sim *SingleHostSimulation) DeadProcess(host Host, wg *sync.WaitGroup) {
+	defer wg.Done()
+	host.RemoveAllPathogens()
+}
+
+// VaccinatedProcess executes within-host processes that occurs when a host
+// is in a globally immune state with the chance to become
+// globally susceptible again.
+func (sim *SingleHostSimulation) VaccinatedProcess(host Host, wg *sync.WaitGroup) {
+	defer wg.Done()
+	host.RemoveAllPathogens()
 	host.DecrementTimer()
 }
