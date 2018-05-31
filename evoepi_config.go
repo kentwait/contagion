@@ -8,19 +8,10 @@ import (
 // EvoEpiConfig contains parameters to create a simulated infection
 // in a connected network of hosts.
 type EvoEpiConfig struct {
-	NumGenerations uint   `toml:"num_generations"`
-	NumReplicates  uint   `toml:"num_replicates"`
-	HostPopSize    uint   `toml:"host_popsize"`
-	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs
-
-	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
-	HostNetworkPath      string `toml:"host_network_path"`
-
-	LogFreq         uint   `toml:"log_freq"`
-	PathogenLogPath string `toml:"pathogen_log_path"`
-
-	IntrahostModels []IntrahostModelConfig `toml:"intrahost_model"`
-	FitnessModels   []FitnessModelConfig   `toml:"fitness_model"`
+	SimParams       epidemicSimConfig      `toml:"simulation"`
+	LogParams       logConfig              `toml:"logging"`
+	IntrahostModels []intrahostModelConfig `toml:"intrahost_model"`
+	FitnessModels   []fitnessModelConfig   `toml:"fitness_model"`
 
 	validated bool
 }
@@ -68,7 +59,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 		sim.fitnessModels[i] = model
 	}
 	// Create epidemic simulation
-	switch c.EpidemicModel {
+	switch c.SimParams.EpidemicModel {
 	case "si":
 	case "sis":
 	case "sir":
@@ -80,8 +71,64 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	return sim, nil
 }
 
+type epidemicSimConfig struct {
+	NumGenerations uint   `toml:"num_generations"`
+	NumReplicates  uint   `toml:"num_replicates"`
+	HostPopSize    uint   `toml:"host_popsize"`
+	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs
+
+	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
+	HostNetworkPath      string `toml:"host_network_path"`
+	validated            bool
+}
+
+func (c *epidemicSimConfig) Validate() error {
+	// Check PathogenSequencePath
+	exists, err := Exists(c.PathogenSequencePath)
+	if err != nil {
+		return fmt.Errorf("error checking if file in %s exists: %s", c.PathogenSequencePath, err)
+	}
+	if !exists {
+		return fmt.Errorf("file in %s does not exist", c.PathogenSequencePath)
+	}
+
+	// Check HostNetworkPath
+	exists, err = Exists(c.HostNetworkPath)
+	if err != nil {
+		return fmt.Errorf("error checking if file in %s exists: %s", c.HostNetworkPath, err)
+	}
+	if !exists {
+		return fmt.Errorf("file in %s does not exist", c.HostNetworkPath)
+	}
+
+	switch c.EpidemicModel {
+	case "si":
+	case "sis":
+	case "sir":
+	case "sirs":
+	case "sei":
+	case "seir":
+	case "seirs":
+	default:
+		return fmt.Errorf(UnrecognizedKeywordError, c.EpidemicModel, "epidemic_model")
+	}
+	c.validated = true
+	return nil
+}
+
+type logConfig struct {
+	LogFreq         uint   `toml:"log_freq"`
+	PathogenLogPath string `toml:"pathogen_log_path"`
+	validated       bool
+}
+
+func (c *logConfig) Validate() error {
+	c.validated = true
+	return nil
+}
+
 // IntrahostModelConfig contains parameters to create an IntrahostModel.
-type IntrahostModelConfig struct {
+type intrahostModelConfig struct {
 	ModelName         string      `toml:"model_name"`
 	MutationRate      float64     `toml:"mutation_rate"`
 	TransitionMatrix  [][]float64 `toml:"transition_matrix"`
@@ -94,7 +141,7 @@ type IntrahostModelConfig struct {
 }
 
 // Validate checks the validity of the IntrahostModelConfig configuration.
-func (c *IntrahostModelConfig) Validate() error {
+func (c *intrahostModelConfig) Validate() error {
 	// check keywords
 	// replication_model
 	switch strings.ToLower(c.ReplicationModel) {
@@ -109,7 +156,7 @@ func (c *IntrahostModelConfig) Validate() error {
 }
 
 // CreateModel creates an IntrahostModel based on the configuration.
-func (c *IntrahostModelConfig) CreateModel() (IntrahostModel, error) {
+func (c *intrahostModelConfig) CreateModel() (IntrahostModel, error) {
 	if !c.validated {
 		return nil, fmt.Errorf("validate model parameters first")
 	}
@@ -155,7 +202,7 @@ func (c *IntrahostModelConfig) CreateModel() (IntrahostModel, error) {
 }
 
 // FitnessModelConfig contains parameters to create an FitnessModel.
-type FitnessModelConfig struct {
+type fitnessModelConfig struct {
 	ModelName        string `toml:"model_name"`
 	FitnessModel     string `toml:"fitness_model"` // multiplicative, additive, additive_motif
 	FitnessModelPath string `toml:"fitness_model_path"`
@@ -163,7 +210,7 @@ type FitnessModelConfig struct {
 }
 
 // Validate checks the validity of the FitnessModelConfig configuration.
-func (c *FitnessModelConfig) Validate() error {
+func (c *fitnessModelConfig) Validate() error {
 	// check keywords
 	// fitness_model
 	switch strings.ToLower(c.FitnessModel) {
@@ -173,12 +220,22 @@ func (c *FitnessModelConfig) Validate() error {
 	default:
 		return fmt.Errorf(UnrecognizedKeywordError, c.FitnessModel, "fitness_model")
 	}
+
+	// Check FitnessModelPath
+	exists, err := Exists(c.FitnessModelPath)
+	if err != nil {
+		return fmt.Errorf("error checking if file in %s exists: %s", c.FitnessModelPath, err)
+	}
+	if !exists {
+		return fmt.Errorf("file in %s does not exist", c.FitnessModelPath)
+	}
+
 	c.validated = true
 	return nil
 }
 
 // CreateModel creates an FitnessModel based on the configuration.
-func (c *FitnessModelConfig) CreateModel() (FitnessModel, error) {
+func (c *fitnessModelConfig) CreateModel() (FitnessModel, error) {
 	if !c.validated {
 		return nil, fmt.Errorf("validate model parameters first")
 	}
