@@ -42,7 +42,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	sim := new(evoEpiSimulation)
 	// Create IntrahostModels
 	for i, conf := range c.IntrahostModels {
-		model, err := conf.CreateModel()
+		model, err := conf.CreateModel(i)
 		if err != nil {
 			return nil, err
 		}
@@ -51,7 +51,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	}
 	// Create FitnessModels
 	for i, conf := range c.FitnessModels {
-		model, err := conf.CreateModel()
+		model, err := conf.CreateModel(i)
 		if err != nil {
 			return nil, err
 		}
@@ -72,9 +72,9 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 }
 
 type epidemicSimConfig struct {
-	NumGenerations uint   `toml:"num_generations"`
-	NumIntances    uint   `toml:"num_instances"`
-	HostPopSize    uint   `toml:"host_popsize"`
+	NumGenerations int    `toml:"num_generations"`
+	NumIntances    int    `toml:"num_instances"`
+	HostPopSize    int    `toml:"host_popsize"`
 	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs
 
 	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
@@ -134,6 +134,10 @@ type logConfig struct {
 }
 
 func (c *logConfig) Validate() error {
+	// Check parameter values
+	if c.LogFreq < 1 {
+		return fmt.Errorf(InvalidIntParameterError, "log_freq", c.LogFreq, "must be greater than or equal to 1")
+	}
 	c.validated = true
 	return nil
 }
@@ -165,7 +169,7 @@ func (c *intrahostModelConfig) Validate() error {
 			return fmt.Errorf(InvalidIntParameterError, "max_pop_size", c.MaxPopSize, "must be greater than or equal to 1")
 		}
 		if c.GrowthRate < 0 {
-			return fmt.Errorf(InvalidIntParameterError, "max_pop_size", c.GrowthRate, "must be greater than or equal to 0")
+			return fmt.Errorf(InvalidFloatParameterError, "max_pop_size", c.GrowthRate, "must be greater than or equal to 0")
 		}
 	case "fitness":
 		if c.MaxPopSize < 1 {
@@ -176,17 +180,17 @@ func (c *intrahostModelConfig) Validate() error {
 	}
 	// Check mutation rate
 	if c.MutationRate < 0 {
-		return fmt.Errorf(InvalidIntParameterError, "mutation_rate", c.MutationRate, "cannot be negative")
+		return fmt.Errorf(InvalidFloatParameterError, "mutation_rate", c.MutationRate, "cannot be negative")
 	}
 	// Check recombination rate
 	if c.RecombinationRate < 0 {
-		return fmt.Errorf(InvalidIntParameterError, "recombination_rate", c.RecombinationRate, "cannot be negative")
+		return fmt.Errorf(InvalidFloatParameterError, "recombination_rate", c.RecombinationRate, "cannot be negative")
 	}
 	// Checks values of TransitionMatrix
 	for i, row := range c.TransitionMatrix {
 		for j := range row {
 			if c.TransitionMatrix[i][j] < 0 {
-				return fmt.Errorf(InvalidIntParameterError, "transition rate", c.TransitionMatrix[i][j], "cannot be negative")
+				return fmt.Errorf(InvalidFloatParameterError, "transition rate", c.TransitionMatrix[i][j], "cannot be negative")
 			}
 		}
 	}
@@ -195,13 +199,14 @@ func (c *intrahostModelConfig) Validate() error {
 }
 
 // CreateModel creates an IntrahostModel based on the configuration.
-func (c *intrahostModelConfig) CreateModel() (IntrahostModel, error) {
+func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 	if !c.validated {
 		return nil, fmt.Errorf("validate model parameters first")
 	}
 	switch c.ReplicationModel {
 	case "constant":
 		model := new(ConstantPopModel)
+		model.id = id
 		model.name = c.ModelName
 		model.popSize = c.ConstantPopSize
 		model.mutationRate = c.MutationRate
@@ -214,6 +219,7 @@ func (c *intrahostModelConfig) CreateModel() (IntrahostModel, error) {
 		return model, nil
 	case "bht":
 		model := new(BevertonHoltThresholdPopModel)
+		model.id = id
 		model.name = c.ModelName
 		model.maxPopSize = c.MaxPopSize
 		model.growthRate = c.GrowthRate
@@ -228,6 +234,7 @@ func (c *intrahostModelConfig) CreateModel() (IntrahostModel, error) {
 	}
 	// fitness
 	model := new(FitnessDependentPopModel)
+	model.id = id
 	model.name = c.ModelName
 	model.maxPopSize = c.MaxPopSize
 	model.mutationRate = c.MutationRate
@@ -274,7 +281,7 @@ func (c *fitnessModelConfig) Validate() error {
 }
 
 // CreateModel creates an FitnessModel based on the configuration.
-func (c *fitnessModelConfig) CreateModel() (FitnessModel, error) {
+func (c *fitnessModelConfig) CreateModel(id int) (FitnessModel, error) {
 	if !c.validated {
 		return nil, fmt.Errorf("validate model parameters first")
 	}
@@ -285,14 +292,14 @@ func (c *fitnessModelConfig) CreateModel() (FitnessModel, error) {
 		if err != nil {
 			return nil, err
 		}
-		fm := NewMultiplicativeFM(0, "multiplicative", matrix)
+		fm := NewMultiplicativeFM(id, "multiplicative", matrix)
 		return fm, nil
 	case "additive":
 		matrix, err := LoadFitnessMatrix(c.FitnessModelPath)
 		if err != nil {
 			return nil, err
 		}
-		fm := NewAdditiveFM(0, "additive", matrix)
+		fm := NewAdditiveFM(id, "additive", matrix)
 		return fm, nil
 	}
 	// additive_motif
