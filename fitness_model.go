@@ -158,3 +158,34 @@ func (fm *additiveFM) SiteCharFitness(position, state int) (fitness float64, err
 func (fm *additiveFM) Log() bool {
 	return false
 }
+
+// NeutralMultiplicativeFM returns a multiplicative fitness matrix where all the values are 0 (ln 1)
+func NeutralMultiplicativeFM(id int, name string, sites, alleles int) FitnessMatrix {
+	fm := new(multiplicativeFM)
+	fm.id = id
+	fm.name = name
+	fm.matrix = make(map[int]map[int]float64)
+	for i := 0; i < sites; i++ {
+		fm.matrix[i] = make(map[int]float64)
+		for j := 0; j < alleles; j++ {
+			fm.matrix[i][j] = 0.0
+		}
+	}
+	return fm
+}
+
+// NeutralAdditiveFM returns a additive fitness matrix where the sum of
+// all sites using any allele combination is equal to the growth rate.
+func NeutralAdditiveFM(id int, name string, sites, alleles, growthRate int) FitnessMatrix {
+	fm := new(additiveFM)
+	fm.id = id
+	fm.name = name
+	fm.matrix = make(map[int]map[int]float64)
+	for i := 0; i < sites; i++ {
+		fm.matrix[i] = make(map[int]float64)
+		for j := 0; j < alleles; j++ {
+			fm.matrix[i][j] = 1.0 / float64(growthRate)
+		}
+	}
+	return fm
+}
