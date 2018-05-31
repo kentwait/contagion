@@ -152,7 +152,17 @@ type intrahostModelConfig struct {
 	ConstantPopSize   int         `toml:"constant_pop_size"` // only for constant
 	MaxPopSize        int         `toml:"max_pop_size"`      // only for bht and fitness
 	GrowthRate        float64     `toml:"growth_rate"`       // only for bht
-	validated         bool
+
+	SusceptibleDuration int `toml:"susceptible_duration"`
+	ExposedDuration     int `toml:"exposed_duration"`
+	InfectedDuration    int `toml:"infected_duration"`
+	InfectiveDuration   int `toml:"infective_duration"`
+	RemovedDuration     int `toml:"removed_duration"`
+	RecoveredDuration   int `toml:"recovered_duration"`
+	DeadDuration        int `toml:"dead_duration"`
+	VaccinatedDuration  int `toml:"vaccinated_duration"`
+
+	validated bool
 }
 
 // Validate checks the validity of the IntrahostModelConfig configuration.
@@ -194,6 +204,33 @@ func (c *intrahostModelConfig) Validate() error {
 			}
 		}
 	}
+
+	// Check durations
+	if c.SusceptibleDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "susceptible_duration", c.SusceptibleDuration, "cannot be negative")
+	}
+	if c.ExposedDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "exposed_duration", c.ExposedDuration, "cannot be negative")
+	}
+	if c.InfectedDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "infected_duration", c.InfectedDuration, "cannot be negative")
+	}
+	if c.InfectiveDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "infective_duration", c.InfectiveDuration, "cannot be negative")
+	}
+	if c.RemovedDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "removed_duration", c.RemovedDuration, "cannot be negative")
+	}
+	if c.RecoveredDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "recovered_duration", c.RecoveredDuration, "cannot be negative")
+	}
+	if c.DeadDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "dead_duration", c.DeadDuration, "cannot be negative")
+	}
+	if c.VaccinatedDuration < 0 {
+		return fmt.Errorf(InvalidFloatParameterError, "vaccinated_duration", c.VaccinatedDuration, "cannot be negative")
+	}
+
 	c.validated = true
 	return nil
 }
@@ -203,6 +240,21 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 	if !c.validated {
 		return nil, fmt.Errorf("validate model parameters first")
 	}
+
+	statusDuration := make(map[int]int)
+	for status, duration := range []int{
+		c.SusceptibleDuration,
+		c.ExposedDuration,
+		c.InfectedDuration,
+		c.InfectiveDuration,
+		c.RemovedDuration,
+		c.RecoveredDuration,
+		c.DeadDuration,
+		c.VaccinatedDuration,
+	} {
+		statusDuration[status] = duration
+	}
+
 	switch c.ReplicationModel {
 	case "constant":
 		model := new(ConstantPopModel)
@@ -216,6 +268,7 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 			model.transitionMatrix[i] = make([]float64, len(c.TransitionMatrix))
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
+		model.statusDuration = statusDuration
 		return model, nil
 	case "bht":
 		model := new(BevertonHoltThresholdPopModel)
@@ -230,21 +283,25 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 			model.transitionMatrix[i] = make([]float64, len(c.TransitionMatrix))
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
+		model.statusDuration = statusDuration
+		return model, nil
+	case "fitness":
+		// fitness
+		model := new(FitnessDependentPopModel)
+		model.id = id
+		model.name = c.ModelName
+		model.maxPopSize = c.MaxPopSize
+		model.mutationRate = c.MutationRate
+		model.recombinationRate = c.RecombinationRate
+		model.transitionMatrix = make([][]float64, len(c.TransitionMatrix))
+		for i := 0; i < len(c.TransitionMatrix); i++ {
+			model.transitionMatrix[i] = make([]float64, len(c.TransitionMatrix))
+			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
+		}
+		model.statusDuration = statusDuration
 		return model, nil
 	}
-	// fitness
-	model := new(FitnessDependentPopModel)
-	model.id = id
-	model.name = c.ModelName
-	model.maxPopSize = c.MaxPopSize
-	model.mutationRate = c.MutationRate
-	model.recombinationRate = c.RecombinationRate
-	model.transitionMatrix = make([][]float64, len(c.TransitionMatrix))
-	for i := 0; i < len(c.TransitionMatrix); i++ {
-		model.transitionMatrix[i] = make([]float64, len(c.TransitionMatrix))
-		copy(model.transitionMatrix[i], c.TransitionMatrix[i])
-	}
-	return model, nil
+	return nil, fmt.Errorf(UnrecognizedKeywordError, c.ReplicationModel, "replication_model")
 }
 
 // FitnessModelConfig contains parameters to create an FitnessModel.
