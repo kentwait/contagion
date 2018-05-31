@@ -83,7 +83,11 @@ type Epidemic interface {
 type EpidemicSimulation interface {
 	Epidemic
 	// Run runs the whole simulation
-	Run(DataRecorder interface{})
+	Run(recorder DataLogger)
+	Update()
+	Record(recorder DataLogger)
+	Process()
+	Transmit()
 }
 
 // Infection encapsulates a single host and the pathogen tree lineage
@@ -144,7 +148,11 @@ type Infection interface {
 type InfectionSimulation interface {
 	Infection
 	// Run runs the whole simulation
-	Run(DataRecorder interface{})
+	Run(recorder DataLogger)
+	Update()
+	Record(recorder DataLogger)
+	Process()
+	Transmit()
 }
 
 // StatusUpdate is a struct for sending and receiving
