@@ -126,7 +126,7 @@ func TestGenotypeTree_NewNode(t *testing.T) {
 	if l := tree.Set().Size(); l != 1 {
 		t.Errorf(UnequalIntParameterError, "size of genotype set", 1, l)
 	}
-	if l := len(tree.(*genotypeTree).genotypes); l != 1 {
+	if l := len(tree.Nodes()); l != 1 {
 		t.Errorf(UnequalIntParameterError, "size of genotype map", 1, l)
 	}
 
@@ -135,7 +135,7 @@ func TestGenotypeTree_NewNode(t *testing.T) {
 	if l := tree.Set().Size(); l != 2 {
 		t.Errorf(UnequalIntParameterError, "size of genotype set", 2, l)
 	}
-	if l := len(tree.(*genotypeTree).genotypes); l != 2 {
+	if l := len(tree.Nodes()); l != 2 {
 		t.Errorf(UnequalIntParameterError, "size of genotype map", 2, l)
 	}
 }
