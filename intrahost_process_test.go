@@ -134,7 +134,7 @@ func TestSequenceMutate(t *testing.T) {
 		t.Errorf(UnequalIntParameterError, "number of pathogens", model.popSize, counter)
 	}
 	if diffMean < 8 || diffMean > 12 {
-		t.Errorf(FloatNotBetweenError, "number of mutations", 8., 12., diffMean)
+		t.Errorf(FloatNotBetweenError, "average number of mutations", 8., 12., diffMean)
 	}
 	// TODO: test whether mutation took place, and if the number is correct
 	// TODO: Add scenarios for binomial hits
