@@ -3,7 +3,6 @@
 # Connections are binomially distributed with a chance of 0.5 that two hosts are connected.
 # Connections are bidirectional. 
 # If a connection from host 0->1 exists, then then reciprocal connect 1->0 must also exist.
-% hosts:10
 0	2	1.0
 2	0	1.0
 0	3	1.0
