@@ -77,6 +77,9 @@ func (h *sequenceHost) TypeID() int {
 }
 
 func (h *sequenceHost) Pathogen(i int) GenotypeNode {
+	if i >= len(h.pathogens) {
+		return nil
+	}
 	return h.pathogens[i]
 }
 
