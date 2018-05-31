@@ -71,7 +71,9 @@ func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model Intr
 		go func(n GenotypeNode, model IntrahostModel, wg *sync.WaitGroup) {
 			defer wg.Done()
 			mu := model.MutationRate()
-			sequence := n.Sequence()
+			// Copy sequence to make changes atomic
+			sequence := make([]int, len(n.Sequence()))
+			copy(sequence, n.Sequence())
 			// Add mutations by state to account for unequal rates
 			for state, numSites := range n.StateCounts() {
 				probs := model.TransitionProbs(state)
