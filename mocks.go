@@ -120,7 +120,7 @@ func sampleEvoEpiSimulation() *evoEpiSimulation {
 		0: []Host{sim.hosts[1]},
 		1: []Host{sim.hosts[0]},
 	}
-	sim.hostNetwork = map[int]map[int]float64{
+	sim.hostNetwork = adjacencyMatrix{
 		0: map[int]float64{1: 1.0},
 		1: map[int]float64{0: 1.0},
 	}
@@ -150,6 +150,7 @@ func sampleLogConfig() *logConfig {
 func sampleIntrahostModelConfig() *intrahostModelConfig {
 	conf := new(intrahostModelConfig)
 	conf.ModelName = "constant-high_mutation"
+	conf.HostIDs = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	conf.MutationRate = 0.01
 	conf.TransitionMatrix = [][]float64{
 		[]float64{0.0, 1.0},
@@ -158,11 +159,13 @@ func sampleIntrahostModelConfig() *intrahostModelConfig {
 	conf.RecombinationRate = 0.0
 	conf.ReplicationModel = "constant"
 	conf.ConstantPopSize = 100
+	conf.InfectedDuration = 10
 	return conf
 }
 
 func sampleFitnessModelConfig() *fitnessModelConfig {
 	conf := new(fitnessModelConfig)
+	conf.HostIDs = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	conf.ModelName = "multiplicative"
 	conf.FitnessModel = "multiplicative"
 	conf.FitnessModelPath = "examples/test1.sir.fm.txt"
@@ -172,9 +175,9 @@ func sampleFitnessModelConfig() *fitnessModelConfig {
 
 func sampleEvoEpiConfig() *EvoEpiConfig {
 	conf := new(EvoEpiConfig)
-	conf.SimParams = *sampleEpidemicSimConfig()
-	conf.LogParams = *sampleLogConfig()
-	conf.IntrahostModels = []intrahostModelConfig{*sampleIntrahostModelConfig()}
-	conf.FitnessModels = []fitnessModelConfig{*sampleFitnessModelConfig()}
+	conf.SimParams = sampleEpidemicSimConfig()
+	conf.LogParams = sampleLogConfig()
+	conf.IntrahostModels = []*intrahostModelConfig{sampleIntrahostModelConfig()}
+	conf.FitnessModels = []*fitnessModelConfig{sampleFitnessModelConfig()}
 	return conf
 }
