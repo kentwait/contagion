@@ -52,11 +52,11 @@ func IntrinsicRateReplication(pathogens []GenotypeNode, replFitness []float64, i
 
 // MutateSite returns the new state of a site based on the
 // given a set of transition probabilities.
-func MutateSite(transitionProbs ...float64) int {
+func MutateSite(transitionProbs ...float64) uint8 {
 	// Get new state
 	for i, v := range rv.Multinomial(1, transitionProbs) {
 		if v == 1 {
-			return i
+			return uint8(i)
 		}
 	}
 	panic(fmt.Sprintf("improper transition probabilities %v", transitionProbs))
@@ -72,11 +72,11 @@ func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model Intr
 			defer wg.Done()
 			mu := model.MutationRate()
 			// Copy sequence to make changes atomic
-			sequence := make([]int, len(n.Sequence()))
+			sequence := make([]uint8, len(n.Sequence()))
 			copy(sequence, n.Sequence())
 			// Add mutations by state to account for unequal rates
 			for state, numSites := range n.StateCounts() {
-				probs := model.TransitionProbs(state)
+				probs := model.TransitionProbs(int(state))
 				// Expected number of mutations over the entire sequence
 				nmu := float64(numSites) * mu
 
