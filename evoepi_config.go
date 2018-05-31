@@ -298,16 +298,47 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 			sim.hosts[id].AddPathogen(genotype)
 		}
 	}
-	// Create epidemic simulation
-	switch c.SimParams.EpidemicModel {
-	case "si":
-	case "sis":
-	case "sir":
-	case "sirs":
-	case "sei":
-	case "seir":
-	case "seirs":
+	// Add config to simulation
+	sim.config = c
+
+	// Add infectable status
+	sim.infectableStatuses = []int{SusceptibleStatusCode}
+	if c.SimParams.Coinfection {
+		switch c.SimParams.EpidemicModel {
+		case "si":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				InfectedStatusCode,
+			}...)
+		case "sis":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				InfectedStatusCode,
+			}...)
+		case "sir":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				InfectedStatusCode,
+			}...)
+		case "sirs":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				InfectedStatusCode,
+			}...)
+		case "sei":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				ExposedStatusCode,
+				InfectiveStatusCode,
+			}...)
+		case "seir":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				ExposedStatusCode,
+				InfectiveStatusCode,
+			}...)
+		case "seirs":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				ExposedStatusCode,
+				InfectiveStatusCode,
+			}...)
+		}
 	}
+
 	return sim, nil
 }
 
@@ -316,6 +347,7 @@ type epidemicSimConfig struct {
 	NumIntances    int    `toml:"num_instances"`
 	HostPopSize    int    `toml:"host_popsize"`
 	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs
+	Coinfection    bool   `toml:"coinfection"`
 
 	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
 	HostNetworkPath      string `toml:"host_network_path"`
