@@ -28,7 +28,7 @@ func LoadSingleHostConfig(path string) (*SingleHostConfig, error) {
 // to assigned hosts.
 // Returns a map where the key is the host ID and the values are
 // the pathogen sequences for the particular host.
-func LoadSequences(path string) (map[int][][]int, error) {
+func LoadSequences(path string) (map[int][][]uint8, error) {
 	/*
 		Format:
 
@@ -46,7 +46,7 @@ func LoadSequences(path string) (map[int][][]int, error) {
 		\d+ is the host ID of the target host.
 	*/
 
-	pathogenHostMap := make(map[int][][]int)
+	pathogenHostMap := make(map[int][][]uint8)
 
 	// TODO: add pathogens to hosts using host ID list
 	// Read from file
@@ -64,8 +64,8 @@ func LoadSequences(path string) (map[int][][]int, error) {
 	scanner := bufio.NewScanner(f)
 	lineNum := 0
 	currentHostID := -1
-	translationMap := make(map[string]int)
-	var currentSeq []int
+	translationMap := make(map[string]uint8)
+	var currentSeq []uint8
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.HasPrefix(line, "#") {
@@ -75,17 +75,18 @@ func LoadSequences(path string) (map[int][][]int, error) {
 			// Check if first line starts with #
 			for _, match := range reTranslate.FindAllStringSubmatch(line, -1) {
 				if len(match[1]) > 0 && len(match[2]) > 0 {
-					translationMap[match[1]], err = strconv.Atoi(match[2])
+					encoded, err := strconv.Atoi(match[2])
 					if err != nil {
 						return nil, fmt.Errorf(FileParsingError, lineNum, err)
 					}
+					translationMap[match[1]] = uint8(encoded)
 				}
 			}
 		} else if strings.HasPrefix(line, ">") {
 			// Check if line starts with >
 			if len(currentSeq) > 0 {
 				pathogenHostMap[currentHostID] = append(pathogenHostMap[currentHostID], currentSeq)
-				currentSeq = []int{}
+				currentSeq = []uint8{}
 			}
 			res := reHostID.FindStringSubmatch(line)
 			hostID, err := strconv.Atoi(res[1])
@@ -94,10 +95,10 @@ func LoadSequences(path string) (map[int][][]int, error) {
 			}
 			currentHostID = hostID
 		} else {
-			// Translate string char into int
+			// Translate string char into uint8
 			for _, char := range line {
 				if i, ok := translationMap[string(char)]; ok {
-					currentSeq = append(currentSeq, int(i))
+					currentSeq = append(currentSeq, uint8(i))
 				}
 			}
 		}
@@ -105,14 +106,14 @@ func LoadSequences(path string) (map[int][][]int, error) {
 	}
 	if len(currentSeq) > 0 {
 		pathogenHostMap[currentHostID] = append(pathogenHostMap[currentHostID], currentSeq)
-		currentSeq = []int{}
+		currentSeq = []uint8{}
 	}
 	return pathogenHostMap, nil
 }
 
 // LoadFitnessMatrix parses and loads the fitness matrix encoded in the
 // text file at the given path.
-func LoadFitnessMatrix(path string) (map[int]map[int]float64, error) {
+func LoadFitnessMatrix(path string) (map[int]map[uint8]float64, error) {
 	/*
 		Format:
 
@@ -190,14 +191,14 @@ func LoadFitnessMatrix(path string) (map[int]map[int]float64, error) {
 		}
 	}
 	// Transform map into FitnessMatrix
-	m := make(map[int]map[int]float64)
+	m := make(map[int]map[uint8]float64)
 	for i := 0; i <= lastPos; i++ {
-		m[i] = make(map[int]float64)
+		m[i] = make(map[uint8]float64)
 		for j := 0; j < alleles; j++ {
 			if _, ok := fitnessMap[i]; ok {
-				m[i][j] = fitnessMap[i][j]
+				m[i][uint8(j)] = fitnessMap[i][j]
 			} else {
-				m[i][j] = defaultValues[j]
+				m[i][uint8(j)] = defaultValues[j]
 			}
 		}
 	}
