@@ -39,6 +39,11 @@ type IntrahostModel interface {
 
 	// RecombinationRate returns the recombination rate for this model.
 	RecombinationRate() float64
+
+	// Infection duration
+
+	// StatusDuration
+	StatusDuration(status int) int
 }
 
 // ConstantPopModel models a constant pathogen population size within the host.
@@ -46,6 +51,7 @@ type ConstantPopModel struct {
 	intrahostMetadata
 	mutationParams
 	recombinationParams
+	durationParams
 	constantIntrahostPopModel
 }
 
@@ -55,6 +61,7 @@ type BevertonHoltThresholdPopModel struct {
 	intrahostMetadata
 	mutationParams
 	recombinationParams
+	durationParams
 	bhtIntrahostPopModel
 }
 
@@ -67,6 +74,7 @@ type FitnessDependentPopModel struct {
 	intrahostMetadata
 	mutationParams
 	recombinationParams
+	durationParams
 	fitnessIntrahostPopModel
 }
 
@@ -124,6 +132,14 @@ type recombinationParams struct {
 
 func (params *recombinationParams) RecombinationRate() float64 {
 	return params.recombinationRate
+}
+
+type durationParams struct {
+	statusDuration map[int]int
+}
+
+func (params *durationParams) StatusDuration(status int) int {
+	return params.statusDuration[status]
 }
 
 type constantIntrahostPopModel struct {
