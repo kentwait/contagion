@@ -201,7 +201,6 @@ type genotypeNode struct {
 	sync.RWMutex
 	Genotype
 	uid      ksuid.KSUID
-	sequence []int
 	parents  []GenotypeNode
 	children []GenotypeNode
 }
@@ -226,9 +225,6 @@ func newGenotypeNode(sequence []int, set GenotypeSet, parents ...GenotypeNode) G
 	n.children = []GenotypeNode{}
 	// Assign genotype
 	n.Genotype = genotype
-	// Copy sequence
-	n.sequence = make([]int, len(sequence))
-	copy(n.sequence, sequence)
 
 	// Add new sequence as child of its parent
 	for _, parent := range parents {
@@ -258,7 +254,7 @@ func (n *genotypeNode) AddChild(child GenotypeNode) {
 }
 
 func (n *genotypeNode) Sequence() []int {
-	return n.sequence
+	return n.Genotype.Sequence()
 }
 
 func (n *genotypeNode) CurrentGenotype() Genotype {
@@ -266,7 +262,7 @@ func (n *genotypeNode) CurrentGenotype() Genotype {
 }
 
 func (n *genotypeNode) History(h [][]int) [][]int {
-	h = append(h, n.sequence)
+	h = append(h, n.Genotype.Sequence())
 	if len(n.parents) == 0 {
 		return h
 	}
@@ -323,9 +319,6 @@ func (t *genotypeTree) NewNode(sequence []int, parents ...GenotypeNode) Genotype
 	n.children = []GenotypeNode{}
 	// Assign genotype
 	n.Genotype = genotype
-	// Copy sequence
-	n.sequence = make([]int, len(sequence))
-	copy(n.sequence, sequence)
 
 	// Add new sequence as child of its parent
 	for _, parent := range parents {
