@@ -151,7 +151,7 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 	}
 }
 
-func TestEvoEpiSimulation_InfectedProcess(t *testing.T) {
+func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	rand.Seed(0)
 	sites := 100
 	mu := 0.1
@@ -229,6 +229,94 @@ func TestEvoEpiSimulation_InfectedProcess(t *testing.T) {
 	diffMean = diffMean / float64(counter)
 	if counter != constPopSize {
 		t.Errorf(UnequalIntParameterError, "number of pathogens", constPopSize, counter)
+	}
+	if diffMean < 9 || diffMean > 11 {
+		t.Errorf(FloatNotBetweenError, "average number of mutations", 9., 11., diffMean)
+	}
+}
+
+func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
+	rand.Seed(0)
+	sites := 100
+	mu := 0.1
+	maxPopSize := 1000
+	initPopSize := 10
+	growthRate := 2
+	multiplicative := false
+
+	sim := new(evoEpiSimulation)
+	// Creates a tree with n roots of all identical sequences (same genotype)
+	sim.tree = sampleGenotypeTree(initPopSize, sites)
+	sim.intrahostModels = map[int]IntrahostModel{
+		0: sampleFitnessIntrahostModel(mu, maxPopSize),
+	}
+	sim.fitnessModels = map[int]FitnessModel{
+		0: sampleFitnessModel(multiplicative, sites),
+	}
+	sim.hosts = map[int]Host{
+		0: NewEmptySequenceHost(0),
+		1: NewEmptySequenceHost(1),
+	}
+	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
+	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
+	var originalSequence string
+	for _, n := range sim.tree.Nodes() {
+		sim.hosts[0].AddPathogen(n)
+		originalSequence = n.StringSequence()
+		fmt.Println(n.StringSequence())
+	}
+	fmt.Println("")
+
+	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
+	sim.hosts[1].SetFitnessModel(sim.fitnessModels[0])
+	sim.statuses = map[int]int{
+		0: InfectedStatusCode,
+		1: SusceptibleStatusCode,
+	}
+	sim.timers = map[int]int{
+		0: 10,
+		1: 0,
+	}
+	sim.hostNeighborhoods = map[int][]Host{
+		0: []Host{sim.hosts[1]},
+		1: []Host{sim.hosts[0]},
+	}
+	sim.hostNetwork = map[int]map[int]float64{
+		0: map[int]float64{1: 1.0},
+		1: map[int]float64{0: 1.0},
+	}
+	sim.infectableStatuses = []int{SusceptibleStatusCode}
+
+	// Test setup
+	var wg sync.WaitGroup
+	wg.Add(1)
+	sim.InfectedProcess(sim.hosts[0], &wg)
+	wg.Wait()
+
+	// Expectations
+	// population size should increase from 10 to 20 after 1 step
+	// (initPopSize * growthRate)
+	// on average, half of sites should be mutated compared to the original
+	counter := 0
+	diffMean := 0.0
+	fmt.Println(originalSequence)
+	for _, n := range sim.hosts[0].Pathogens() {
+		// compare sequences
+		diff := 0
+		for i := 0; i < len(originalSequence); i++ {
+			if originalSequence[i] != n.StringSequence()[i] {
+				diff++
+			}
+		}
+		fmt.Println(n.StringSequence(), diff)
+		diffMean += float64(diff)
+		counter++
+	}
+	diffMean = diffMean / float64(counter)
+	expPopSize := initPopSize * growthRate
+	errVal := 5
+	if counter < expPopSize-errVal || counter > expPopSize+errVal {
+		t.Errorf(IntNotBetweenError, "number of pathogens", expPopSize-errVal, expPopSize+errVal, counter)
 	}
 	if diffMean < 9 || diffMean > 11 {
 		t.Errorf(FloatNotBetweenError, "average number of mutations", 9., 11., diffMean)
