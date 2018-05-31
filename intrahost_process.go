@@ -71,10 +71,9 @@ func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model Intr
 		go func(n GenotypeNode, model IntrahostModel, wg *sync.WaitGroup) {
 			defer wg.Done()
 			mu := model.MutationRate()
-			stateCounts := n.StateCounts()
 			sequence := n.Sequence()
 			// Add mutations by state to account for unequal rates
-			for state, numSites := range stateCounts {
+			for state, numSites := range n.StateCounts() {
 				probs := model.TransitionProbs(state)
 				// Expected number of mutations over the entire sequence
 				nmu := float64(numSites) * mu
@@ -86,8 +85,9 @@ func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model Intr
 				} else {
 					hits = rv.Binomial(numSites, mu)
 				}
+
 				// Get position of hits
-				hitPositions := pickSites(hits, numSites)
+				hitPositions := pickSites(hits, numSites, n.StatePositions(state))
 
 				// Create new node per hit
 				for _, pos := range hitPositions {
@@ -104,18 +104,16 @@ func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model Intr
 	return c
 }
 
-func pickSites(hitsNeeded, numSites int) []int {
+func pickSites(hitsNeeded, numSites int, positions []int) []int {
 	// Create hittable list of positions
-	hittable := make([]int, numSites)
-	for i := range hittable {
-		hittable[i] = i
-	}
+	hittable := make([]int, len(positions))
+	copy(hittable, positions)
 	// Get position of hits
 	hitPositions := make([]int, hitsNeeded)
 	for i := 0; i < hitsNeeded; i++ {
 		x := rand.Intn(numSites - i)
+		hitPositions[i] = hittable[x]
 		hittable = append(hittable[:x], hittable[x+1:]...)
-		hitPositions[i] = x
 	}
 	return hitPositions
 }

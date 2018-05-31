@@ -3,6 +3,7 @@ package contagiongo
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 	"testing"
 
 	"github.com/segmentio/ksuid"
@@ -73,10 +74,21 @@ func TestSequenceMutate(t *testing.T) {
 	rand.Seed(0)
 	// Create a mock tree
 	tree := EmptyGenotypeTree()
-	root := tree.NewNode(sampleSequenceShort())
+	root := tree.NewNode([]int{
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	})
 	// Create mock IntrahostModel
 	model := new(ConstantPopModel)
-	model.mutationRate = 0.5
+	model.mutationRate = 0.1
 	model.transitionMatrix = [][]float64{
 		[]float64{0, 1},
 		[]float64{1, 0},
@@ -86,7 +98,19 @@ func TestSequenceMutate(t *testing.T) {
 	// Send root 4 times to simulate population of 4
 	c := make(chan GenotypeNode)
 	go func() {
-		for _, pathogen := range []GenotypeNode{root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root, root} {
+		for i := 0; i < model.popSize; i++ {
+			pathogen := tree.NewNode([]int{
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			})
 			c <- pathogen
 		}
 		close(c)
@@ -96,6 +120,7 @@ func TestSequenceMutate(t *testing.T) {
 	diffMean := 0.0
 	for pathogen := range pathogens {
 		diff := 0
+		// fmt.Println(pathogen.StringSequence())
 		for i := 0; i < len(pathogen.StringSequence()); i++ {
 			if pathogen.StringSequence()[i] != root.StringSequence()[i] {
 				diff++
@@ -105,12 +130,26 @@ func TestSequenceMutate(t *testing.T) {
 		counter++
 	}
 	diffMean = diffMean / float64(counter)
-	if counter != 20 {
-		t.Errorf(UnequalIntParameterError, "number of pathogens", 4, counter)
+	if counter != model.popSize {
+		t.Errorf(UnequalIntParameterError, "number of pathogens", model.popSize, counter)
 	}
-	if diffMean < 4 || diffMean > 6 {
-		t.Errorf(FloatNotBetweenError, "number of mutations", 4., 6., diffMean)
+	if diffMean < 8 || diffMean > 12 {
+		t.Errorf(FloatNotBetweenError, "number of mutations", 8., 12., diffMean)
 	}
 	// TODO: test whether mutation took place, and if the number is correct
 	// TODO: Add scenarios for binomial hits
+}
+
+func TestPickSites(t *testing.T) {
+	hitsNeeded := 10
+	numSites := 10
+	positions := make([]int, numSites)
+	for i := range positions {
+		positions[i] = i
+	}
+	hitPositions := pickSites(hitsNeeded, numSites, positions)
+	sort.Slice(hitPositions, func(i, j int) bool { return hitPositions[i] < hitPositions[j] })
+	if fmt.Sprintf("%v", positions) != fmt.Sprintf("%v", hitPositions) {
+		t.Errorf(UnequalStringParameterError, "hit positions", fmt.Sprintf("%v", positions), fmt.Sprintf("%v", hitPositions))
+	}
 }
