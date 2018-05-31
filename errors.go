@@ -7,10 +7,15 @@ const (
 	// IntKeyExists is the message printed when a given key already exists
 	IntKeyExists = "key %d already exists"
 
-	// IntrahostModelExists is the message printed when an intrahost model has
-	// already been assigned to a host.
-	IntrahostModelExistsError = "Intrahost model %s (%d) already exists"
-	EmptyIntrahostModelError  = "Intrahost model does not exist"
+	// IntrahostModelExistsError is the message printed when an intrahost model
+	// has already been assigned to a host.
+	IntrahostModelExistsError = "intrahost model %s (%d) already exists"
+	EmptyIntrahostModelError  = "intrahost model does not exist"
+
+	// FitnessModelExistsError is the message printed when a fitness model
+	// has already been assigned to a host.
+	FitnessModelExistsError = "fitness model %s (%d) already exists"
+	EmptyFitnessModelError  = "fitness model does not exist"
 
 	// GraphPathogenTypeAssertionError is the message printed when
 	// an GraphPathogen cannot be asserted for an interface
