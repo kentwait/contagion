@@ -51,6 +51,21 @@ func sampleIntrahostModel(mutationRate float64, popSize int) IntrahostModel {
 	return model
 }
 
+func sampleFitnessIntrahostModel(mutationRate float64, popSize int) IntrahostModel {
+	model := new(FitnessDependentPopModel)
+	model.mutationRate = mutationRate
+	model.transitionMatrix = [][]float64{
+		[]float64{0, 1},
+		[]float64{1, 0},
+	}
+	model.recombinationRate = 0
+	model.maxPopSize = popSize
+	model.statusDuration = map[int]int{
+		InfectedStatusCode: 10,
+	}
+	return model
+}
+
 func sampleFitnessModel(multiplicative bool, sites int) FitnessModel {
 	if multiplicative {
 		return NeutralMultiplicativeFM(0, "neutral", sites, 2)
