@@ -39,6 +39,7 @@ type Host interface {
 	// mutation, replication, recombination, and infection modes and parameters
 	// to be used.
 	SetIntrahostModel(intrahostModel IntrahostModel) error
+	SetFitnessModel(fitnessModel FitnessModel) error
 }
 
 type sequenceHost struct {
@@ -131,5 +132,13 @@ func (h *sequenceHost) SetIntrahostModel(intrahostModel IntrahostModel) error {
 		return fmt.Errorf(IntrahostModelExistsError, h.IntrahostModel.ModelName(), h.IntrahostModel.ModelID())
 	}
 	h.IntrahostModel = intrahostModel
+	return nil
+}
+
+func (h *sequenceHost) SetFitnessModel(fitnessModel FitnessModel) error {
+	if h.FitnessModel != nil {
+		return fmt.Errorf(IntrahostModelExistsError, h.FitnessModel.ModelName(), h.FitnessModel.ModelID())
+	}
+	h.FitnessModel = fitnessModel
 	return nil
 }
