@@ -1,6 +1,7 @@
 package contagiongo
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 )
@@ -13,6 +14,23 @@ func TestNewGenotype(t *testing.T) {
 	}()
 	sequence := []int{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
 	NewGenotype(sequence)
+}
+
+func TestGenotype_Fitness(t *testing.T) {
+	sites := 100
+	fm := NeutralMultiplicativeFM(0, "m", sites, 2)
+	genotype := NewGenotype(sampleSequence(sites))
+	logFitness := genotype.Fitness(fm)
+
+	if logFitness != 0.0 {
+		t.Errorf(UnequalFloatParameterError, "log fitness", 0.0, logFitness)
+	}
+	// Fitness has been assigned during the first call
+	// If fitness model has the same ID, then just recalls previous value.
+	logFitness = genotype.Fitness(fm)
+	if logFitness != 0.0 {
+		t.Errorf(UnequalFloatParameterError, "log fitness", 0.0, logFitness)
+	}
 }
 
 func TestEmptyGenotypeSet(t *testing.T) {
@@ -69,6 +87,26 @@ func TestNewGenotypeNode(t *testing.T) {
 	sequence := sampleSequence(1000)
 	set := EmptyGenotypeSet()
 	newGenotypeNode(sequence, set)
+}
+
+func TestNewGenotypeNode_Getters(t *testing.T) {
+	set := EmptyGenotypeSet()
+	p1 := newGenotypeNode(sampleSequence(1000), set)
+	p2 := newGenotypeNode(sampleSequence(1000), set, p1)
+	p3 := newGenotypeNode(sampleSequence(1000), set, p2)
+
+	if l := len(p2.Parents()); l != 1 {
+		t.Errorf(UnequalIntParameterError, "number of parents", 1, l)
+	}
+	if n := p2.Parents()[0]; n.UID() != p1.UID() {
+		t.Errorf(UnequalStringParameterError, "parent UID", fmt.Sprint(p1.UID()), fmt.Sprint(n.UID()))
+	}
+	if l := len(p2.Children()); l != 1 {
+		t.Errorf(UnequalIntParameterError, "number of childen", 1, l)
+	}
+	if n := p2.Children()[0]; n.UID() != p3.UID() {
+		t.Errorf(UnequalStringParameterError, "child UID", fmt.Sprint(p3.UID()), fmt.Sprint(n.UID()))
+	}
 }
 
 func TestEmptyGenotypeTree(t *testing.T) {

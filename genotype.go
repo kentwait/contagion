@@ -65,6 +65,7 @@ func (n *genotype) Fitness(f FitnessModel) float64 {
 	fitness, ok := n.fitness[id]
 	if !ok {
 		fitness, _ := f.ComputeFitness(n.sequence...)
+		n.fitness[id] = fitness
 		return fitness
 	}
 	return fitness
