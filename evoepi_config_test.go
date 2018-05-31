@@ -2,6 +2,8 @@ package contagiongo
 
 import (
 	"fmt"
+	"math/rand"
+	"sync"
 	"testing"
 )
 
@@ -134,6 +136,54 @@ func TestEvoEpiConfig_NewSimulation_NewInstance(t *testing.T) {
 			"sim0 host network", sim0.(*evoEpiSimulation).hostNetwork,
 			"sim1 host network", sim1.(*evoEpiSimulation).hostNetwork,
 		)
+	}
+}
+
+func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
+	rand.Seed(0)
+	conf := sampleEvoEpiConfig()
+	err := conf.Validate()
+	if err != nil {
+		t.Error(err)
+	}
+	sim0, err := conf.NewSimulation()
+	sim := sim0.(*evoEpiSimulation)
+	if err != nil {
+		t.Error(err)
+	}
+	// Record parameters
+	originalSequence := sim.Host(0).Pathogen(0).StringSequence()
+	constPopSize := sim.config.(*EvoEpiConfig).IntrahostModels[0].ConstantPopSize
+	// Run infected process on the simulation
+	var wg sync.WaitGroup
+	wg.Add(1)
+	sim.InfectedProcess(sim.Host(0), &wg)
+	wg.Wait()
+
+	// Expectations
+	// population size should increase from 10 to 100 after 1 step
+	// on average, half of sites should be mutated compared to the original
+	counter := 0
+	diffMean := 0.0
+	fmt.Println(originalSequence)
+	for _, n := range sim.hosts[0].Pathogens() {
+		// compare sequences
+		diff := 0
+		for i := 0; i < len(originalSequence); i++ {
+			if originalSequence[i] != n.StringSequence()[i] {
+				diff++
+			}
+		}
+		fmt.Println(n.StringSequence(), diff)
+		diffMean += float64(diff)
+		counter++
+	}
+	diffMean = diffMean / float64(counter)
+	if counter != constPopSize {
+		t.Errorf(UnequalIntParameterError, "number of pathogens", constPopSize, counter)
+	}
+	if diffMean < 0.8 || diffMean > 1.2 {
+		t.Errorf(FloatNotBetweenError, "average number of mutations", 0.8, 1.2, diffMean)
 	}
 }
 
