@@ -18,11 +18,158 @@ type EvoEpiConfig struct {
 
 // Validate checks the validity of the configuration.
 func (c *EvoEpiConfig) Validate() error {
+	// Validate sections
+	err := c.SimParams.Validate()
+	if err != nil {
+		return err
+	}
+	err = c.LogParams.Validate()
+	if err != nil {
+		return err
+	}
 	// Validate each intrahost model
 	for _, model := range c.IntrahostModels {
 		err := model.Validate()
 		if err != nil {
 			return err
+		}
+		// Check if durations match EpidemicModel
+		switch c.SimParams.EpidemicModel {
+		case "si":
+			if model.InfectedDuration != 0 && model.InfectedDuration < c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"infected_duration",
+					model.InfectedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			// Assign default value
+			if model.InfectedDuration == 0 {
+				model.InfectedDuration = c.SimParams.NumGenerations + 1
+			}
+		case "sis":
+			if model.InfectedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"infected_duration",
+					model.InfectedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+		case "sir":
+			if model.RemovedDuration != 0 && model.RemovedDuration < c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"removed_duration",
+					model.RemovedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			if model.InfectedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"infected_duration",
+					model.InfectedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			// Assign default value
+			if model.RemovedDuration == 0 {
+				model.RemovedDuration = c.SimParams.NumGenerations + 1
+			}
+		case "sirs":
+			if model.InfectedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"infected_duration",
+					model.InfectedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			if model.RemovedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"removed_duration",
+					model.RemovedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+		case "sei":
+			if model.InfectiveDuration != 0 && model.InfectiveDuration < c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"infective_duration",
+					model.InfectiveDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			if model.ExposedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"exposed_duration",
+					model.ExposedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			// Assign default value
+			if model.InfectiveDuration == 0 {
+				model.InfectiveDuration = c.SimParams.NumGenerations + 1
+			}
+		case "seir":
+			if model.RemovedDuration != 0 && model.RemovedDuration < c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"removed_duration",
+					model.RemovedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			if model.ExposedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"exposed_duration",
+					model.ExposedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			if model.InfectiveDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"exposed_duration",
+					model.InfectiveDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			// Assign default value
+			if model.RemovedDuration == 0 {
+				model.RemovedDuration = c.SimParams.NumGenerations + 1
+			}
+		case "seirs":
+			if model.ExposedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"exposed_duration",
+					model.ExposedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			if model.InfectiveDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"exposed_duration",
+					model.InfectiveDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			if model.RemovedDuration > c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"removed_duration",
+					model.RemovedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
 		}
 	}
 	// Validate each fitness model
@@ -153,14 +300,13 @@ type intrahostModelConfig struct {
 	MaxPopSize        int         `toml:"max_pop_size"`      // only for bht and fitness
 	GrowthRate        float64     `toml:"growth_rate"`       // only for bht
 
-	SusceptibleDuration int `toml:"susceptible_duration"`
-	ExposedDuration     int `toml:"exposed_duration"`
-	InfectedDuration    int `toml:"infected_duration"`
-	InfectiveDuration   int `toml:"infective_duration"`
-	RemovedDuration     int `toml:"removed_duration"`
-	RecoveredDuration   int `toml:"recovered_duration"`
-	DeadDuration        int `toml:"dead_duration"`
-	VaccinatedDuration  int `toml:"vaccinated_duration"`
+	ExposedDuration    int `toml:"exposed_duration"`
+	InfectedDuration   int `toml:"infected_duration"`
+	InfectiveDuration  int `toml:"infective_duration"`
+	RemovedDuration    int `toml:"removed_duration"`
+	RecoveredDuration  int `toml:"recovered_duration"`
+	DeadDuration       int `toml:"dead_duration"`
+	VaccinatedDuration int `toml:"vaccinated_duration"`
 
 	validated bool
 }
@@ -206,9 +352,6 @@ func (c *intrahostModelConfig) Validate() error {
 	}
 
 	// Check durations
-	if c.SusceptibleDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "susceptible_duration", c.SusceptibleDuration, "cannot be negative")
-	}
 	if c.ExposedDuration < 0 {
 		return fmt.Errorf(InvalidFloatParameterError, "exposed_duration", c.ExposedDuration, "cannot be negative")
 	}
@@ -243,7 +386,6 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 
 	statusDuration := make(map[int]int)
 	for status, duration := range []int{
-		c.SusceptibleDuration,
 		c.ExposedDuration,
 		c.InfectedDuration,
 		c.InfectiveDuration,
