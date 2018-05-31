@@ -5,13 +5,20 @@ import (
 	"strings"
 )
 
+// Config represents any top level TOML configuration
+// that can create a new simulation.
+type Config interface {
+	Validate() error
+	NewSimulation() (Epidemic, error)
+}
+
 // EvoEpiConfig contains parameters to create a simulated infection
 // in a connected network of hosts.
 type EvoEpiConfig struct {
-	SimParams       epidemicSimConfig      `toml:"simulation"`
-	LogParams       logConfig              `toml:"logging"`
-	IntrahostModels []intrahostModelConfig `toml:"intrahost_model"`
-	FitnessModels   []fitnessModelConfig   `toml:"fitness_model"`
+	SimParams       *epidemicSimConfig      `toml:"simulation"`
+	LogParams       *logConfig              `toml:"logging"`
+	IntrahostModels []*intrahostModelConfig `toml:"intrahost_model"`
+	FitnessModels   []*fitnessModelConfig   `toml:"fitness_model"`
 
 	validated bool
 }
@@ -28,6 +35,8 @@ func (c *EvoEpiConfig) Validate() error {
 		return err
 	}
 	// Validate each intrahost model
+	// Check if host_ids are unique
+	hostIDSet := make(map[int]bool)
 	for _, model := range c.IntrahostModels {
 		err := model.Validate()
 		if err != nil {
@@ -171,14 +180,43 @@ func (c *EvoEpiConfig) Validate() error {
 				)
 			}
 		}
+		//
+		for _, i := range model.HostIDs {
+			if _, exists := hostIDSet[i]; exists {
+				return fmt.Errorf("host id "+IntKeyExists, i)
+			}
+			hostIDSet[i] = true
+		}
 	}
+	// Check if all hosts have been assigned a model
+	for i := 0; i < c.SimParams.HostPopSize; i++ {
+		if !hostIDSet[i] {
+			return fmt.Errorf("host %d was not assigned a intrahost model", i)
+		}
+	}
+
 	// Validate each fitness model
+	// Check if host_ids are unique
+	hostIDSet = make(map[int]bool)
 	for _, model := range c.FitnessModels {
 		err := model.Validate()
 		if err != nil {
 			return err
 		}
+		for _, i := range model.HostIDs {
+			if _, exists := hostIDSet[i]; exists {
+				return fmt.Errorf("host id "+IntKeyExists, i)
+			}
+			hostIDSet[i] = true
+		}
 	}
+	// Check if all hosts have been assigned a model
+	for i := 0; i < c.SimParams.HostPopSize; i++ {
+		if !hostIDSet[i] {
+			return fmt.Errorf("host %d was not assigned a fitness model", i)
+		}
+	}
+
 	// TODO: validate file paths
 	c.validated = true
 	return nil
@@ -187,6 +225,18 @@ func (c *EvoEpiConfig) Validate() error {
 // NewSimulation creates a new SingleHostSimulation simulation.
 func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	sim := new(evoEpiSimulation)
+	// Initialize maps
+	sim.hosts = make(map[int]Host)
+	sim.statuses = make(map[int]int)
+	sim.timers = make(map[int]int)
+	sim.intrahostModels = make(map[int]IntrahostModel)
+	sim.fitnessModels = make(map[int]FitnessModel)
+	sim.hostNeighborhoods = make(map[int][]Host)
+	// Create empty hosts
+	for i := 0; i < c.SimParams.HostPopSize; i++ {
+		sim.hosts[i] = NewEmptySequenceHost(i)
+	}
+
 	// Create IntrahostModels
 	for i, conf := range c.IntrahostModels {
 		model, err := conf.CreateModel(i)
@@ -195,6 +245,13 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 		}
 		model.SetModelID(i)
 		sim.intrahostModels[i] = model
+		// assign to hosts
+		for _, id := range conf.HostIDs {
+			err := sim.hosts[id].SetIntrahostModel(model)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
 	// Create FitnessModels
 	for i, conf := range c.FitnessModels {
@@ -204,6 +261,42 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 		}
 		model.SetModelID(i)
 		sim.fitnessModels[i] = model
+		// assign to hosts
+		for _, id := range conf.HostIDs {
+			err := sim.hosts[id].SetFitnessModel(model)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	// Load host connections
+	var err error
+	sim.hostNetwork, err = LoadAdjacencyMatrix(c.SimParams.HostNetworkPath)
+	if err != nil {
+		return nil, err
+	}
+	// Construct neighborhoods
+	for id := range sim.hosts {
+		neighborIDs := sim.hostNetwork.GetNeighbors(id)
+		sim.hostNeighborhoods[id] = make([]Host, len(neighborIDs))
+		for i, neighborID := range neighborIDs {
+			sim.hostNeighborhoods[id][i] = sim.hosts[neighborID]
+		}
+	}
+	// Initialize empty GenotypeTree
+	sim.tree = EmptyGenotypeTree()
+	// Load pathogens
+	hostPathogenMap, err := LoadSequences(c.SimParams.PathogenSequencePath)
+	if err != nil {
+		return nil, err
+	}
+	// Seed pathogens into host/s
+	for id, sequences := range hostPathogenMap {
+		for _, s := range sequences {
+			// Seeded pathogens are all roots
+			genotype := sim.tree.NewNode(s)
+			sim.hosts[id].AddPathogen(genotype)
+		}
 	}
 	// Create epidemic simulation
 	switch c.SimParams.EpidemicModel {
@@ -292,6 +385,7 @@ func (c *logConfig) Validate() error {
 // IntrahostModelConfig contains parameters to create an IntrahostModel.
 type intrahostModelConfig struct {
 	ModelName         string      `toml:"model_name"`
+	HostIDs           []int       `toml:"host_ids"`
 	MutationRate      float64     `toml:"mutation_rate"`
 	TransitionMatrix  [][]float64 `toml:"transition_matrix"`
 	RecombinationRate float64     `toml:"recombination_rate"`
@@ -353,26 +447,27 @@ func (c *intrahostModelConfig) Validate() error {
 
 	// Check durations
 	if c.ExposedDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "exposed_duration", c.ExposedDuration, "cannot be negative")
+		return fmt.Errorf(InvalidIntParameterError, "exposed_duration", c.ExposedDuration, "cannot be negative")
 	}
 	if c.InfectedDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "infected_duration", c.InfectedDuration, "cannot be negative")
+		return fmt.Errorf(InvalidIntParameterError, "infected_duration", c.InfectedDuration, "cannot be negative")
 	}
 	if c.InfectiveDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "infective_duration", c.InfectiveDuration, "cannot be negative")
+		return fmt.Errorf(InvalidIntParameterError, "infective_duration", c.InfectiveDuration, "cannot be negative")
 	}
 	if c.RemovedDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "removed_duration", c.RemovedDuration, "cannot be negative")
+		return fmt.Errorf(InvalidIntParameterError, "removed_duration", c.RemovedDuration, "cannot be negative")
 	}
 	if c.RecoveredDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "recovered_duration", c.RecoveredDuration, "cannot be negative")
+		return fmt.Errorf(InvalidIntParameterError, "recovered_duration", c.RecoveredDuration, "cannot be negative")
 	}
 	if c.DeadDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "dead_duration", c.DeadDuration, "cannot be negative")
+		return fmt.Errorf(InvalidIntParameterError, "dead_duration", c.DeadDuration, "cannot be negative")
 	}
 	if c.VaccinatedDuration < 0 {
-		return fmt.Errorf(InvalidFloatParameterError, "vaccinated_duration", c.VaccinatedDuration, "cannot be negative")
+		return fmt.Errorf(InvalidIntParameterError, "vaccinated_duration", c.VaccinatedDuration, "cannot be negative")
 	}
+	// TODO: make sure host_ids are unique across models
 
 	c.validated = true
 	return nil
@@ -449,6 +544,7 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 // FitnessModelConfig contains parameters to create an FitnessModel.
 type fitnessModelConfig struct {
 	ModelName        string `toml:"model_name"`
+	HostIDs          []int  `toml:"host_ids"`
 	FitnessModel     string `toml:"fitness_model"` // multiplicative, additive, additive_motif
 	FitnessModelPath string `toml:"fitness_model_path"`
 	validated        bool
@@ -475,6 +571,7 @@ func (c *fitnessModelConfig) Validate() error {
 		return fmt.Errorf("file in %s does not exist", c.FitnessModelPath)
 	}
 
+	// TODO: make sure host_ids are unique across models
 	c.validated = true
 	return nil
 }
