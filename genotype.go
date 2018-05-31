@@ -196,7 +196,9 @@ type genotypeNode struct {
 }
 
 // NewGenotypeNode creates a new genotype node from a sequence.
-func NewGenotypeNode(sequence []int, set GenotypeSet, parents ...GenotypeNode) GenotypeNode {
+// This should not be used to create a new genotype. Use the NewNode method in
+// GenotypeTree instead.
+func newGenotypeNode(sequence []int, set GenotypeSet, parents ...GenotypeNode) GenotypeNode {
 	genotype := set.AddSequence(sequence)
 
 	// Create new node

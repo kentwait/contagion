@@ -23,7 +23,7 @@ func sampleGenotypeNode(sites int, sets ...GenotypeSet) *genotypeNode {
 	} else {
 		set = sets[0].(*genotypeSet)
 	}
-	n := NewGenotypeNode(sampleSequence(sites), set).(*genotypeNode)
+	n := newGenotypeNode(sampleSequence(sites), set).(*genotypeNode)
 	return n
 }
 
