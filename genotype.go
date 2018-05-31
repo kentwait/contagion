@@ -11,6 +11,8 @@ import (
 type Genotype interface {
 	// Sequence returns the sequence of the current node.
 	Sequence() []int
+	// SetSequence changes the sequence of genotype.
+	SetSequence(sequence []int)
 	// StringSequence returns the string representation of the
 	// integer-coded sequence of the current node.
 	StringSequence() string
@@ -52,6 +54,12 @@ func NewGenotype(s []int) Genotype {
 
 func (n *genotype) Sequence() []int {
 	return n.sequence
+}
+
+func (n *genotype) SetSequence(sequence []int) {
+	n.sequence = nil
+	n.sequence = make([]int, len(sequence))
+	copy(n.sequence, sequence)
 }
 
 func (n *genotype) StringSequence() string {
@@ -166,6 +174,8 @@ type GenotypeNode interface {
 	AddChild(child GenotypeNode)
 	// Sequence returns the sequence of the current node.
 	Sequence() []int
+	// SetSequence changes the sequence of genotype.
+	SetSequence(sequence []int)
 	// StringSequence returns the string representation of the
 	// integer-coded sequence of the current node.
 	StringSequence() string
