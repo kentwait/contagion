@@ -27,9 +27,6 @@ type Epidemic interface {
 	// SetHostStatus sets the current status of the selected host
 	// to a given status code.
 	SetHostStatus(id, status int)
-	// HostStatusDuration returns the number of generations a host
-	// remains in a given status.
-	HostStatusDuration(id, status int) int
 	// HostTime returns the current number of generations remaining
 	// before the host changes status.
 	HostTimer(id int) int
@@ -90,22 +87,22 @@ type EpidemicSimulation interface {
 // to strudy intrahost evolutionary dynamics especially in chronic diseases.
 type Infection interface {
 	// Host returns the selected host in the simulation.
-	Host(id int) Host
+	Host() Host
 
 	// HostStatus retrieves the current status of the selected host.
-	HostStatus(id int) int
+	HostStatus() int
 	// SetHostStatus sets the current status of the selected host
 	// to a given status code.
-	SetHostStatus(id, status int)
+	SetHostStatus(status int)
 	// HostStatusDuration returns the number of generations a host
 	// remains in a given status.
-	HostStatusDuration(id, status int) int
+	HostStatusDuration(status int) int
 	// HostTime returns the current number of generations remaining
 	// before the host changes status.
-	HostTimer(id int) int
+	HostTimer() int
 	// SetHostTimer sets the number of generations for the host to
 	// remain in its current status.
-	SetHostTimer(id, interval int)
+	SetHostTimer(interval int)
 
 	// The following methods perform intrahost processes associated with
 	// the status. For every generation, one of the following is called for
@@ -137,10 +134,10 @@ type Infection interface {
 	VaccinatedProcess(host Host, wg *sync.WaitGroup)
 }
 
-// SingleHostSimulation is a simulation environment that simulates
+// InfectionSimulation is a simulation environment that simulates
 // the infection within a single hosts or in an evironment where a network
 // configuration is not necessary.
-type SingleHostSimulation interface {
+type InfectionSimulation interface {
 	Infection
 	// Run runs the whole simulation
 	Run(DataRecorder interface{})
