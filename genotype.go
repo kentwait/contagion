@@ -272,25 +272,27 @@ type GenotypeTree interface {
 	// NewNode creates a new genotype node from a given sequence.
 	// Automatically adds sequence to the genotypeSet if it is not yet present.
 	NewNode(sequence []int, parents ...GenotypeNode) GenotypeNode
-	// Genotypes returns the map of genotype nodes found in the tree.
-	Genotypes() map[ksuid.KSUID]GenotypeNode
+	// Nodes returns the map of genotype nodes found in the tree.
+	Nodes() map[ksuid.KSUID]GenotypeNode
 }
 
 type genotypeTree struct {
 	sync.RWMutex
-	genotypes map[ksuid.KSUID]GenotypeNode
-	set       GenotypeSet
+	nodes map[ksuid.KSUID]GenotypeNode
+	set   GenotypeSet
 }
 
 // EmptyGenotypeTree creates a new empty genotype tree.
 func EmptyGenotypeTree() GenotypeTree {
 	tree := new(genotypeTree)
-	tree.genotypes = make(map[ksuid.KSUID]GenotypeNode)
+	tree.nodes = make(map[ksuid.KSUID]GenotypeNode)
 	tree.set = EmptyGenotypeSet()
 	return tree
 }
 
 func (t *genotypeTree) Set() GenotypeSet {
+	t.RLock()
+	defer t.RUnlock()
 	return t.set
 }
 
@@ -323,10 +325,12 @@ func (t *genotypeTree) NewNode(sequence []int, parents ...GenotypeNode) Genotype
 	// Add to tree map
 	t.Lock()
 	defer t.Unlock()
-	t.genotypes[n.uid] = n
+	t.nodes[n.uid] = n
 	return n
 }
 
-func (t *genotypeTree) Genotypes() map[ksuid.KSUID]GenotypeNode {
-	return t.genotypes
+func (t *genotypeTree) Nodes() map[ksuid.KSUID]GenotypeNode {
+	t.RLock()
+	defer t.RUnlock()
+	return t.nodes
 }
