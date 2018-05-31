@@ -184,7 +184,7 @@ func NeutralAdditiveFM(id int, name string, sites, alleles, growthRate int) Fitn
 	for i := 0; i < sites; i++ {
 		fm.matrix[i] = make(map[int]float64)
 		for j := 0; j < alleles; j++ {
-			fm.matrix[i][j] = 1.0 / float64(growthRate)
+			fm.matrix[i][j] = float64(growthRate) / float64(sites)
 		}
 	}
 	return fm
