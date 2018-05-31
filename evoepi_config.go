@@ -73,7 +73,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 
 type epidemicSimConfig struct {
 	NumGenerations uint   `toml:"num_generations"`
-	NumReplicates  uint   `toml:"num_replicates"`
+	NumIntances    uint   `toml:"num_instances"`
 	HostPopSize    uint   `toml:"host_popsize"`
 	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs
 
@@ -99,6 +99,17 @@ func (c *epidemicSimConfig) Validate() error {
 	}
 	if !exists {
 		return fmt.Errorf("file in %s does not exist", c.HostNetworkPath)
+	}
+
+	// Check parameter values
+	if c.NumGenerations < 1 {
+		return fmt.Errorf(InvalidIntParameterError, "num_generations", c.NumGenerations, "must be greater than or equal to 1")
+	}
+	if c.NumIntances < 1 {
+		return fmt.Errorf(InvalidIntParameterError, "num_instances", c.NumIntances, "must be greater than or equal to 1")
+	}
+	if c.HostPopSize < 1 {
+		return fmt.Errorf(InvalidIntParameterError, "host_popsize", c.HostPopSize, "must be greater than or equal to 1")
 	}
 
 	switch c.EpidemicModel {
@@ -142,14 +153,42 @@ type intrahostModelConfig struct {
 
 // Validate checks the validity of the IntrahostModelConfig configuration.
 func (c *intrahostModelConfig) Validate() error {
-	// check keywords
+	// check keywords and associated values
 	// replication_model
 	switch strings.ToLower(c.ReplicationModel) {
 	case "constant":
+		if c.ConstantPopSize < 1 {
+			return fmt.Errorf(InvalidIntParameterError, "constant_pop_size", c.ConstantPopSize, "must be greater than or equal to 1")
+		}
 	case "bht":
+		if c.MaxPopSize < 1 {
+			return fmt.Errorf(InvalidIntParameterError, "max_pop_size", c.MaxPopSize, "must be greater than or equal to 1")
+		}
+		if c.GrowthRate < 0 {
+			return fmt.Errorf(InvalidIntParameterError, "max_pop_size", c.GrowthRate, "must be greater than or equal to 0")
+		}
 	case "fitness":
+		if c.MaxPopSize < 1 {
+			return fmt.Errorf(InvalidIntParameterError, "max_pop_size", c.MaxPopSize, "must be greater than or equal to 1")
+		}
 	default:
 		return fmt.Errorf(UnrecognizedKeywordError, c.ReplicationModel, "replication_model")
+	}
+	// Check mutation rate
+	if c.MutationRate < 0 {
+		return fmt.Errorf(InvalidIntParameterError, "mutation_rate", c.MutationRate, "cannot be negative")
+	}
+	// Check recombination rate
+	if c.RecombinationRate < 0 {
+		return fmt.Errorf(InvalidIntParameterError, "recombination_rate", c.RecombinationRate, "cannot be negative")
+	}
+	// Checks values of TransitionMatrix
+	for i, row := range c.TransitionMatrix {
+		for j := range row {
+			if c.TransitionMatrix[i][j] < 0 {
+				return fmt.Errorf(InvalidIntParameterError, "transition rate", c.TransitionMatrix[i][j], "cannot be negative")
+			}
+		}
 	}
 	c.validated = true
 	return nil
