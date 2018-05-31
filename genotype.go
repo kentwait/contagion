@@ -10,9 +10,9 @@ import (
 // Genotype represents a unique pathogen sequence.
 type Genotype interface {
 	// Sequence returns the sequence of the current node.
-	Sequence() []int
+	Sequence() []uint8
 	// SetSequence changes the sequence of genotype.
-	SetSequence(sequence []int)
+	SetSequence(sequence []uint8)
 	// StringSequence returns the string representation of the
 	// integer-coded sequence of the current node.
 	StringSequence() string
@@ -24,26 +24,26 @@ type Genotype interface {
 	// NumSites returns the number of sites being modeled in this pathogen node.
 	NumSites() int
 	// StateCounts returns the number of sites by state.
-	StateCounts() map[int]int
+	StateCounts() map[uint8]int
 	// StatePositions returns the indexes of sites in a particular state.
-	StatePositions(state int) []int
+	StatePositions(state uint8) []int
 }
 
 type genotype struct {
 	sync.RWMutex
-	sequence []int
-	statePos map[int][]int   // key is the state
+	sequence []uint8
+	statePos map[uint8][]int // key is the state
 	fitness  map[int]float64 // key is the fitness model id
 }
 
 // NewGenotype creates a new genotype from sequence.
-func NewGenotype(s []int) Genotype {
+func NewGenotype(s []uint8) Genotype {
 	g := new(genotype)
 	// Copy sequence
-	g.sequence = make([]int, len(s))
+	g.sequence = make([]uint8, len(s))
 	copy(g.sequence, s)
 	// Initial count of states
-	g.statePos = make(map[int][]int)
+	g.statePos = make(map[uint8][]int)
 	for i, state := range g.sequence {
 		g.statePos[state] = append(g.statePos[state], i)
 	}
@@ -52,13 +52,13 @@ func NewGenotype(s []int) Genotype {
 	return g
 }
 
-func (n *genotype) Sequence() []int {
+func (n *genotype) Sequence() []uint8 {
 	return n.sequence
 }
 
-func (n *genotype) SetSequence(sequence []int) {
+func (n *genotype) SetSequence(sequence []uint8) {
 	n.sequence = nil
-	n.sequence = make([]int, len(sequence))
+	n.sequence = make([]uint8, len(sequence))
 	copy(n.sequence, sequence)
 }
 
@@ -83,15 +83,15 @@ func (n *genotype) NumSites() int {
 	return len(n.sequence)
 }
 
-func (n *genotype) StateCounts() map[int]int {
-	stateCounts := make(map[int]int)
+func (n *genotype) StateCounts() map[uint8]int {
+	stateCounts := make(map[uint8]int)
 	for state, positions := range n.statePos {
 		stateCounts[state] = len(positions)
 	}
 	return stateCounts
 }
 
-func (n *genotype) StatePositions(state int) []int {
+func (n *genotype) StatePositions(state uint8) []int {
 	return n.statePos[state]
 }
 
@@ -101,9 +101,9 @@ type GenotypeSet interface {
 	Add(g Genotype)
 	// AddSequence creates a new genotype from the sequence if it is not present
 	// in the set. Otherwise, returns the existing genotype in the set.
-	AddSequence(s []int) Genotype
+	AddSequence(s []uint8) Genotype
 	// Remove removes genotype of a particular sequence from the set.
-	Remove(s []int)
+	Remove(s []uint8)
 	// Size returns the size of the set.
 	Size() int
 }
@@ -130,7 +130,7 @@ func (set *genotypeSet) Add(g Genotype) {
 	}
 }
 
-func (set *genotypeSet) AddSequence(s []int) Genotype {
+func (set *genotypeSet) AddSequence(s []uint8) Genotype {
 	key := fmt.Sprintf("%v", s)
 	key = key[1 : len(key)-1]
 	set.Lock()
@@ -144,7 +144,7 @@ func (set *genotypeSet) AddSequence(s []int) Genotype {
 	return g
 }
 
-func (set *genotypeSet) Remove(s []int) {
+func (set *genotypeSet) Remove(s []uint8) {
 	key := fmt.Sprintf("%v", s)
 	key = key[1 : len(key)-1]
 	set.Lock()
@@ -173,9 +173,9 @@ type GenotypeNode interface {
 	// AddChild appends a child to the list of children.
 	AddChild(child GenotypeNode)
 	// Sequence returns the sequence of the current node.
-	Sequence() []int
+	Sequence() []uint8
 	// SetSequence changes the sequence of genotype.
-	SetSequence(sequence []int)
+	SetSequence(sequence []uint8)
 	// StringSequence returns the string representation of the
 	// integer-coded sequence of the current node.
 	StringSequence() string
@@ -183,7 +183,7 @@ type GenotypeNode interface {
 	CurrentGenotype() Genotype
 	// History returns the list of sequences that resulted into the extant
 	// sequence.
-	History(h [][]int) [][]int
+	History(h [][]uint8) [][]uint8
 	// Fitness returns the fitness value of this node based on its current
 	// sequence and the given fitness model. If the fitness of the node has
 	// been computed before using the same fitness model, then the value is
@@ -192,9 +192,9 @@ type GenotypeNode interface {
 	// NumSites returns the number of sites being modeled in this pathogen node.
 	NumSites() int
 	// StateCounts returns the number of sites by state.
-	StateCounts() map[int]int
+	StateCounts() map[uint8]int
 	// StatePositions returns the indexes of sites in a particular state.
-	StatePositions(state int) []int
+	StatePositions(state uint8) []int
 }
 
 type genotypeNode struct {
@@ -208,7 +208,7 @@ type genotypeNode struct {
 // NewGenotypeNode creates a new genotype node from a sequence.
 // This should not be used to create a new genotype. Use the NewNode method in
 // GenotypeTree instead.
-func newGenotypeNode(sequence []int, set GenotypeSet, parents ...GenotypeNode) GenotypeNode {
+func newGenotypeNode(sequence []uint8, set GenotypeSet, parents ...GenotypeNode) GenotypeNode {
 	genotype := set.AddSequence(sequence)
 
 	// Create new node
@@ -253,7 +253,7 @@ func (n *genotypeNode) AddChild(child GenotypeNode) {
 	n.children = append(n.children, child)
 }
 
-func (n *genotypeNode) Sequence() []int {
+func (n *genotypeNode) Sequence() []uint8 {
 	return n.Genotype.Sequence()
 }
 
@@ -261,7 +261,7 @@ func (n *genotypeNode) CurrentGenotype() Genotype {
 	return n.Genotype
 }
 
-func (n *genotypeNode) History(h [][]int) [][]int {
+func (n *genotypeNode) History(h [][]uint8) [][]uint8 {
 	h = append(h, n.Genotype.Sequence())
 	if len(n.parents) == 0 {
 		return h
@@ -277,7 +277,7 @@ type GenotypeTree interface {
 	Set() GenotypeSet
 	// NewNode creates a new genotype node from a given sequence.
 	// Automatically adds sequence to the genotypeSet if it is not yet present.
-	NewNode(sequence []int, parents ...GenotypeNode) GenotypeNode
+	NewNode(sequence []uint8, parents ...GenotypeNode) GenotypeNode
 	// Nodes returns the map of genotype nodes found in the tree.
 	Nodes() map[ksuid.KSUID]GenotypeNode
 }
@@ -302,7 +302,7 @@ func (t *genotypeTree) Set() GenotypeSet {
 	return t.set
 }
 
-func (t *genotypeTree) NewNode(sequence []int, parents ...GenotypeNode) GenotypeNode {
+func (t *genotypeTree) NewNode(sequence []uint8, parents ...GenotypeNode) GenotypeNode {
 	genotype := t.set.AddSequence(sequence)
 
 	// Create new node
