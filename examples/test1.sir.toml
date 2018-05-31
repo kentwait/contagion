@@ -1,11 +1,12 @@
+[simulation]
 num_generations = 100
 num_replicates = 10
 host_popsize = 10
 epidemic_model = "sir"
-
 pathogen_sequence_path = "examples/test1.sir.pathogens.fa"
 host_network_path = "examples/test1.sir.network.txt"
 
+[logging]
 log_freq = 1
 pathogen_log_path = "examples/test1.sir.log"
 
