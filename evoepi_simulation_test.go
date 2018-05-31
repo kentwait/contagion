@@ -45,7 +45,7 @@ func TestEvoEpiSimulation_Getters(t *testing.T) {
 		0: []Host{sim.hosts[1]},
 		1: []Host{sim.hosts[0]},
 	}
-	sim.hostNetwork = map[int]map[int]float64{
+	sim.hostNetwork = adjacencyMatrix{
 		0: map[int]float64{1: 1.0},
 		1: map[int]float64{0: 1.0},
 	}
@@ -114,7 +114,7 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 		0: []Host{sim.hosts[1]},
 		1: []Host{sim.hosts[0]},
 	}
-	sim.hostNetwork = map[int]map[int]float64{
+	sim.hostNetwork = adjacencyMatrix{
 		0: map[int]float64{1: 1.0},
 		1: map[int]float64{0: 1.0},
 	}
@@ -196,7 +196,7 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 		0: []Host{sim.hosts[1]},
 		1: []Host{sim.hosts[0]},
 	}
-	sim.hostNetwork = map[int]map[int]float64{
+	sim.hostNetwork = adjacencyMatrix{
 		0: map[int]float64{1: 1.0},
 		1: map[int]float64{0: 1.0},
 	}
@@ -281,7 +281,7 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 		0: []Host{sim.hosts[1]},
 		1: []Host{sim.hosts[0]},
 	}
-	sim.hostNetwork = map[int]map[int]float64{
+	sim.hostNetwork = adjacencyMatrix{
 		0: map[int]float64{1: 1.0},
 		1: map[int]float64{0: 1.0},
 	}
