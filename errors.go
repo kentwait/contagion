@@ -41,3 +41,8 @@ const (
 	UnrecognizedKeywordError    = "unrecognized keyword %s for %s"
 	FileParsingError            = "error in line %d: %s"
 )
+
+const (
+	IdenticalPointerError    = "memory address of %s (%p) and %s (%p) are identical"
+	NotIdenticalPointerError = "memory address of %s (%p) and %s (%p) are not identical"
+)
