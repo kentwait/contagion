@@ -138,10 +138,13 @@ func LoadFitnessMatrix(path string) (map[int]map[int]float64, error) {
 	i := 1
 	fitnessMap := make(map[int][]float64)
 	var defaultValues []float64
+	alleles := 0
 	lastPos := 0
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
+		i++
+
 		if strings.HasPrefix(line, "#") {
 			// ignore comment lines
 			continue
@@ -153,7 +156,9 @@ func LoadFitnessMatrix(path string) (map[int]map[int]float64, error) {
 			for _, vStr := range reValues.FindAllString(splittedLine[1], -1) {
 				v, _ := strconv.ParseFloat(vStr, 64)
 				defaultValues = append(defaultValues, v)
+
 			}
+			alleles = len(defaultValues)
 		} else {
 			// Load site fitness values
 			splittedLine := strings.Split(line, ":")
@@ -177,19 +182,21 @@ func LoadFitnessMatrix(path string) (map[int]map[int]float64, error) {
 			if lastPos < pos {
 				lastPos = pos
 			}
+			if alleles == 0 {
+				alleles = len(values)
+			} else if alleles != len(values) {
+				return nil, fmt.Errorf("number of alleles in site %d (%d) is not equal to the previous count (%d)", pos, len(values), alleles)
+			}
 		}
-		i++
 	}
 	// Transform map into FitnessMatrix
 	m := make(map[int]map[int]float64)
 	for i := 0; i <= lastPos; i++ {
 		m[i] = make(map[int]float64)
-		if v, ok := fitnessMap[i]; ok {
-			for j := 0; j < len(v); j++ {
+		for j := 0; j < alleles; j++ {
+			if _, ok := fitnessMap[i]; ok {
 				m[i][j] = fitnessMap[i][j]
-			}
-		} else {
-			for j := 0; j < len(v); j++ {
+			} else {
 				m[i][j] = defaultValues[j]
 			}
 		}
