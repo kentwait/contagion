@@ -227,10 +227,12 @@ func LoadAdjacencyMatrix(p string) (adjacencyMatrix, error) {
 	i := 0
 	for scanner.Scan() {
 		i++
+		line := scanner.Text()
 		if strings.HasPrefix(line, "#") {
 			// ignore comment lines
 			continue
-		res := re.FindStringSubmatch(scanner.Text())
+		}
+		res := re.FindStringSubmatch(line)
 		if len(res) == 0 {
 			continue
 		}
