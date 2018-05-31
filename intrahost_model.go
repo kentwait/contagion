@@ -13,8 +13,6 @@ type IntrahostModel interface {
 
 	// MutationRate returns the mutation rate for this model.
 	MutationRate() float64
-	// States returns the list of possible states.
-	States() []int
 	// TransitionMatrix returns the conditioned mutation rate matrix
 	// for this model.
 	TransitionMatrix() [][]float64
@@ -113,17 +111,6 @@ func (params *mutationParams) TransitionMatrix() [][]float64 {
 
 func (params *mutationParams) TransitionProbs(char int) []float64 {
 	return params.transitionMatrix[char]
-}
-
-func (params *mutationParams) States() []int {
-	if params.transitionMatrix == nil {
-		return []int{}
-	}
-	states := make([]int, len(params.transitionMatrix))
-	for i := range params.transitionMatrix {
-		states[i] = i
-	}
-	return states
 }
 
 type recombinationParams struct {
