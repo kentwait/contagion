@@ -6,9 +6,9 @@ import (
 	"sync"
 )
 
-// EvoEpiSimulation is a type simulation that uses a SequenceNode
+// evoEpiSimulation is a type simulation that uses a SequenceNode
 // to represent pathogens.
-type EvoEpiSimulation struct {
+type evoEpiSimulation struct {
 	Hosts             map[int]Host
 	Statuses          map[int]int
 	Timers            map[int]int
@@ -16,44 +16,35 @@ type EvoEpiSimulation struct {
 	IntrahostModels   map[int]IntrahostModel
 	FitnessModels     map[int]FitnessModel
 	HostNeighborhoods map[int][]Host
+	HostNetwork       map[int]map[int]float64
 	Tree              GenotypeTree
 }
 
-// Host returns an EpidemicHost registered to the simulation
-// with the specified host ID.
-func (sim *EvoEpiSimulation) Host(id int) Host {
+func (sim *evoEpiSimulation) Host(id int) Host {
 	return sim.Hosts[id]
 }
 
-// HostMap returns the mapping of all hosts and IDs registered
-// in the simulation.
-func (sim *EvoEpiSimulation) HostMap() map[int]Host {
-	return sim.Hosts
-}
-
-// HostStatus returns the status of a particular host.
-func (sim *EvoEpiSimulation) HostStatus(id int) int {
+func (sim *evoEpiSimulation) HostStatus(id int) int {
 	return sim.Statuses[id]
 }
 
-// SetHostStatus sets the status of a particular host.
-func (sim *EvoEpiSimulation) SetHostStatus(id, status int) {
+func (sim *evoEpiSimulation) SetHostStatus(id, status int) {
 	sim.Statuses[id] = status
 }
 
-// HostTimer returns the current time interval for a particular host.
-func (sim *EvoEpiSimulation) HostTimer(id int) int {
+func (sim *evoEpiSimulation) HostTimer(id int) int {
 	return sim.Timers[id]
 }
 
-// SetHostTimer sets the time interval for a particular host.
-func (sim *EvoEpiSimulation) SetHostTimer(id, interval int) {
+func (sim *evoEpiSimulation) SetHostTimer(id, interval int) {
 	sim.Timers[id] = interval
 }
 
-// HostNeighbors returns the list of EpidemicHost that is directly connected
-// to a particular host.
-func (sim *EvoEpiSimulation) HostNeighbors(id int) []Host {
+func (sim *evoEpiSimulation) HostMap() map[int]Host {
+	return sim.Hosts
+}
+
+func (sim *evoEpiSimulation) HostNeighbors(id int) []Host {
 	return sim.HostNeighborhoods[id]
 }
 
@@ -63,7 +54,7 @@ func (sim *EvoEpiSimulation) HostNeighbors(id int) []Host {
 
 // SusceptibleProcess executes within-host processes that occurs when a host
 // is in the susceptible state.
-func (sim *EvoEpiSimulation) SusceptibleProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) SusceptibleProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// Decrement to -1 if pathogens exist
 	if host.PathogenPopSize() > 0 {
@@ -73,7 +64,7 @@ func (sim *EvoEpiSimulation) SusceptibleProcess(host Host, wg *sync.WaitGroup) {
 
 // ExposedProcess executes within-host processes that occurs when a host
 // is in the exposed state. By default, it is same as InfectedProcess.
-func (sim *EvoEpiSimulation) ExposedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) ExposedProcess(host Host, wg *sync.WaitGroup) {
 	// timer decrement is done within the InfectedProcess function
 	// Done() signal also executed within the InfectedProcess function
 	sim.InfectedProcess(host, wg)
@@ -82,7 +73,7 @@ func (sim *EvoEpiSimulation) ExposedProcess(host Host, wg *sync.WaitGroup) {
 
 // InfectedProcess executes within-host processes that occurs when a host
 // is in the infected state.
-func (sim *EvoEpiSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	pathogens := host.Pathogens()
 	var replicatedC <-chan GenotypeNode
@@ -136,7 +127,7 @@ func (sim *EvoEpiSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) {
 
 // InfectiveProcess executes within-host processes that occurs when a host
 // is in the infective state. By default, it is same as InfectedProcess.
-func (sim *EvoEpiSimulation) InfectiveProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) InfectiveProcess(host Host, wg *sync.WaitGroup) {
 	// timer decrement is done within the InfectedProcess function
 	// Done() signal also executed within the InfectedProcess function
 	sim.InfectedProcess(host, wg)
@@ -144,7 +135,7 @@ func (sim *EvoEpiSimulation) InfectiveProcess(host Host, wg *sync.WaitGroup) {
 
 // RemovedProcess executes within-host processes that occurs when a host
 // is in the removed state that is perpetually uninfectable.
-func (sim *EvoEpiSimulation) RemovedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) RemovedProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
 }
@@ -153,7 +144,7 @@ func (sim *EvoEpiSimulation) RemovedProcess(host Host, wg *sync.WaitGroup) {
 // is in the recovered state that is perpetually uninfectable.
 // This state is identically to Removed but is used to distinguish from
 // a dead state.
-func (sim *EvoEpiSimulation) RecoveredProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) RecoveredProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
 }
@@ -162,7 +153,7 @@ func (sim *EvoEpiSimulation) RecoveredProcess(host Host, wg *sync.WaitGroup) {
 // is in the dead state state that is perpetually uninfectable.
 // This state is identically to Removed but is used to distinguish from
 // a recovered, but perpetually immune state.
-func (sim *EvoEpiSimulation) DeadProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) DeadProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
 }
@@ -170,7 +161,7 @@ func (sim *EvoEpiSimulation) DeadProcess(host Host, wg *sync.WaitGroup) {
 // VaccinatedProcess executes within-host processes that occurs when a host
 // is in a globally immune state with the chance to become
 // globally susceptible again.
-func (sim *EvoEpiSimulation) VaccinatedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) VaccinatedProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
 	host.DecrementTimer()
