@@ -196,3 +196,60 @@ func LoadFitnessMatrix(path string) (map[int]map[int]float64, error) {
 	}
 	return m, nil
 }
+
+// LoadAdjacencyMatrix creates a new 2D mapping based on a text file.
+func LoadAdjacencyMatrix(p string) (adjacencyMatrix, error) {
+	m := make(adjacencyMatrix)
+
+	/*
+		Parses text file for connection information between hosts.
+		Ignores lines that starts with #.
+		The text file should be formatted as follows for every line:
+
+			from_uid<int>    to_uid<int>    weight<float64>
+
+		For every line in the file, the AddWeightedConnection method is called
+		to create a directed edge between the source and recepient host
+		specified by the given UIDs.
+
+		If the edge is undirected, two declarations are expected per source-
+		recepient pair: one in the forward direction and the other in the
+		reverse direction.
+
+	*/
+	f, err := os.Open(p)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	re := regexp.MustCompile(`(\d+)\s+(\d+)\s+(\d*\.?\d+)`)
+	scanner := bufio.NewScanner(f)
+	i := 0
+	for scanner.Scan() {
+		i++
+		if strings.HasPrefix(line, "#") {
+			// ignore comment lines
+			continue
+		res := re.FindStringSubmatch(scanner.Text())
+		if len(res) == 0 {
+			continue
+		}
+		if len(res) < 3 {
+			return nil, fmt.Errorf("invalid format in line %d", i)
+		}
+		a, err := strconv.Atoi(res[1])
+		if err != nil {
+			return nil, fmt.Errorf("%s in line %d", err, i)
+		}
+		b, err := strconv.Atoi(res[2])
+		if err != nil {
+			return nil, fmt.Errorf("%s in line %d", err, i)
+		}
+		wt, err := strconv.ParseFloat(res[3], 64)
+		if err != nil {
+			return nil, fmt.Errorf("%s in line %d", err, i)
+		}
+		m.AddWeightedConnection(a, b, wt)
+	}
+	return m, nil
+}
