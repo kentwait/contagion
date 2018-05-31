@@ -259,6 +259,8 @@ type GenotypeTree interface {
 	// NewNode creates a new genotype node from a given sequence.
 	// Automatically adds sequence to the genotypeSet if it is not yet present.
 	NewNode(sequence []int, parents ...GenotypeNode) GenotypeNode
+	// Genotypes returns the map of genotype nodes found in the tree.
+	Genotypes() map[ksuid.KSUID]GenotypeNode
 }
 
 type genotypeTree struct {
@@ -310,4 +312,8 @@ func (t *genotypeTree) NewNode(sequence []int, parents ...GenotypeNode) Genotype
 	defer t.Unlock()
 	t.genotypes[n.uid] = n
 	return n
+}
+
+func (t *genotypeTree) Genotypes() map[ksuid.KSUID]GenotypeNode {
+	return t.genotypes
 }
