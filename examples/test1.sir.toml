@@ -1,0 +1,27 @@
+num_generations = 100
+num_replicates = 10
+epidemic_model = "sir"
+
+pathogen_sequence_path = "examples/test1.sir.pathogens.fa"
+host_network_path = "examples/test1.sir.network.txt"
+
+log_freq = 1
+pathogen_log_path = "examples/test1.sir.log"
+
+[[intrahost_model]]
+model_name = "constant-high_mutation"
+mutation_rate = 0.01
+transition_matrix = [
+  [ 0.0e+00, 1.0e+00 ],
+  [ 1.0e+00, 0.0e+00 ],
+]
+recombination_rate = 0.0
+replication_model = "constant"
+constant_pop_size = 100
+
+[[fitness_model]]
+model_name = "multiplicative"
+fitness_model = "multiplicative"
+fitness_model_path = "examples/test1.sir.fm.txt"
+
+
