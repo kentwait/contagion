@@ -9,8 +9,8 @@ import (
 // HostNetwork interface describes a host population connected together as
 // a network.
 type HostNetwork interface {
-	// PopSize returns the total number of hosts in the network.
-	PopSize() int
+	// ConnectedPopSize returns the total number of hosts in the network.
+	ConnectedPopSize() int
 	// GetNeighbors retrieves the unordered list of neighbors from
 	// the adjacency matrix.
 	GetNeighbors(ID int) (neighbors []int)
@@ -52,7 +52,7 @@ type HostNetwork interface {
 // connections between hosts using their UIDs as index.
 type adjacencyMatrix map[int]map[int]float64
 
-func (m adjacencyMatrix) PopSize() int {
+func (m adjacencyMatrix) ConnectedPopSize() int {
 	hostIdsSet := make(map[int]bool)
 	for i, hosts := range m {
 		hostIdsSet[i] = true
