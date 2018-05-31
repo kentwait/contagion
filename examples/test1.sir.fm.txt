@@ -3,6 +3,6 @@
 # This test uses 2 alleles per site.
 # This test mimicks neutral evolution.
 # Fitness values are in log form, ie. ln 1.0 = 0.0
-default->1.0, 1.0, 1.0 1.0
-0: 1.0, 1.0, 1.0, 1.0
-99: 1.0, 1.0, 1.0, 1.0
+default->1.0, 1.0
+0: 1.0, 1.0
+99: 1.0, 1.0
