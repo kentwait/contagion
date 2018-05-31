@@ -21,16 +21,17 @@ type Genotype interface {
 	Fitness(f FitnessModel) float64
 	// NumSites returns the number of sites being modeled in this pathogen node.
 	NumSites() int
-	// StateCounts returns the number of sites by state, postion corresponds
-	// to the state from 0 to n.
+	// StateCounts returns the number of sites by state.
 	StateCounts() map[int]int
+	// StatePositions returns the indexes of sites in a particular state.
+	StatePositions(state int) []int
 }
 
 type genotype struct {
 	sync.RWMutex
-	sequence    []int
-	stateCounts map[int]int     // key is the state
-	fitness     map[int]float64 // key is the fitness model id
+	sequence []int
+	statePos map[int][]int   // key is the state
+	fitness  map[int]float64 // key is the fitness model id
 }
 
 // NewGenotype creates a new genotype from sequence.
@@ -40,9 +41,9 @@ func NewGenotype(s []int) Genotype {
 	g.sequence = make([]int, len(s))
 	copy(g.sequence, s)
 	// Initial count of states
-	g.stateCounts = make(map[int]int)
-	for _, state := range g.sequence {
-		g.stateCounts[state]++
+	g.statePos = make(map[int][]int)
+	for i, state := range g.sequence {
+		g.statePos[state] = append(g.statePos[state], i)
 	}
 	// Initialize other maps
 	g.fitness = make(map[int]float64)
@@ -74,7 +75,15 @@ func (n *genotype) NumSites() int {
 }
 
 func (n *genotype) StateCounts() map[int]int {
-	return n.stateCounts
+	stateCounts := make(map[int]int)
+	for state, positions := range n.statePos {
+		stateCounts[state] = len(positions)
+	}
+	return stateCounts
+}
+
+func (n *genotype) StatePositions(state int) []int {
+	return n.statePos[state]
 }
 
 // GenotypeSet is a collection of genotypes.
@@ -171,9 +180,10 @@ type GenotypeNode interface {
 	Fitness(f FitnessModel) float64
 	// NumSites returns the number of sites being modeled in this pathogen node.
 	NumSites() int
-	// StateCounts returns the number of sites by state, postion corresponds
-	// to the state from 0 to n.
+	// StateCounts returns the number of sites by state.
 	StateCounts() map[int]int
+	// StatePositions returns the indexes of sites in a particular state.
+	StatePositions(state int) []int
 }
 
 type genotypeNode struct {
