@@ -9,14 +9,15 @@ import (
 // evoEpiSimulation is a type simulation that uses a SequenceNode
 // to represent pathogens.
 type evoEpiSimulation struct {
-	hosts             map[int]Host
-	statuses          map[int]int
-	timers            map[int]int
-	intrahostModels   map[int]IntrahostModel
-	fitnessModels     map[int]FitnessModel
-	hostNeighborhoods map[int][]Host
-	hostNetwork       map[int]map[int]float64
-	tree              GenotypeTree
+	hosts              map[int]Host
+	statuses           map[int]int
+	timers             map[int]int
+	intrahostModels    map[int]IntrahostModel
+	fitnessModels      map[int]FitnessModel
+	hostNeighborhoods  map[int][]Host
+	hostNetwork        map[int]map[int]float64
+	infectableStatuses []int
+	tree               GenotypeTree
 }
 
 func (sim *evoEpiSimulation) Host(id int) Host {
@@ -37,6 +38,10 @@ func (sim *evoEpiSimulation) HostTimer(id int) int {
 
 func (sim *evoEpiSimulation) SetHostTimer(id, interval int) {
 	sim.timers[id] = interval
+}
+
+func (sim *evoEpiSimulation) InfectableStatuses() []int {
+	return sim.infectableStatuses
 }
 
 func (sim *evoEpiSimulation) HostMap() map[int]Host {

@@ -46,8 +46,8 @@ func (c *EvoEpiConfig) Validate() error {
 }
 
 // NewSimulation creates a new SingleHostSimulation simulation.
-func (c *EvoEpiConfig) NewSimulation() (*EvoEpiSimulation, error) {
-	sim := new(EvoEpiSimulation)
+func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
+	sim := new(evoEpiSimulation)
 	// Create IntrahostModels
 	for i, conf := range c.IntrahostModels {
 		model, err := conf.CreateModel()
@@ -55,7 +55,7 @@ func (c *EvoEpiConfig) NewSimulation() (*EvoEpiSimulation, error) {
 			return nil, err
 		}
 		model.SetModelID(i)
-		sim.IntrahostModels[i] = model
+		sim.intrahostModels[i] = model
 	}
 	// Create FitnessModels
 	for i, conf := range c.FitnessModels {
@@ -64,7 +64,7 @@ func (c *EvoEpiConfig) NewSimulation() (*EvoEpiSimulation, error) {
 			return nil, err
 		}
 		model.SetModelID(i)
-		sim.FitnessModels[i] = model
+		sim.fitnessModels[i] = model
 	}
 	// Create epidemic simulation
 	switch c.EpidemicModel {
