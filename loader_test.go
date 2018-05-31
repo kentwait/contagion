@@ -70,3 +70,44 @@ func TestLoadAdjacencyMatrix(t *testing.T) {
 		t.Errorf(UnequalIntParameterError, "number of connected hosts", connectedHosts, c)
 	}
 }
+
+func TestLoadEvoEpiConfig_Validate(t *testing.T) {
+	path := "examples/test1.sir.toml"
+	conf, err := LoadEvoEpiConfig(path)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Validate individual parts
+	err = conf.Validate()
+	if err != nil {
+		t.Error(err)
+	}
+	// err = conf.LogParams.Validate()
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+}
+
+func TestLoadEvoEpiConfig_NewSimulation(t *testing.T) {
+	path := "examples/test1.sir.toml"
+	conf, err := LoadEvoEpiConfig(path)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Validate
+	err = conf.Validate()
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = conf.NewSimulation()
+	if err != nil {
+		t.Error(err)
+	}
+	// err = conf.LogParams.Validate()
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+}

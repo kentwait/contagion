@@ -262,3 +262,12 @@ func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
 	}
 	return m, nil
 }
+
+func LoadEvoEpiConfig(path string) (EvoEpiConfig, error) {
+	var conf EvoEpiConfig
+	_, err := toml.DecodeFile(path, &conf)
+	if err != nil {
+		return EvoEpiConfig{}, err
+	}
+	return conf, nil
+}
