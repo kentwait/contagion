@@ -29,6 +29,23 @@ func LoadSingleHostConfig(path string) (*SingleHostConfig, error) {
 // Returns a map where the key is the host ID and the values are
 // the pathogen sequences for the particular host.
 func LoadSequences(path string) (map[int][][]int, error) {
+	/*
+		Format:
+
+		# This is a comment
+		% U:0 P:1
+		>h:0
+		UUPUUPUPUUPPUUPUUPUPPPUU
+		PUPUUPUPUPUPPUUUUPPPPPPP
+
+		First line indicates how characters are translated into integer
+		encoding. The desciption line is similar to FASTA format except that
+		the pattern h:\d+ must be present somewhere in the line.
+
+		This indicates which host the pathogen will be inoculated in, where
+		\d+ is the host ID of the target host.
+	*/
+
 	pathogenHostMap := make(map[int][][]int)
 
 	// TODO: add pathogens to hosts using host ID list
@@ -40,9 +57,9 @@ func LoadSequences(path string) (map[int][][]int, error) {
 	}
 	defer f.Close()
 	// Regular expression to encode characters into integers
-	reTranslate := regexp.MustCompile(`([A-Za-z0-9]+)\:(\d+)`)
+	reTranslate := regexp.MustCompile(`([A-Za-z0-9]+)\s*\:\s*(\d+)`)
 	// Regular expression to find target host
-	reHostID := regexp.MustCompile(`h\:(\d+)`)
+	reHostID := regexp.MustCompile(`h\s*\:\s*(\d+)`)
 	// seqRe := regexp.MustCompile(`[A-Za-z0-9]`)
 	scanner := bufio.NewScanner(f)
 	lineNum := 0
@@ -51,7 +68,10 @@ func LoadSequences(path string) (map[int][][]int, error) {
 	var currentSeq []int
 	for scanner.Scan() {
 		line := scanner.Text()
-		if strings.HasPrefix(line, "#") && lineNum == 0 {
+		if strings.HasPrefix(line, "#") {
+			// ignore comment lines
+			continue
+		} else if strings.HasPrefix(line, "%") {
 			// Check if first line starts with #
 			for _, match := range reTranslate.FindAllStringSubmatch(line, -1) {
 				if len(match[1]) > 0 && len(match[2]) > 0 {
