@@ -15,9 +15,10 @@ type evoEpiSimulation struct {
 	intrahostModels    map[int]IntrahostModel
 	fitnessModels      map[int]FitnessModel
 	hostNeighborhoods  map[int][]Host
-	hostNetwork        map[int]map[int]float64
+	hostNetwork        HostNetwork
 	infectableStatuses []int
 	tree               GenotypeTree
+	config             Config
 }
 
 func (sim *evoEpiSimulation) Host(id int) Host {
@@ -50,6 +51,10 @@ func (sim *evoEpiSimulation) HostMap() map[int]Host {
 
 func (sim *evoEpiSimulation) HostNeighbors(id int) []Host {
 	return sim.hostNeighborhoods[id]
+}
+
+func (sim *evoEpiSimulation) NewInstance() (Epidemic, error) {
+	return sim.config.NewSimulation()
 }
 
 // The following methods are used as goroutines that performs tasks within
