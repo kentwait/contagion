@@ -10,9 +10,13 @@ import (
 func TestNewMultiplicativeFM(t *testing.T) {
 	id := 1
 	name := "multiplicative"
-	matrix := make(map[int]map[int]float64)
+	matrix := make(map[int]map[uint8]float64)
 	for i := 0; i < 1000; i++ {
-		matrix[i] = map[int]float64{0: math.Log(0.4), 1: math.Log(0.3), 2: math.Log(0.2), 3: math.Log(0.1)}
+		matrix[i] = map[uint8]float64{
+			uint8(0): math.Log(0.4),
+			uint8(1): math.Log(0.3),
+			uint8(2): math.Log(0.2),
+			uint8(3): math.Log(0.1)}
 	}
 
 	fm := NewMultiplicativeFM(id, name, matrix)
@@ -27,9 +31,13 @@ func TestNewMultiplicativeFM(t *testing.T) {
 
 func TestMultiplicativeFM_Fitness(t *testing.T) {
 	rand.Seed(0)
-	matrix := make(map[int]map[int]float64)
+	matrix := make(map[int]map[uint8]float64)
 	for i := 0; i < 1000; i++ {
-		matrix[i] = map[int]float64{0: math.Log(0.4), 1: math.Log(0.3), 2: math.Log(0.2), 3: math.Log(0.1)}
+		matrix[i] = map[uint8]float64{
+			uint8(0): math.Log(0.4),
+			uint8(1): math.Log(0.3),
+			uint8(2): math.Log(0.2),
+			uint8(3): math.Log(0.1)}
 	}
 	sequence := sampleSequence(1000)
 	id := 1
@@ -43,9 +51,13 @@ func TestMultiplicativeFM_Fitness(t *testing.T) {
 }
 
 func TestNewAdditiveFM(t *testing.T) {
-	matrix := make(map[int]map[int]float64)
+	matrix := make(map[int]map[uint8]float64)
 	for i := 0; i < 1000; i++ {
-		matrix[i] = map[int]float64{0: 0.4, 1: 0.3, 2: 0.2, 3: 0.1}
+		matrix[i] = map[uint8]float64{
+			uint8(0): 0.4,
+			uint8(1): 0.3,
+			uint8(2): 0.2,
+			uint8(3): 0.1}
 	}
 	id := 1
 	name := "additive"
@@ -61,9 +73,13 @@ func TestNewAdditiveFM(t *testing.T) {
 
 func TestAdditiveFM_Fitness(t *testing.T) {
 	rand.Seed(0)
-	matrix := make(map[int]map[int]float64)
+	matrix := make(map[int]map[uint8]float64)
 	for i := 0; i < 1000; i++ {
-		matrix[i] = map[int]float64{0: 0.4, 1: 0.3, 2: 0.2, 3: 0.1}
+		matrix[i] = map[uint8]float64{
+			uint8(0): 0.4,
+			uint8(1): 0.3,
+			uint8(2): 0.2,
+			uint8(3): 0.1}
 	}
 	sequence := sampleSequence(1000)
 	id := 1

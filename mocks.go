@@ -2,16 +2,16 @@ package contagiongo
 
 import "math/rand"
 
-func sampleSequence(sites int) []int {
-	sequence := make([]int, sites)
+func sampleSequence(sites int) []uint8 {
+	sequence := make([]uint8, sites)
 	for i := 0; i < sites; i++ {
-		sequence[i] = rand.Intn(2)
+		sequence[i] = uint8(rand.Intn(2))
 	}
 	return sequence
 }
 
 func sampleGenotype() Genotype {
-	sequence := []int{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
+	sequence := []uint8{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
 	g := NewGenotype(sequence)
 	return g
 }

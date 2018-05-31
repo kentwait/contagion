@@ -74,7 +74,7 @@ func TestSequenceMutate(t *testing.T) {
 	rand.Seed(0)
 	// Create a mock tree
 	tree := EmptyGenotypeTree()
-	root := tree.NewNode([]int{
+	root := tree.NewNode([]uint8{
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -99,7 +99,7 @@ func TestSequenceMutate(t *testing.T) {
 	c := make(chan GenotypeNode)
 	go func() {
 		for i := 0; i < model.popSize; i++ {
-			pathogen := tree.NewNode([]int{
+			pathogen := tree.NewNode([]uint8{
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

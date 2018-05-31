@@ -12,7 +12,7 @@ func TestNewGenotype(t *testing.T) {
 			t.Fatalf(UnexpectedErrorWhileError, "calling NewGenotype constructor", err)
 		}
 	}()
-	sequence := []int{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
+	sequence := []uint8{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
 	NewGenotype(sequence)
 }
 
