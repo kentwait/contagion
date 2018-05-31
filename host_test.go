@@ -29,18 +29,6 @@ func TestNewEmptySequenceHost(t *testing.T) {
 	}
 }
 
-func sampleIntrahostModel() IntrahostModel {
-	model := new(ConstantPopModel)
-	model.mutationRate = 1e-5
-	model.transitionMatrix = [][]float64{
-		[]float64{0, 1},
-		[]float64{1, 0},
-	}
-	model.recombinationRate = 0
-	model.popSize = 1000
-	return model
-}
-
 func TestSequenceHost_SetIntrahostModel(t *testing.T) {
 	id := 1
 	typeID := 1

@@ -8,22 +8,6 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-func sampleGenotypeNode(numSites int, sets ...GenotypeSet) *genotypeNode {
-	sequence := make([]int, numSites)
-	for i := 0; i < numSites; i++ {
-		s := rand.Intn(4)
-		sequence[i] = s
-	}
-	var set *genotypeSet
-	if len(sets) < 1 {
-		set = EmptyGenotypeSet().(*genotypeSet)
-	} else {
-		set = sets[0].(*genotypeSet)
-	}
-	n := NewGenotypeNode(sequence, set).(*genotypeNode)
-	return n
-}
-
 func TestSequenceMultinomialReplication(t *testing.T) {
 	set := EmptyGenotypeSet()
 	p1 := sampleGenotypeNode(100, set)

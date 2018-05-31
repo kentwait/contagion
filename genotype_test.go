@@ -21,12 +21,6 @@ func TestEmptyGenotypeSet(t *testing.T) {
 	EmptyGenotypeSet()
 }
 
-func sampleGenotype() Genotype {
-	sequence := []int{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
-	g := NewGenotype(sequence)
-	return g
-}
-
 func TestGenotypeSet_Add(t *testing.T) {
 	g := sampleGenotype()
 	set := EmptyGenotypeSet()
@@ -38,11 +32,6 @@ func TestGenotypeSet_Add(t *testing.T) {
 	if l := set.Size(); l != 1 {
 		t.Errorf(UnequalIntParameterError, "size of genotype set", 1, l)
 	}
-}
-
-func sampleSequenceShort() []int {
-	sequence := []int{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
-	return sequence
 }
 
 func TestGenotypeSet_AddSequence(t *testing.T) {
