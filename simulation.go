@@ -44,6 +44,10 @@ type Epidemic interface {
 	// host based on the supplied adjacency matrix.
 	HostNeighbors(id int) []Host
 
+	// NewInstance creates a NewInstancete a new instance from
+	// the stored configuration
+	NewInstance() (Epidemic, error)
+
 	// The following methods perform intrahost processes associated with
 	// the status. For every generation, one of the following is called for
 	// each host.
