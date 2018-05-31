@@ -2,75 +2,12 @@ package contagiongo
 
 import "math/rand"
 
-func sampleSequenceShort() []int {
-	return []int{0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1}
-}
-
-func sampleSequenceLong() []int {
-	return []int{
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
-		0, 1, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, 1,
+func sampleSequence(sites int) []int {
+	sequence := make([]int, sites)
+	for i := 0; i < sites; i++ {
+		sequence[i] = rand.Intn(2)
 	}
-}
-
-func sampleIntrahostModel() IntrahostModel {
-	model := new(ConstantPopModel)
-	model.mutationRate = 1e-5
-	model.transitionMatrix = [][]float64{
-		[]float64{0, 1},
-		[]float64{1, 0},
-	}
-	model.recombinationRate = 0
-	model.popSize = 1000
-	return model
+	return sequence
 }
 
 func sampleGenotype() Genotype {
@@ -79,31 +16,100 @@ func sampleGenotype() Genotype {
 	return g
 }
 
-func sampleGenotypeNode(numSites int, sets ...GenotypeSet) *genotypeNode {
-	sequence := make([]int, numSites)
-	for i := 0; i < numSites; i++ {
-		s := rand.Intn(4)
-		sequence[i] = s
-	}
+func sampleGenotypeNode(sites int, sets ...GenotypeSet) *genotypeNode {
 	var set *genotypeSet
 	if len(sets) < 1 {
 		set = EmptyGenotypeSet().(*genotypeSet)
 	} else {
 		set = sets[0].(*genotypeSet)
 	}
-	n := NewGenotypeNode(sequence, set).(*genotypeNode)
+	n := NewGenotypeNode(sampleSequence(sites), set).(*genotypeNode)
 	return n
 }
 
+func sampleInfectedHost(hostID, pathogens, sites int) Host {
+	host := NewEmptySequenceHost(hostID)
+	tree := sampleGenotypeTree(pathogens, sites)
+	for _, n := range tree.Genotypes() {
+		host.AddPathogen(n)
+	}
+	return host
+}
+
+func sampleIntrahostModel(mutationRate float64, popSize int) IntrahostModel {
+	model := new(ConstantPopModel)
+	model.mutationRate = mutationRate
+	model.transitionMatrix = [][]float64{
+		[]float64{0, 1},
+		[]float64{1, 0},
+	}
+	model.recombinationRate = 0
+	model.popSize = popSize
+	model.statusDuration = map[int]int{
+		InfectedStatusCode: 10,
+	}
+	return model
+}
+
+func sampleFitnessModel(multiplicative bool, sites int) FitnessModel {
+	if multiplicative {
+		return NeutralMultiplicativeFM(0, "neutral", sites, 2)
+	}
+	return NeutralAdditiveFM(0, "additive", sites, 2, 2)
+}
+
+func sampleGenotypeTree(roots, sites int) GenotypeTree {
+	tree := EmptyGenotypeTree()
+	pathogen := sampleSequence(sites)
+	for i := 0; i < roots; i++ {
+		tree.NewNode(pathogen)
+	}
+	return tree
+}
+
 func sampleEvoEpiSimulation() *evoEpiSimulation {
-	sim = new(evoEpiSimulation)
-	sim.hosts              map[int]Host
-	sim.statuses           map[int]int
-	sim.timers             map[int]int
-	sim.intrahostModels    map[int]IntrahostModel
-	sim.fitnessModels      map[int]FitnessModel
-	sim.hostNeighborhoods  map[int][]Host
-	sim.hostNetwork        map[int]map[int]float64
-	sim.infectableStatuses []int
-	sim.tree               GenotypeTree
+	sites := 100
+	mu := 10e-5
+	constPopSize := 1000
+	initPopSize := 1
+	multiplicative := true
+
+	sim := new(evoEpiSimulation)
+	sim.tree = sampleGenotypeTree(initPopSize, sites)
+	sim.intrahostModels = map[int]IntrahostModel{
+		0: sampleIntrahostModel(mu, constPopSize),
+	}
+	sim.fitnessModels = map[int]FitnessModel{
+		0: sampleFitnessModel(multiplicative, sites),
+	}
+	sim.hosts = map[int]Host{
+		0: NewEmptySequenceHost(0),
+		1: NewEmptySequenceHost(1),
+	}
+	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
+	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
+	for _, n := range sim.tree.Genotypes() {
+		sim.hosts[0].AddPathogen(n)
+	}
+	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
+	sim.hosts[1].SetFitnessModel(sim.fitnessModels[0])
+	sim.statuses = map[int]int{
+		0: InfectedStatusCode,
+		1: SusceptibleStatusCode,
+	}
+	sim.timers = map[int]int{
+		0: 10,
+		1: 0,
+	}
+	sim.hostNeighborhoods = map[int][]Host{
+		0: []Host{sim.hosts[1]},
+		1: []Host{sim.hosts[0]},
+	}
+	sim.hostNetwork = map[int]map[int]float64{
+		0: map[int]float64{1: 1.0},
+		1: map[int]float64{0: 1.0},
+	}
+	sim.infectableStatuses = []int{SusceptibleStatusCode}
+
+	return sim
 }
