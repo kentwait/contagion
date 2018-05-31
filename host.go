@@ -40,11 +40,13 @@ type Host interface {
 	// to be used.
 	SetIntrahostModel(intrahostModel IntrahostModel) error
 	SetFitnessModel(fitnessModel FitnessModel) error
+	SetTranmsmissionModel(transmissionModel TransmissionModel) error
 }
 
 type sequenceHost struct {
 	IntrahostModel
 	FitnessModel
+	TransmissionModel
 
 	id            int
 	typeID        int
@@ -130,18 +132,26 @@ func (h *sequenceHost) DecrementTimer() {
 	h.internalTimer--
 }
 
-func (h *sequenceHost) SetIntrahostModel(intrahostModel IntrahostModel) error {
+func (h *sequenceHost) SetIntrahostModel(model IntrahostModel) error {
 	if h.IntrahostModel != nil {
-		return fmt.Errorf(IntrahostModelExistsError, h.IntrahostModel.ModelName(), h.IntrahostModel.ModelID())
+		return fmt.Errorf("intrahost "+ModelExistsError, h.IntrahostModel.ModelName(), h.IntrahostModel.ModelID())
 	}
-	h.IntrahostModel = intrahostModel
+	h.IntrahostModel = model
 	return nil
 }
 
-func (h *sequenceHost) SetFitnessModel(fitnessModel FitnessModel) error {
+func (h *sequenceHost) SetFitnessModel(model FitnessModel) error {
 	if h.FitnessModel != nil {
-		return fmt.Errorf(IntrahostModelExistsError, h.FitnessModel.ModelName(), h.FitnessModel.ModelID())
+		return fmt.Errorf("fitness "+ModelExistsError, h.FitnessModel.ModelName(), h.FitnessModel.ModelID())
 	}
-	h.FitnessModel = fitnessModel
+	h.FitnessModel = model
+	return nil
+}
+
+func (h *sequenceHost) SetTranmsmissionModel(model TransmissionModel) error {
+	if h.TransmissionModel != nil {
+		return fmt.Errorf("transmission "+ModelExistsError, h.TransmissionModel.ModelName(), h.TransmissionModel.ModelID())
+	}
+	h.TransmissionModel = model
 	return nil
 }
