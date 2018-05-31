@@ -36,29 +36,8 @@ type FitnessMatrix interface {
 	Log() bool
 }
 
-type baseFM struct {
-	id   int
-	name string
-}
-
-func (fm *baseFM) ModelID() int {
-	return fm.id
-}
-
-func (fm *baseFM) ModelName() string {
-	return fm.name
-}
-
-func (fm *baseFM) SetModelID(id int) {
-	fm.id = id
-}
-
-func (fm *baseFM) SetModelName(name string) {
-	fm.name = name
-}
-
 type multiplicativeFM struct {
-	baseFM
+	modelMetadata
 	matrix map[int]map[int]float64
 }
 
@@ -103,7 +82,7 @@ func (fm *multiplicativeFM) Log() bool {
 }
 
 type additiveFM struct {
-	baseFM
+	modelMetadata
 	matrix map[int]map[int]float64
 }
 
