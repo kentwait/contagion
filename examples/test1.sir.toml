@@ -12,6 +12,7 @@ pathogen_log_path = "examples/test1.sir.log"
 
 [[intrahost_model]]
 model_name = "constant-high_mutation"
+host_ids = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 mutation_rate = 0.01
 transition_matrix = [
   [ 0.0e+00, 1.0e+00 ],
@@ -23,6 +24,7 @@ constant_pop_size = 100
 
 [[fitness_model]]
 model_name = "multiplicative"
+host_ids = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 fitness_model = "multiplicative"
 fitness_model_path = "examples/test1.sir.fm.txt"
 
