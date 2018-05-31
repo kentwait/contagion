@@ -3,6 +3,7 @@ package contagiongo
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"testing"
 )
 
@@ -25,18 +26,19 @@ func TestNewMultiplicativeFM(t *testing.T) {
 }
 
 func TestMultiplicativeFM_Fitness(t *testing.T) {
+	rand.Seed(0)
 	matrix := make(map[int]map[int]float64)
 	for i := 0; i < 1000; i++ {
 		matrix[i] = map[int]float64{0: math.Log(0.4), 1: math.Log(0.3), 2: math.Log(0.2), 3: math.Log(0.1)}
 	}
-	sequence := sampleSequenceLong()
+	sequence := sampleSequence(1000)
 	id := 1
 	name := "multiplicative"
 	fm := NewMultiplicativeFM(id, name, matrix)
 	if res, err := fm.ComputeFitness(sequence...); err != nil {
 		t.Fatalf(UnexpectedErrorWhileError, "getting the fitness of the sequence", err)
-	} else if err == nil && fmt.Sprintf("%.6f", res) != "-1060.131768" {
-		t.Errorf(UnequalFloatParameterError, "fitness", -1060.131768, res)
+	} else if err == nil && fmt.Sprintf("%.6f", res) != "-1051.213624" {
+		t.Errorf(UnequalFloatParameterError, "fitness", -1051.213624, res)
 	}
 }
 
@@ -58,17 +60,18 @@ func TestNewAdditiveFM(t *testing.T) {
 }
 
 func TestAdditiveFM_Fitness(t *testing.T) {
+	rand.Seed(0)
 	matrix := make(map[int]map[int]float64)
 	for i := 0; i < 1000; i++ {
 		matrix[i] = map[int]float64{0: 0.4, 1: 0.3, 2: 0.2, 3: 0.1}
 	}
-	sequence := sampleSequenceLong()
+	sequence := sampleSequence(1000)
 	id := 1
 	name := "additive"
 	fm := NewAdditiveFM(id, name, matrix)
 	if res, err := fm.ComputeFitness(sequence...); err != nil {
 		t.Fatalf(UnexpectedErrorWhileError, "getting the fitness of the sequence", err)
-	} else if err == nil && fmt.Sprintf("%.6f", res) != "350.000000" {
-		t.Errorf(UnequalFloatParameterError, "fitness", 350.000000, res)
+	} else if err == nil && fmt.Sprintf("%.6f", res) != "353.100000" {
+		t.Errorf(UnequalFloatParameterError, "fitness", 353.100000, res)
 	}
 }

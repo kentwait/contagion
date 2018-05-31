@@ -1,6 +1,9 @@
 package contagiongo
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+)
 
 func TestNewGenotype(t *testing.T) {
 	defer func() {
@@ -35,7 +38,7 @@ func TestGenotypeSet_Add(t *testing.T) {
 }
 
 func TestGenotypeSet_AddSequence(t *testing.T) {
-	sequence := sampleSequenceShort()
+	sequence := sampleSequence(1000)
 	set := EmptyGenotypeSet()
 	set.AddSequence(sequence)
 	if l := set.Size(); l != 1 {
@@ -48,7 +51,7 @@ func TestGenotypeSet_AddSequence(t *testing.T) {
 }
 
 func TestGenotypeSet_Remove(t *testing.T) {
-	sequence := sampleSequenceShort()
+	sequence := sampleSequence(1000)
 	set := EmptyGenotypeSet()
 	set.AddSequence(sequence)
 	set.Remove(sequence)
@@ -63,7 +66,7 @@ func TestNewGenotypeNode(t *testing.T) {
 			t.Fatalf(UnexpectedErrorWhileError, "calling NewGenotype constructor", err)
 		}
 	}()
-	sequence := sampleSequenceShort()
+	sequence := sampleSequence(1000)
 	set := EmptyGenotypeSet()
 	NewGenotypeNode(sequence, set)
 }
@@ -78,8 +81,9 @@ func TestEmptyGenotypeTree(t *testing.T) {
 }
 
 func TestGenotypeTree_NewNode(t *testing.T) {
+	rand.Seed(0)
 	tree := EmptyGenotypeTree()
-	sequence := sampleSequenceShort()
+	sequence := sampleSequence(1000)
 	p1 := tree.NewNode(sequence)
 	if l := tree.Set().Size(); l != 1 {
 		t.Errorf(UnequalIntParameterError, "size of genotype set", 1, l)
