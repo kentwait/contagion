@@ -55,10 +55,10 @@ func (c *SingleHostConfig) Validate() error {
 }
 
 // NewSimulation creates a new SingleHostSimulation simulation.
-func (c *SingleHostConfig) NewSimulation() (*SingleHostSimulation, error) {
-	sim := new(SingleHostSimulation)
+func (c *SingleHostConfig) NewSimulation() (Infection, error) {
+	sim := new(singleHostSimulation)
 	// Create empty tree
-	sim.Tree = EmptyGenotypeTree()
+	sim.tree = EmptyGenotypeTree()
 	// Create empty host
 	host := NewEmptySequenceHost(0, 0)
 
@@ -75,7 +75,7 @@ func (c *SingleHostConfig) NewSimulation() (*SingleHostSimulation, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		host.SetIntrahostModel(model)
-		sim.IntrahostModel = model
+		sim.intrahostModel = model
 	case "bht":
 		model := new(BevertonHoltThresholdPopModel)
 		model.maxPopSize = c.MaxPopSize
@@ -88,7 +88,7 @@ func (c *SingleHostConfig) NewSimulation() (*SingleHostSimulation, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		host.SetIntrahostModel(model)
-		sim.IntrahostModel = model
+		sim.intrahostModel = model
 	case "fitness":
 		model := new(FitnessDependentPopModel)
 		model.maxPopSize = c.MaxPopSize
@@ -100,7 +100,7 @@ func (c *SingleHostConfig) NewSimulation() (*SingleHostSimulation, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		host.SetIntrahostModel(model)
-		sim.IntrahostModel = model
+		sim.intrahostModel = model
 	}
 
 	// Create FitnessModel
@@ -111,14 +111,14 @@ func (c *SingleHostConfig) NewSimulation() (*SingleHostSimulation, error) {
 			return nil, err
 		}
 		fm := NewMultiplicativeFM(0, "multiplicative", matrix)
-		sim.FitnessModel = fm
+		sim.fitnessModel = fm
 	case "additive":
 		matrix, err := LoadFitnessMatrix(c.FitnessModelPath)
 		if err != nil {
 			return nil, err
 		}
 		fm := NewAdditiveFM(0, "additive", matrix)
-		sim.FitnessModel = fm
+		sim.fitnessModel = fm
 	case "additive_motif":
 		return nil, fmt.Errorf("additive_motif not yet implemented")
 	}
@@ -132,14 +132,14 @@ func (c *SingleHostConfig) NewSimulation() (*SingleHostSimulation, error) {
 	// Adds sequences to the tree
 	for _, sequence := range pathogenHostMap[0] {
 		// Each starting sequence is a root node
-		sim.Tree.NewNode(sequence)
+		sim.tree.NewNode(sequence)
 	}
 	// Initialize durations
-	sim.StatusDuration = make(map[int]int)
-	sim.StatusDuration[InfectedStatusCode] = int(c.NumGenerations)
+	sim.statusDuration = make(map[int]int)
+	sim.statusDuration[InfectedStatusCode] = int(c.NumGenerations)
 	// Initialize status
 	if len(pathogenHostMap[0]) > 0 {
-		sim.Status = InfectedStatusCode
+		sim.status = InfectedStatusCode
 	}
 	return sim, nil
 }

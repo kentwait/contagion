@@ -29,6 +29,10 @@ func (sim *singleHostSimulation) SetHostStatus(status int) {
 	sim.status = status
 }
 
+func (sim *singleHostSimulation) HostStatusDuration(status int) int {
+	return sim.statusDuration[status]
+}
+
 func (sim *singleHostSimulation) HostTimer() int {
 	return sim.timer
 }
@@ -45,6 +49,15 @@ func (sim *singleHostSimulation) SusceptibleProcess(host Host, wg *sync.WaitGrou
 	if host.PathogenPopSize() > 0 {
 		host.DecrementTimer()
 	}
+}
+
+// ExposedProcess executes within-host processes that occurs when a host
+// is in the exposed state. By default, it is same as InfectedProcess.
+func (sim *singleHostSimulation) ExposedProcess(host Host, wg *sync.WaitGroup) {
+	// timer decrement is done within the InfectedProcess function
+	// Done() signal also executed within the InfectedProcess function
+	sim.InfectedProcess(host, wg)
+	// TODO: Threshold to be considered infective instead of exposed
 }
 
 // InfectedProcess executes within-host processes that occurs when a host
