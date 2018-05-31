@@ -46,3 +46,27 @@ func TestLoadFitnessMatrix(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadAdjacencyMatrix(t *testing.T) {
+	numConnections := 44
+	connectedHosts := 10
+	path := "examples/test1.sir.network.txt"
+	net, err := LoadAdjacencyMatrix(path)
+	if err != nil {
+		t.Error(err)
+	}
+
+	am := net.(adjacencyMatrix)
+	counter := 0
+	for _, row := range am {
+		for range row {
+			counter++
+		}
+	}
+	if counter != numConnections {
+		t.Errorf(UnequalIntParameterError, "number of connections", numConnections, counter)
+	}
+	if c := net.ConnectedPopSize(); c != connectedHosts {
+		t.Errorf(UnequalIntParameterError, "number of connected hosts", connectedHosts, c)
+	}
+}

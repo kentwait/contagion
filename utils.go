@@ -205,7 +205,7 @@ func LoadFitnessMatrix(path string) (map[int]map[int]float64, error) {
 }
 
 // LoadAdjacencyMatrix creates a new 2D mapping based on a text file.
-func LoadAdjacencyMatrix(p string) (HostNetwork, error) {
+func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
 	m := make(adjacencyMatrix)
 
 	/*
@@ -224,7 +224,7 @@ func LoadAdjacencyMatrix(p string) (HostNetwork, error) {
 		reverse direction.
 
 	*/
-	f, err := os.Open(p)
+	f, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
