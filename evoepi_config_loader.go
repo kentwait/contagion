@@ -10,16 +10,17 @@ import (
 type EvoEpiConfig struct {
 	NumGenerations uint   `toml:"num_generations"`
 	NumReplicates  uint   `toml:"num_replicates"`
+	HostPopSize    uint   `toml:"host_popsize"`
 	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs
-
-	IntrahostModels []IntrahostModelConfig `toml:"intrahost_models"`
-	FitnessModels   []FitnessModelConfig   `toml:"fitness_models"`
 
 	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
 	HostNetworkPath      string `toml:"host_network_path"`
 
 	LogFreq         uint   `toml:"log_freq"`
 	PathogenLogPath string `toml:"pathogen_log_path"`
+
+	IntrahostModels []IntrahostModelConfig `toml:"intrahost_model"`
+	FitnessModels   []FitnessModelConfig   `toml:"fitness_model"`
 
 	validated bool
 }
