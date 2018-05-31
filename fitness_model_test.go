@@ -120,3 +120,60 @@ func TestNeutralAdditiveFM(t *testing.T) {
 		t.Errorf(UnequalIntParameterError, "number of sites", sites, cnt)
 	}
 }
+
+func TestBaseFM_Getters(t *testing.T) {
+	modelID := 1
+	modelName := "m"
+	fm := NeutralMultiplicativeFM(modelID, modelName, 100, 2)
+
+	if fm.ModelID() != modelID {
+		t.Errorf(UnequalIntParameterError, "model ID", fm.ModelID(), modelID)
+	}
+	if fm.ModelName() != modelName {
+		t.Errorf(UnequalStringParameterError, "model ID", fm.ModelName(), modelName)
+	}
+}
+
+func TestBaseFM_Setters(t *testing.T) {
+	modelID := 1
+	modelName := "m"
+	fm := NeutralMultiplicativeFM(modelID, modelName, 100, 2)
+
+	newModelID := 2
+	fm.SetModelID(newModelID)
+	if fm.ModelID() != newModelID {
+		t.Errorf(UnequalIntParameterError, "model ID", fm.ModelID(), newModelID)
+	}
+	newModelName := "mul"
+	fm.SetModelName(newModelName)
+	if fm.ModelName() != newModelName {
+		t.Errorf(UnequalStringParameterError, "model ID", fm.ModelName(), newModelName)
+	}
+}
+
+func TestMultiplicativeFM_Getters(t *testing.T) {
+	modelID := 1
+	modelName := "m"
+	fm := NeutralMultiplicativeFM(modelID, modelName, 100, 2)
+
+	if res, _ := fm.SiteCharFitness(0, 1); res != 0.0 {
+		t.Errorf(UnequalFloatParameterError, "fitness value", res, 0.0)
+	}
+	if fm.Log() != true {
+		t.Errorf(UnequalStringParameterError, "Log() output", "true", "false")
+	}
+}
+
+func TestAdditiveFM_Getters(t *testing.T) {
+	modelID := 1
+	modelName := "m"
+	fm := NeutralAdditiveFM(modelID, modelName, 100, 2, 2)
+	value := 2. / 100.
+
+	if res, _ := fm.SiteCharFitness(0, 1); res != value {
+		t.Errorf(UnequalFloatParameterError, "fitness value", res, value)
+	}
+	if fm.Log() != false {
+		t.Errorf(UnequalStringParameterError, "Log() output", "false", "true")
+	}
+}

@@ -36,9 +36,29 @@ type FitnessMatrix interface {
 	Log() bool
 }
 
+type baseFM struct {
+	id   int
+	name string
+}
+
+func (fm *baseFM) ModelID() int {
+	return fm.id
+}
+
+func (fm *baseFM) ModelName() string {
+	return fm.name
+}
+
+func (fm *baseFM) SetModelID(id int) {
+	fm.id = id
+}
+
+func (fm *baseFM) SetModelName(name string) {
+	fm.name = name
+}
+
 type multiplicativeFM struct {
-	id     int
-	name   string
+	baseFM
 	matrix map[int]map[int]float64
 }
 
@@ -58,22 +78,6 @@ func NewMultiplicativeFM(id int, name string, matrix map[int]map[int]float64) Fi
 		}
 	}
 	return fm
-}
-
-func (fm *multiplicativeFM) ModelID() int {
-	return fm.id
-}
-
-func (fm *multiplicativeFM) ModelName() string {
-	return fm.name
-}
-
-func (fm *multiplicativeFM) SetModelID(id int) {
-	fm.id = id
-}
-
-func (fm *multiplicativeFM) SetModelName(name string) {
-	fm.name = name
 }
 
 func (fm *multiplicativeFM) ComputeFitness(chars ...int) (fitness float64, err error) {
@@ -99,8 +103,7 @@ func (fm *multiplicativeFM) Log() bool {
 }
 
 type additiveFM struct {
-	id     int
-	name   string
+	baseFM
 	matrix map[int]map[int]float64
 }
 
@@ -119,22 +122,6 @@ func NewAdditiveFM(id int, name string, matrix map[int]map[int]float64) FitnessM
 		}
 	}
 	return fm
-}
-
-func (fm *additiveFM) ModelID() int {
-	return fm.id
-}
-
-func (fm *additiveFM) ModelName() string {
-	return fm.name
-}
-
-func (fm *additiveFM) SetModelID(id int) {
-	fm.id = id
-}
-
-func (fm *additiveFM) SetModelName(name string) {
-	fm.name = name
 }
 
 func (fm *additiveFM) ComputeFitness(chars ...int) (fitness float64, err error) {
