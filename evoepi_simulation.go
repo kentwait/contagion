@@ -9,43 +9,42 @@ import (
 // evoEpiSimulation is a type simulation that uses a SequenceNode
 // to represent pathogens.
 type evoEpiSimulation struct {
-	Hosts             map[int]Host
-	Statuses          map[int]int
-	Timers            map[int]int
-	StatusDuration    map[int]int
-	IntrahostModels   map[int]IntrahostModel
-	FitnessModels     map[int]FitnessModel
-	HostNeighborhoods map[int][]Host
-	HostNetwork       map[int]map[int]float64
-	Tree              GenotypeTree
+	hosts             map[int]Host
+	statuses          map[int]int
+	timers            map[int]int
+	intrahostModels   map[int]IntrahostModel
+	fitnessModels     map[int]FitnessModel
+	hostNeighborhoods map[int][]Host
+	hostNetwork       map[int]map[int]float64
+	tree              GenotypeTree
 }
 
 func (sim *evoEpiSimulation) Host(id int) Host {
-	return sim.Hosts[id]
+	return sim.hosts[id]
 }
 
 func (sim *evoEpiSimulation) HostStatus(id int) int {
-	return sim.Statuses[id]
+	return sim.statuses[id]
 }
 
 func (sim *evoEpiSimulation) SetHostStatus(id, status int) {
-	sim.Statuses[id] = status
+	sim.statuses[id] = status
 }
 
 func (sim *evoEpiSimulation) HostTimer(id int) int {
-	return sim.Timers[id]
+	return sim.timers[id]
 }
 
 func (sim *evoEpiSimulation) SetHostTimer(id, interval int) {
-	sim.Timers[id] = interval
+	sim.timers[id] = interval
 }
 
 func (sim *evoEpiSimulation) HostMap() map[int]Host {
-	return sim.Hosts
+	return sim.hosts
 }
 
 func (sim *evoEpiSimulation) HostNeighbors(id int) []Host {
-	return sim.HostNeighborhoods[id]
+	return sim.hostNeighborhoods[id]
 }
 
 // The following methods are used as goroutines that performs tasks within
@@ -116,7 +115,7 @@ func (sim *evoEpiSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) {
 		replicatedC = IntrinsicRateReplication(pathogens, replicativeFitnesses, nil)
 	}
 	// Mutate replicated pathogens
-	mutatedC := MutateSequence(replicatedC, sim.Tree, host.(*sequenceHost).IntrahostModel)
+	mutatedC := MutateSequence(replicatedC, sim.tree, host.(*sequenceHost).IntrahostModel)
 	// Clear current set of pathogens and get new set from the channel
 	host.RemoveAllPathogens()
 	for pathogen := range mutatedC {
