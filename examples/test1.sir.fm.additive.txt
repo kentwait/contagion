@@ -1,0 +1,9 @@
+# Additive fitness matrix for test1.sir.toml
+# This test models 100 sites (index 0 to 99).
+# This test uses 2 alleles per site.
+# This test mimicks neutral evolution, where growth rate is 2 
+# no matter what combination of alleles.
+# Fitness values are in decimal form.
+default->0.02, 0.02
+0: 0.02, 0.02
+99: 0.02, 0.02
