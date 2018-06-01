@@ -1,7 +1,6 @@
 package contagiongo
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -39,8 +38,8 @@ func TestLoadFitnessMatrix(t *testing.T) {
 	if l := len(matrix); l != sites {
 		t.Errorf(UnequalIntParameterError, "number of sites", sites, l)
 	}
-	for i, row := range matrix {
-		fmt.Println(i, row)
+	for _, row := range matrix {
+		// fmt.Println(i, row)
 		if l := len(row); l != alleles {
 			t.Errorf(UnequalIntParameterError, "number of alleles", alleles, l)
 		}

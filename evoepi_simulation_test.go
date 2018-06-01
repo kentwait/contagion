@@ -1,7 +1,6 @@
 package contagiongo
 
 import (
-	"fmt"
 	"math/rand"
 	"sync"
 	"testing"
@@ -179,9 +178,9 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	for _, n := range sim.tree.NodeMap() {
 		sim.hosts[0].AddPathogen(n)
 		originalSequence = n.StringSequence()
-		fmt.Println(n.StringSequence())
+		// fmt.Println(n.StringSequence())
 	}
-	fmt.Println("")
+	// fmt.Println("")
 
 	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[1].SetFitnessModel(sim.fitnessModels[0])
@@ -214,8 +213,8 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 		close(c)
 	}()
 	newNodeCnt := 0
-	for pack := range c {
-		fmt.Println(pack)
+	for range c {
+		// fmt.Println(pack)
 		newNodeCnt++
 	}
 
@@ -224,7 +223,7 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	// on average, half of sites should be mutated compared to the original
 	counter := 0
 	diffMean := 0.0
-	fmt.Println(originalSequence)
+	// fmt.Println(originalSequence)
 	for _, n := range sim.hosts[0].Pathogens() {
 		// compare sequences
 		diff := 0
@@ -233,7 +232,7 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 				diff++
 			}
 		}
-		fmt.Println(n.StringSequence(), diff)
+		// fmt.Println(n.StringSequence(), diff)
 		diffMean += float64(diff)
 		counter++
 	}
@@ -277,9 +276,9 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 	for _, n := range sim.tree.NodeMap() {
 		sim.hosts[0].AddPathogen(n)
 		originalSequence = n.StringSequence()
-		fmt.Println(n.StringSequence())
+		// fmt.Println(n.StringSequence())
 	}
-	fmt.Println("")
+	// fmt.Println("")
 
 	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[1].SetFitnessModel(sim.fitnessModels[0])
@@ -312,8 +311,8 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 		close(c)
 	}()
 	newNodeCnt := 0
-	for pack := range c {
-		fmt.Println(pack)
+	for range c {
+		// fmt.Println(pack)
 		newNodeCnt++
 	}
 
@@ -323,7 +322,7 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 	// on average, half of sites should be mutated compared to the original
 	counter := 0
 	diffMean := 0.0
-	fmt.Println(originalSequence)
+	// fmt.Println(originalSequence)
 	for _, n := range sim.hosts[0].Pathogens() {
 		// compare sequences
 		diff := 0
@@ -332,7 +331,7 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 				diff++
 			}
 		}
-		fmt.Println(n.StringSequence(), diff)
+		// fmt.Println(n.StringSequence(), diff)
 		diffMean += float64(diff)
 		counter++
 	}

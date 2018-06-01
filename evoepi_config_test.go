@@ -165,8 +165,8 @@ func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
 		close(c)
 	}()
 	newNodeCnt := 0
-	for pack := range c {
-		fmt.Println(pack)
+	for range c {
+		// fmt.Println(pack)
 		newNodeCnt++
 	}
 
@@ -175,7 +175,7 @@ func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
 	// on average, half of sites should be mutated compared to the original
 	counter := 0
 	diffMean := 0.0
-	fmt.Println(originalSequence)
+	// fmt.Println(originalSequence)
 	for _, n := range sim.hosts[0].Pathogens() {
 		// compare sequences
 		diff := 0
@@ -184,9 +184,11 @@ func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
 				diff++
 			}
 		}
-		fmt.Println(n.StringSequence(), diff)
+		// fmt.Println(n.StringSequence(), diff)
 		diffMean += float64(diff)
-		counter++
+		if diff > 0 {
+			counter++
+		}
 	}
 	diffMean = diffMean / float64(counter)
 	if counter != constPopSize {
