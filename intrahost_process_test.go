@@ -74,7 +74,7 @@ func TestSequenceMutate(t *testing.T) {
 	rand.Seed(0)
 	// Create a mock tree
 	tree := EmptyGenotypeTree()
-	root := tree.NewNode([]uint8{
+	rootSeq := []uint8{
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -85,7 +85,8 @@ func TestSequenceMutate(t *testing.T) {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	}, 0)
+	}
+	root := tree.NewNode(rootSeq, 0)
 	// Create mock IntrahostModel
 	model := new(ConstantPopModel)
 	model.mutationRate = 0.1
@@ -99,18 +100,75 @@ func TestSequenceMutate(t *testing.T) {
 	c := make(chan GenotypeNode)
 	go func() {
 		for i := 0; i < model.popSize; i++ {
-			pathogen := tree.NewNode([]uint8{
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			}, 0)
+			r := make([]uint8, len(rootSeq))
+			copy(r, rootSeq)
+			pathogen := tree.NewNode(r, 0)
+			c <- pathogen
+		}
+		close(c)
+	}()
+	pathogens, newMutantsC := MutateSequence(c, tree, model)
+	go func() {
+		for range newMutantsC {
+		}
+	}()
+	counter := 0
+	diffMean := 0.0
+	for pathogen := range pathogens {
+		diff := 0
+		// fmt.Println(pathogen.StringSequence())
+		for i := 0; i < len(pathogen.StringSequence()); i++ {
+			if pathogen.StringSequence()[i] != root.StringSequence()[i] {
+				diff++
+			}
+		}
+		diffMean += float64(diff)
+		counter++
+	}
+	diffMean = diffMean / float64(counter)
+	if counter != model.popSize {
+		t.Errorf(UnequalIntParameterError, "number of pathogens", model.popSize, counter)
+	}
+	if diffMean < 8 || diffMean > 12 {
+		t.Errorf(FloatNotBetweenError, "average number of mutations", 8., 12., diffMean)
+	}
+	// TODO: test whether mutation took place, and if the number is correct
+	// TODO: Add scenarios for binomial hits
+}
+
+func TestSequenceMutate2(t *testing.T) {
+	rand.Seed(0)
+	// Create a mock tree
+	tree := EmptyGenotypeTree()
+	rootSeq := []uint8{
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	}
+	root := tree.NewNode(rootSeq, 0)
+	// Create mock IntrahostModel
+	model := new(ConstantPopModel)
+	model.mutationRate = 0.1
+	model.transitionMatrix = [][]float64{
+		[]float64{0, 1},
+		[]float64{1, 0},
+	}
+	model.recombinationRate = 0
+	model.popSize = 10
+	// Send root 4 times to simulate population of 4
+	c := make(chan GenotypeNode)
+	go func() {
+		for i := 0; i < model.popSize; i++ {
+			r := make([]uint8, len(rootSeq))
+			copy(r, rootSeq)
+			pathogen := tree.NewNode(r, 0)
 			c <- pathogen
 		}
 		close(c)
