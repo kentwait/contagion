@@ -21,7 +21,7 @@ type SISimulation struct {
 }
 
 // NewSISimulation creates a new SI simulation.
-func NewSISimulation(config Config, logger DataLogger, instance int) (*SISimulation, error) {
+func NewSISimulation(config Config, logger DataLogger) (*SISimulation, error) {
 	epidemic, err := config.NewSimulation()
 	if err != nil {
 		return nil, err
@@ -29,7 +29,6 @@ func NewSISimulation(config Config, logger DataLogger, instance int) (*SISimulat
 	sim := new(SISimulation)
 	sim.Epidemic = epidemic
 	sim.DataLogger = logger
-	sim.instanceID = instance
 	sim.numGenerations = config.NumGenerations()
 	sim.logFreq = config.LogFreq()
 	return sim, nil
@@ -83,17 +82,14 @@ func (sim *SISimulation) Update(t int) {
 					sim.SetHostTimer(host.ID(), newDuration)
 					// Update status in pack and send
 					pack.status = newStatus
-					c <- pack
 				}
-			default:
-				// No change
-				// Just send pack
-				c <- pack
 			}
+			// Send pack after all changes
+			c <- pack
 			// Record pathogen frequencies
 			counts := make(map[ksuid.KSUID]int)
 			for _, p := range host.Pathogens() {
-				counts[p.CurrentGenotype().GenotypeUID()]++
+				counts[p.GenotypeUID()]++
 			}
 			for uid, freq := range counts {
 				d <- GenotypeFreqPackage{
@@ -114,7 +110,15 @@ func (sim *SISimulation) Update(t int) {
 	// Write status  and genotype frequencies using DataLogger
 	var wg2 sync.WaitGroup
 	wg2.Add(2)
-	sim.WriteStatus(c)
+	go func() {
+		sim.WriteStatus(c)
+		wg2.Done()
+	}()
+	go func() {
+		sim.WriteGenotypeFreq(d)
+		wg2.Done()
+	}()
+	wg2.Wait()
 }
 
 // Process runs the internal evolution simulation in each host.
@@ -208,28 +212,35 @@ func (sim *SISimulation) Transmit(t int) {
 func (sim *SISimulation) Finalize() {
 	// Record genotype tree
 	var wg sync.WaitGroup
-	wg.Add(2)
-	go func(wg *sync.WaitGroup) {
-		c := make(chan GenotypeNode)
+	c := make(chan GenotypeNode)
+	d := make(chan Genotype)
 
+	wg.Add(2)
+	go func() {
 		for _, node := range sim.GenotypeNodeMap() {
 			c <- node
 		}
 		close(c)
-		sim.WriteGenotypeNodes(c)
 		wg.Done()
-	}(&wg)
-	go func(wg *sync.WaitGroup) {
-		d := make(chan Genotype)
+	}()
+	go func() {
 		for _, genotype := range sim.GenotypeSet().Map() {
 			d <- genotype
 		}
 		close(d)
-		sim.WriteGenotypes(d)
 		wg.Done()
-	}(&wg)
-	// Block until finished
-	wg.Wait()
+	}()
+	var wg2 sync.WaitGroup
+	wg2.Add(2)
+	go func() {
+		sim.WriteGenotypeNodes(c)
+		wg2.Done()
+	}()
+	go func() {
+		sim.WriteGenotypes(d)
+		wg2.Done()
+	}()
+	wg2.Wait()
 
 	// Clear memory by deleting pathogens in host
 	for _, host := range sim.HostMap() {
