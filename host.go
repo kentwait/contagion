@@ -40,7 +40,11 @@ type Host interface {
 	// to be used.
 	SetIntrahostModel(intrahostModel IntrahostModel) error
 	SetFitnessModel(fitnessModel FitnessModel) error
-	SetTranmsmissionModel(transmissionModel TransmissionModel) error
+	SetTransmissionModel(transmissionModel TransmissionModel) error
+
+	GetIntrahostModel() IntrahostModel
+	GetFitnessModel() FitnessModel
+	GetTransmissionModel() TransmissionModel
 }
 
 type sequenceHost struct {
@@ -148,10 +152,20 @@ func (h *sequenceHost) SetFitnessModel(model FitnessModel) error {
 	return nil
 }
 
-func (h *sequenceHost) SetTranmsmissionModel(model TransmissionModel) error {
+func (h *sequenceHost) SetTransmissionModel(model TransmissionModel) error {
 	if h.TransmissionModel != nil {
 		return fmt.Errorf("transmission "+ModelExistsError, h.TransmissionModel.ModelName(), h.TransmissionModel.ModelID())
 	}
 	h.TransmissionModel = model
 	return nil
+}
+
+func (h *sequenceHost) GetIntrahostModel() IntrahostModel {
+	return h.IntrahostModel
+}
+func (h *sequenceHost) GetFitnessModel() FitnessModel {
+	return h.FitnessModel
+}
+func (h *sequenceHost) GetTransmissionModel() TransmissionModel {
+	return h.TransmissionModel
 }
