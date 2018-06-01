@@ -32,8 +32,6 @@ type Host interface {
 	// RemoveAllPathogens removes all the pathogens from the host.
 	// Internally, this removes all the pointers that refer to GenotypeNodes.
 	RemoveAllPathogens()
-	// DecrementTimer decreases the internal timer by 1.
-	DecrementTimer()
 	// SetModel associates the current host to a given intrahost model.
 	// The intrahost model governs intrahost processes by specifying the
 	// mutation, replication, recombination, and infection modes and parameters
@@ -52,10 +50,9 @@ type sequenceHost struct {
 	FitnessModel
 	TransmissionModel
 
-	id            int
-	typeID        int
-	internalTimer int
-	pathogens     []GenotypeNode
+	id        int
+	typeID    int
+	pathogens []GenotypeNode
 }
 
 // NewEmptySequenceHost creates a new host without an intrahost model and
@@ -67,7 +64,6 @@ func NewEmptySequenceHost(ids ...int) Host {
 	if len(ids) > 1 {
 		h.typeID = ids[1]
 	}
-	h.internalTimer = 0
 	h.pathogens = []GenotypeNode{}
 	h.IntrahostModel = nil
 	h.FitnessModel = nil
@@ -130,10 +126,6 @@ func (h *sequenceHost) RemoveAllPathogens() {
 		h.pathogens[i] = nil
 	}
 	h.pathogens = h.pathogens[:0]
-}
-
-func (h *sequenceHost) DecrementTimer() {
-	h.internalTimer--
 }
 
 func (h *sequenceHost) SetIntrahostModel(model IntrahostModel) error {

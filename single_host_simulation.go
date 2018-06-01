@@ -45,10 +45,6 @@ func (sim *singleHostSimulation) SetHostTimer(interval int) {
 // is in the susceptible state.
 func (sim *singleHostSimulation) SusceptibleProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
-	// Decrement to -1 if pathogens exist
-	if host.PathogenPopSize() > 0 {
-		host.DecrementTimer()
-	}
 }
 
 // ExposedProcess executes within-host processes that occurs when a host
@@ -111,7 +107,6 @@ func (sim *singleHostSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) 
 	for pathogen := range mutatedC {
 		host.AddPathogen(pathogen)
 	}
-	host.DecrementTimer()
 }
 
 // InfectiveProcess executes within-host processes that occurs when a host
@@ -153,5 +148,4 @@ func (sim *singleHostSimulation) DeadProcess(host Host, wg *sync.WaitGroup) {
 func (sim *singleHostSimulation) VaccinatedProcess(host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
-	host.DecrementTimer()
 }
