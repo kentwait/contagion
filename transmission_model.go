@@ -2,6 +2,9 @@ package contagiongo
 
 import rv "github.com/kentwait/randomvariate"
 
+// TransmissionModel describes the transmission probability and number of
+// pathogens that transmits per event. The model may be constant or
+// probabilistic.
 type TransmissionModel interface {
 	// ID returns the ID for this transmission model.
 	ModelID() int
