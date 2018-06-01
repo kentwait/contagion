@@ -265,11 +265,11 @@ func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
 }
 
 // LoadEvoEpiConfig creates an EvoEpiConfig struct from a TOML file.
-func LoadEvoEpiConfig(path string) (EvoEpiConfig, error) {
+func LoadEvoEpiConfig(path string) (*EvoEpiConfig, error) {
 	var conf EvoEpiConfig
 	_, err := toml.DecodeFile(path, &conf)
 	if err != nil {
-		return EvoEpiConfig{}, err
+		return &EvoEpiConfig{}, err
 	}
-	return conf, nil
+	return &conf, nil
 }
