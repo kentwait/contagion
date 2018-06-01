@@ -26,15 +26,21 @@ const (
 )
 
 const (
-	UnequalFloatParameterError  = "expected %s %f, instead got %f"
-	UnequalIntParameterError    = "expected %s %d, instead got %d"
-	FloatNotBetweenError        = "expected %s between %f and %f, instead got %f"
-	IntNotBetweenError          = "expected %s between %d and %d, instead got %d"
+	UnequalFloatParameterError = "expected %s %f, instead got %f"
+	EqualFloatParameterError   = "%s should not be equal: %f, %f"
+	FloatNotBetweenError       = "expected %s between %f and %f, instead got %f"
+
+	UnequalIntParameterError = "expected %s %d, instead got %d"
+	EqualIntParameterError   = "%s should not be equal: %d, %d"
+	IntNotBetweenError       = "expected %s between %d and %d, instead got %d"
+
 	UnequalStringParameterError = "expected %s %s, instead got %s"
-	UnexpectedErrorWhileError   = "encountered error while %s: %s"
-	ExpectedErrorWhileError     = "expected an error while %s, instead got none"
-	UnrecognizedKeywordError    = "unrecognized keyword %s for %s"
-	FileParsingError            = "error in line %d: %s"
+	EqualStringParameterError   = "%s should not be idenitical: %s, %s"
+
+	UnexpectedErrorWhileError = "encountered error while %s: %s"
+	ExpectedErrorWhileError   = "expected an error while %s, instead got none"
+	UnrecognizedKeywordError  = "unrecognized keyword %s for %s"
+	FileParsingError          = "error in line %d: %s"
 )
 
 const (
