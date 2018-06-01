@@ -4,6 +4,8 @@ import (
 	"math"
 	"strings"
 	"sync"
+
+	"github.com/segmentio/ksuid"
 )
 
 // evoEpiSimulation is a type simulation that uses a SequenceNode
@@ -62,6 +64,14 @@ func (sim *evoEpiSimulation) HostNeighbors(id int) []Host {
 	return sim.hostNeighborhoods[id]
 }
 
+func (sim *evoEpiSimulation) GenotypeNodeMap() map[ksuid.KSUID]GenotypeNode {
+	return sim.tree.NodeMap()
+}
+
+func (sim *evoEpiSimulation) GenotypeSet() GenotypeSet {
+	return sim.tree.Set()
+}
+
 func (sim *evoEpiSimulation) NewInstance() (Epidemic, error) {
 	return sim.config.NewSimulation()
 }
@@ -72,26 +82,22 @@ func (sim *evoEpiSimulation) NewInstance() (Epidemic, error) {
 
 // SusceptibleProcess executes within-host processes that occurs when a host
 // is in the susceptible state.
-func (sim *evoEpiSimulation) SusceptibleProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) SusceptibleProcess(i, t int, host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
-	// Decrement to -1 if pathogens exist
-	if host.PathogenPopSize() > 0 {
-		host.DecrementTimer()
-	}
 }
 
 // ExposedProcess executes within-host processes that occurs when a host
 // is in the exposed state. By default, it is same as InfectedProcess.
-func (sim *evoEpiSimulation) ExposedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) ExposedProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup) {
 	// timer decrement is done within the InfectedProcess function
 	// Done() signal also executed within the InfectedProcess function
-	sim.InfectedProcess(host, wg)
+	sim.InfectedProcess(i, t, host, c, wg)
 	// TODO: Threshold to be considered infective instead of exposed
 }
 
 // InfectedProcess executes within-host processes that occurs when a host
 // is in the infected state.
-func (sim *evoEpiSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup) {
 	defer wg.Done()
 	pathogens := host.Pathogens()
 	var replicatedC <-chan GenotypeNode
@@ -140,20 +146,19 @@ func (sim *evoEpiSimulation) InfectedProcess(host Host, wg *sync.WaitGroup) {
 	for pathogen := range mutatedC {
 		host.AddPathogen(pathogen)
 	}
-	host.DecrementTimer()
 }
 
 // InfectiveProcess executes within-host processes that occurs when a host
 // is in the infective state. By default, it is same as InfectedProcess.
-func (sim *evoEpiSimulation) InfectiveProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) InfectiveProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup) {
 	// timer decrement is done within the InfectedProcess function
 	// Done() signal also executed within the InfectedProcess function
-	sim.InfectedProcess(host, wg)
+	sim.InfectedProcess(i, t, host, c, wg)
 }
 
 // RemovedProcess executes within-host processes that occurs when a host
 // is in the removed state that is perpetually uninfectable.
-func (sim *evoEpiSimulation) RemovedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) RemovedProcess(i, t int, host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
 }
@@ -162,7 +167,7 @@ func (sim *evoEpiSimulation) RemovedProcess(host Host, wg *sync.WaitGroup) {
 // is in the recovered state that is perpetually uninfectable.
 // This state is identically to Removed but is used to distinguish from
 // a dead state.
-func (sim *evoEpiSimulation) RecoveredProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) RecoveredProcess(i, t int, host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
 }
@@ -171,7 +176,7 @@ func (sim *evoEpiSimulation) RecoveredProcess(host Host, wg *sync.WaitGroup) {
 // is in the dead state state that is perpetually uninfectable.
 // This state is identically to Removed but is used to distinguish from
 // a recovered, but perpetually immune state.
-func (sim *evoEpiSimulation) DeadProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) DeadProcess(i, t int, host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
 }
@@ -179,8 +184,7 @@ func (sim *evoEpiSimulation) DeadProcess(host Host, wg *sync.WaitGroup) {
 // VaccinatedProcess executes within-host processes that occurs when a host
 // is in a globally immune state with the chance to become
 // globally susceptible again.
-func (sim *evoEpiSimulation) VaccinatedProcess(host Host, wg *sync.WaitGroup) {
+func (sim *evoEpiSimulation) VaccinatedProcess(i, t int, host Host, wg *sync.WaitGroup) {
 	defer wg.Done()
 	host.RemoveAllPathogens()
-	host.DecrementTimer()
 }
