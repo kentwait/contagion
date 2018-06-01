@@ -234,7 +234,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	sim.hostNeighborhoods = make(map[int][]Host)
 	// Create empty hosts
 	for i := 0; i < c.SimParams.HostPopSize; i++ {
-		sim.hosts[i] = NewEmptySequenceHost(i)
+		sim.hosts[i] = EmptySequenceHost(i)
 	}
 
 	// Create IntrahostModels

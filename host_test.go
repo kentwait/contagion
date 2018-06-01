@@ -5,7 +5,7 @@ import "testing"
 func TestSequenceHost_Empty_Getters(t *testing.T) {
 	id := 1
 	typeID := 1
-	h := NewEmptySequenceHost(id, typeID)
+	h := EmptySequenceHost(id, typeID)
 	if h.ID() != id {
 		t.Errorf(UnequalIntParameterError, "host ID", id, h.ID())
 	}
@@ -87,7 +87,7 @@ func TestSequenceHost_Setters(t *testing.T) {
 func TestSequenceHost_SetIntrahostModel(t *testing.T) {
 	id := 1
 	typeID := 1
-	h := NewEmptySequenceHost(id, typeID)
+	h := EmptySequenceHost(id, typeID)
 	seqH := h.(*sequenceHost)
 	model := sampleIntrahostModel(10e-5, 1000)
 

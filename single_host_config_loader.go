@@ -60,7 +60,7 @@ func (c *SingleHostConfig) NewSimulation() (Infection, error) {
 	// Create empty tree
 	sim.tree = EmptyGenotypeTree()
 	// Create empty host
-	host := NewEmptySequenceHost(0, 0)
+	host := EmptySequenceHost(0, 0)
 
 	// Create IntrahostModel
 	switch c.ReplicationModel {

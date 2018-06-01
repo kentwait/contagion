@@ -55,9 +55,9 @@ type sequenceHost struct {
 	pathogens []GenotypeNode
 }
 
-// NewEmptySequenceHost creates a new host without an intrahost model and
+// EmptySequenceHost creates a new host without an intrahost model and
 // no pathogens.
-func NewEmptySequenceHost(ids ...int) Host {
+func EmptySequenceHost(ids ...int) Host {
 	h := new(sequenceHost)
 	h.id = ids[0]
 	h.typeID = 0 // default

@@ -23,8 +23,8 @@ func TestEvoEpiSimulation_Getters(t *testing.T) {
 		0: sampleFitnessModel(multiplicative, sites),
 	}
 	sim.hosts = map[int]Host{
-		0: NewEmptySequenceHost(0),
-		1: NewEmptySequenceHost(1),
+		0: EmptySequenceHost(0),
+		1: EmptySequenceHost(1),
 	}
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
@@ -90,8 +90,8 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 		0: sampleFitnessModel(multiplicative, sites),
 	}
 	sim.hosts = map[int]Host{
-		0: NewEmptySequenceHost(0),
-		1: NewEmptySequenceHost(1),
+		0: EmptySequenceHost(0),
+		1: EmptySequenceHost(1),
 	}
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
@@ -170,8 +170,8 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 		0: sampleFitnessModel(multiplicative, sites),
 	}
 	sim.hosts = map[int]Host{
-		0: NewEmptySequenceHost(0),
-		1: NewEmptySequenceHost(1),
+		0: EmptySequenceHost(0),
+		1: EmptySequenceHost(1),
 	}
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
@@ -268,8 +268,8 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 		0: sampleFitnessModel(multiplicative, sites),
 	}
 	sim.hosts = map[int]Host{
-		0: NewEmptySequenceHost(0),
-		1: NewEmptySequenceHost(1),
+		0: EmptySequenceHost(0),
+		1: EmptySequenceHost(1),
 	}
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
