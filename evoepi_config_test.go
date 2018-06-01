@@ -157,10 +157,18 @@ func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
 	// Run infected process on the simulation
 	var wg sync.WaitGroup
 	c := make(chan MutationPackage)
-	wg.Add(1)
-	sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
-	close(c)
-	wg.Wait()
+	wg.Add(2)
+	go sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
+	go sim.InfectedProcess(0, 0, sim.Host(1), c, &wg)
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+	newNodeCnt := 0
+	for pack := range c {
+		fmt.Println(pack)
+		newNodeCnt++
+	}
 
 	// Expectations
 	// population size should increase from 10 to 100 after 1 step
@@ -186,6 +194,9 @@ func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
 	}
 	if diffMean < 0.8 || diffMean > 1.2 {
 		t.Errorf(FloatNotBetweenError, "average number of mutations", 0.8, 1.2, diffMean)
+	}
+	if newNodeCnt < counter {
+		t.Errorf(UnequalIntParameterError, "number of new mutants", counter, newNodeCnt)
 	}
 }
 
