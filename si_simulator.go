@@ -163,7 +163,7 @@ func (sim *SISimulator) Transmit(t int) {
 			for _, infectableStatus := range sim.InfectableStatuses() {
 				if status == infectableStatus {
 					wg.Add(1)
-					go TransmitPathogens(sim.instanceID, t, host, neighbor, count, status, c, d, &wg)
+					go TransmitPathogens(sim.instanceID, t, host, neighbor, count, c, d, &wg)
 				}
 			}
 
