@@ -12,7 +12,7 @@ func CreateTestSim() (*SISimulation, *EvoEpiConfig, *CSVLogger, error) {
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	logger := NewCSVLogger(conf.LogPath())
+	logger := NewCSVLogger(conf.LogPath(), 1)
 	sim, err := NewSISimulation(conf, logger)
 	if err != nil {
 		return nil, nil, nil, err
