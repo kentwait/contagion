@@ -9,6 +9,7 @@ import (
 // evoEpiSimulation is a type simulation that uses a SequenceNode
 // to represent pathogens.
 type evoEpiSimulation struct {
+	sync.RWMutex
 	hosts              map[int]Host
 	statuses           map[int]int
 	timers             map[int]int
@@ -26,18 +27,26 @@ func (sim *evoEpiSimulation) Host(id int) Host {
 }
 
 func (sim *evoEpiSimulation) HostStatus(id int) int {
+	sim.RLock()
+	defer sim.RUnlock()
 	return sim.statuses[id]
 }
 
 func (sim *evoEpiSimulation) SetHostStatus(id, status int) {
+	sim.Lock()
+	defer sim.Unlock()
 	sim.statuses[id] = status
 }
 
 func (sim *evoEpiSimulation) HostTimer(id int) int {
+	sim.RLock()
+	defer sim.RUnlock()
 	return sim.timers[id]
 }
 
 func (sim *evoEpiSimulation) SetHostTimer(id, interval int) {
+	sim.Lock()
+	defer sim.Unlock()
 	sim.timers[id] = interval
 }
 
