@@ -18,22 +18,22 @@ type CSVLogger struct {
 	mutationPath     string
 }
 
-func NewCSVLogger(basepath string) *CSVLogger {
+func NewCSVLogger(basepath string, i int) *CSVLogger {
 	l := new(CSVLogger)
-	l.SetBasePath(basepath)
+	l.SetBasePath(basepath, i)
 	return l
 }
 
-func (l *CSVLogger) SetBasePath(basepath string) {
+func (l *CSVLogger) SetBasePath(basepath string, i int) {
 	if info, err := os.Stat(basepath); err == nil && info.IsDir() {
-		basepath += "log"
+		basepath += fmt.Sprintf("log.%03d", i)
 	}
-	l.genotypePath = strings.TrimSuffix(basepath, ".") + ".g.csv"
-	l.genotypeNodePath = strings.TrimSuffix(basepath, ".") + ".n.csv"
-	l.genotypeFreqPath = strings.TrimSuffix(basepath, ".") + ".freq.csv"
-	l.statusPath = strings.TrimSuffix(basepath, ".") + ".status.csv"
-	l.transmissionPath = strings.TrimSuffix(basepath, ".") + ".trans.csv"
-	l.mutationPath = strings.TrimSuffix(basepath, ".") + ".tree.csv"
+	l.genotypePath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "g")
+	l.genotypeNodePath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "n")
+	l.genotypeFreqPath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "freq")
+	l.statusPath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "status")
+	l.transmissionPath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "trans")
+	l.mutationPath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "tree")
 }
 
 func (l *CSVLogger) WriteGenotypes(c <-chan Genotype) {
