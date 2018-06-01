@@ -175,6 +175,7 @@ type GenotypeNode interface {
 	// UID returns the unique ID of the node. Uses KSUID to generate
 	// random unique IDs with effectively no collision.
 	UID() ksuid.KSUID
+	GenotypeUID() ksuid.KSUID
 	// Parents returns the parent of the node.
 	Parents() []GenotypeNode
 	// Children returns the children of the node.
