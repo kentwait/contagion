@@ -10,6 +10,9 @@ import (
 type Config interface {
 	Validate() error
 	NewSimulation() (Epidemic, error)
+	NumInstances() int
+	NumGenerations() int
+	LogFreq() int
 }
 
 // EvoEpiConfig contains parameters to create a simulated infection
@@ -342,6 +345,17 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	return sim, nil
 }
 
+// NumInstances returns the number of independent realizations to run.
+func (c *EvoEpiConfig) NumInstances() int { return c.SimParams.NumIntances }
+
+// NumGenerations returns the number of pathogen generation in
+// a single simulation run.
+func (c *EvoEpiConfig) NumGenerations() int { return c.SimParams.NumGenerations }
+
+// LogFreq returns the number of pathogen generations in the simulation until
+// data is recorded.
+func (c *EvoEpiConfig) LogFreq() int { return int(c.LogParams.LogFreq) }
+
 type epidemicSimConfig struct {
 	NumGenerations int    `toml:"num_generations"`
 	NumIntances    int    `toml:"num_instances"`
@@ -400,9 +414,9 @@ func (c *epidemicSimConfig) Validate() error {
 }
 
 type logConfig struct {
-	LogFreq         uint   `toml:"log_freq"`
-	PathogenLogPath string `toml:"pathogen_log_path"`
-	validated       bool
+	LogFreq   uint   `toml:"log_freq"`
+	LogPath   string `toml:"log_path"`
+	validated bool
 }
 
 func (c *logConfig) Validate() error {
