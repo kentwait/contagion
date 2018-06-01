@@ -81,10 +81,14 @@ func (n *genotype) Fitness(f FitnessModel) float64 {
 	fitness, ok := n.fitness[id]
 	if !ok {
 		fitness, _ := f.ComputeFitness(n.sequence...)
+		n.Lock()
+		defer n.Unlock()
 		n.fitness[id] = fitness
 		return fitness
 	}
 	return fitness
+	// fitness, _ := f.ComputeFitness(n.sequence...)
+	// return fitness
 }
 
 func (n *genotype) NumSites() int {
@@ -213,6 +217,7 @@ type genotypeNode struct {
 	sync.RWMutex
 	Genotype
 	uid      ksuid.KSUID
+	subs     int
 	parents  []GenotypeNode
 	children []GenotypeNode
 }
@@ -289,7 +294,7 @@ type GenotypeTree interface {
 	Set() GenotypeSet
 	// NewNode creates a new genotype node from a given sequence.
 	// Automatically adds sequence to the genotypeSet if it is not yet present.
-	NewNode(sequence []uint8, parents ...GenotypeNode) GenotypeNode
+	NewNode(sequence []uint8, subs int, parents ...GenotypeNode) GenotypeNode
 	// Nodes returns the map of genotype node ID found in the tree to its
 	// corresponding genotype.
 	NodeMap() map[ksuid.KSUID]GenotypeNode
@@ -315,12 +320,13 @@ func (t *genotypeTree) Set() GenotypeSet {
 	return t.set
 }
 
-func (t *genotypeTree) NewNode(sequence []uint8, parents ...GenotypeNode) GenotypeNode {
+func (t *genotypeTree) NewNode(sequence []uint8, subs int, parents ...GenotypeNode) GenotypeNode {
 	genotype := t.set.AddSequence(sequence)
 
 	// Create new node
 	n := new(genotypeNode)
 	n.uid = ksuid.New()
+	n.subs = subs
 	// Assign its parent
 	if len(parents) > 0 {
 		n.parents = make([]GenotypeNode, len(parents))

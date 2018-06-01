@@ -101,12 +101,32 @@ func (sim *singleHostSimulation) InfectedProcess(i, t int, host Host, c chan<- M
 		replicatedC = IntrinsicRateReplication(pathogens, replicativeFitnesses, nil)
 	}
 	// Mutate replicated pathogens
-	mutatedC := MutateSequence(replicatedC, sim.tree, host.(*sequenceHost).IntrahostModel)
+	mutatedC, newMutantsC := MutateSequence(replicatedC, sim.tree, host.(*sequenceHost).IntrahostModel)
 	// Clear current set of pathogens and get new set from the channel
 	host.RemoveAllPathogens()
-	for pathogen := range mutatedC {
-		host.AddPathogen(pathogen)
-	}
+	var wg2 sync.WaitGroup
+	wg2.Add(2)
+	go func() {
+		for node := range mutatedC {
+			host.AddPathogen(node)
+		}
+		wg2.Done()
+	}()
+	go func() {
+		for node := range newMutantsC {
+			for _, parent := range node.Parents() {
+				c <- MutationPackage{
+					instanceID:   i,
+					genID:        t,
+					hostID:       host.ID(),
+					nodeID:       node.UID(),
+					parentNodeID: parent.UID(),
+				}
+			}
+		}
+		wg2.Done()
+	}()
+	wg2.Wait()
 }
 
 // InfectiveProcess executes within-host processes that occurs when a host

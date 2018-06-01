@@ -122,7 +122,7 @@ func TestGenotypeTree_NewNode(t *testing.T) {
 	rand.Seed(0)
 	tree := EmptyGenotypeTree()
 	sequence := sampleSequence(1000)
-	p1 := tree.NewNode(sequence)
+	p1 := tree.NewNode(sequence, 0)
 	if l := tree.Set().Size(); l != 1 {
 		t.Errorf(UnequalIntParameterError, "size of genotype set", 1, l)
 	}
@@ -131,7 +131,7 @@ func TestGenotypeTree_NewNode(t *testing.T) {
 	}
 
 	sequence[0] = 1
-	tree.NewNode(sequence, p1)
+	tree.NewNode(sequence, 0, p1)
 	if l := tree.Set().Size(); l != 2 {
 		t.Errorf(UnequalIntParameterError, "size of genotype set", 2, l)
 	}

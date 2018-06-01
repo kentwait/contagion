@@ -85,7 +85,7 @@ func TestSequenceMutate(t *testing.T) {
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-	})
+	}, 0)
 	// Create mock IntrahostModel
 	model := new(ConstantPopModel)
 	model.mutationRate = 0.1
@@ -110,12 +110,16 @@ func TestSequenceMutate(t *testing.T) {
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 				1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			})
+			}, 0)
 			c <- pathogen
 		}
 		close(c)
 	}()
-	pathogens := MutateSequence(c, tree, model)
+	pathogens, newMutantsC := MutateSequence(c, tree, model)
+	go func() {
+		for range newMutantsC {
+		}
+	}()
 	counter := 0
 	diffMean := 0.0
 	for pathogen := range pathogens {

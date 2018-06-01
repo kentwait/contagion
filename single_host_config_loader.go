@@ -132,7 +132,7 @@ func (c *SingleHostConfig) NewSimulation() (Infection, error) {
 	// Adds sequences to the tree
 	for _, sequence := range pathogenHostMap[0] {
 		// Each starting sequence is a root node
-		sim.tree.NewNode(sequence)
+		sim.tree.NewNode(sequence, 0)
 	}
 	// Initialize durations
 	sim.statusDuration = make(map[int]int)

@@ -77,7 +77,7 @@ func sampleGenotypeTree(roots, sites int) GenotypeTree {
 	tree := EmptyGenotypeTree()
 	pathogen := sampleSequence(sites)
 	for i := 0; i < roots; i++ {
-		tree.NewNode(pathogen)
+		tree.NewNode(pathogen, 0)
 	}
 	return tree
 }
