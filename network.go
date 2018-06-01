@@ -232,7 +232,7 @@ func (m adjacencyMatrix) DeleteBiConnection(a, b int) error {
 }
 
 // EmptyAdjacencyMatrix creates a new 2D mapping with no contents.
-func EmptyAdjacencyMatrix() adjacencyMatrix {
+func EmptyAdjacencyMatrix() HostNetwork {
 	m := make(adjacencyMatrix)
 	return m
 }
