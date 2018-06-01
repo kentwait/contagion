@@ -38,11 +38,14 @@ func NewSISimulation(config Config, logger DataLogger) (*SISimulation, error) {
 func (sim *SISimulation) Run(i int) {
 	sim.instanceID = i
 	sim.Update(0)
-	for t := 1; t < sim.numGenerations; t++ {
+	t := 1
+	for t <= sim.numGenerations {
 		sim.Process(t)
 		sim.Transmit(t)
 		sim.Update(t)
+		t++
 	}
+	sim.Update(t)
 	sim.Finalize()
 }
 
