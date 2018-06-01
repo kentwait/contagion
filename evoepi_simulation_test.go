@@ -122,10 +122,9 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 
 	// Test setup
 	var wg sync.WaitGroup
-	c := make(chan MutationPackage)
-	wg.Add(1)
-	sim.SusceptibleProcess(0, 0, sim.Host(0), &wg)
-	close(c)
+	wg.Add(2)
+	go sim.SusceptibleProcess(0, 0, sim.Host(0), &wg)
+	go sim.SusceptibleProcess(0, 0, sim.Host(1), &wg)
 	wg.Wait()
 
 	// Expectations
@@ -207,10 +206,18 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	// Test setup
 	var wg sync.WaitGroup
 	c := make(chan MutationPackage)
-	wg.Add(1)
-	sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
-	close(c)
-	wg.Wait()
+	wg.Add(2)
+	go sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
+	go sim.InfectedProcess(0, 0, sim.Host(1), c, &wg)
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+	newNodeCnt := 0
+	for pack := range c {
+		fmt.Println(pack)
+		newNodeCnt++
+	}
 
 	// Expectations
 	// population size should increase from 10 to 100 after 1 step
@@ -236,6 +243,9 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	}
 	if diffMean < 9 || diffMean > 11 {
 		t.Errorf(FloatNotBetweenError, "average number of mutations", 9., 11., diffMean)
+	}
+	if newNodeCnt < counter {
+		t.Errorf(UnequalIntParameterError, "number of new mutants", counter, newNodeCnt)
 	}
 }
 
@@ -294,10 +304,18 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 	// Test setup
 	var wg sync.WaitGroup
 	c := make(chan MutationPackage)
-	wg.Add(1)
-	sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
-	close(c)
-	wg.Wait()
+	wg.Add(2)
+	go sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
+	go sim.InfectedProcess(0, 0, sim.Host(1), c, &wg)
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+	newNodeCnt := 0
+	for pack := range c {
+		fmt.Println(pack)
+		newNodeCnt++
+	}
 
 	// Expectations
 	// population size should increase from 10 to 20 after 1 step
@@ -327,4 +345,9 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 	if diffMean < 9 || diffMean > 11 {
 		t.Errorf(FloatNotBetweenError, "average number of mutations", 9., 11., diffMean)
 	}
+	if newNodeCnt < counter {
+		t.Errorf(UnequalIntParameterError, "number of new mutants", counter, newNodeCnt)
+	}
 }
+
+// TODO: Create separate test for testing contents of MutationPackage channel

@@ -100,6 +100,9 @@ func (sim *evoEpiSimulation) ExposedProcess(i, t int, host Host, c chan<- Mutati
 func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup) {
 	defer wg.Done()
 	pathogens := host.Pathogens()
+	if host.PathogenPopSize() == 0 {
+		return
+	}
 	var replicatedC <-chan GenotypeNode
 	switch strings.ToLower(host.(*sequenceHost).IntrahostModel.ReplicationMethod()) {
 	case "relative":
@@ -143,8 +146,17 @@ func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- Mutat
 	mutatedC := MutateSequence(replicatedC, sim.tree, host.(*sequenceHost).IntrahostModel)
 	// Clear current set of pathogens and get new set from the channel
 	host.RemoveAllPathogens()
-	for pathogen := range mutatedC {
-		host.AddPathogen(pathogen)
+	for node := range mutatedC {
+		host.AddPathogen(node)
+		for _, parent := range node.Parents() {
+			c <- MutationPackage{
+				instanceID:   i,
+				genID:        t,
+				hostID:       host.ID(),
+				nodeID:       node.UID(),
+				parentNodeID: parent.UID(),
+			}
+		}
 	}
 }
 
