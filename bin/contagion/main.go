@@ -2,8 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"runtime"
+	"strings"
+	"time"
 
 	contagion "github.com/kentwait/contagiongo"
 )
@@ -29,6 +32,8 @@ func main() {
 		log.Fatal(err)
 	}
 	for i := 1; i <= conf.NumInstances(); i++ {
+		log.Printf("starting instance %03d\n\n", i)
+		start := time.Now()
 		// Create a new logger for every realization
 		var logger contagion.DataLogger
 		switch *loggerType {
@@ -44,5 +49,8 @@ func main() {
 			log.Fatalf("error creating a new simulation from the configuration file: %s", err)
 		}
 		sim.Run(i)
+		elapsed := time.Since(start)
+		fmt.Println(strings.Repeat("-", 80))
+		log.Printf("Finished instance %03d in %s.\n", i, elapsed)
 	}
 }

@@ -1,6 +1,7 @@
 package contagiongo
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/segmentio/ksuid"
@@ -40,10 +41,12 @@ func (sim *SISimulation) Run(i int) {
 	sim.Update(0)
 	t := 1
 	for t <= sim.numGenerations {
+		fmt.Printf("instance %04d\tgeneration %05d\t", i, t)
 		sim.Process(t)
 		sim.Transmit(t)
 		sim.Update(t)
 		t++
+		fmt.Printf("Done.\n")
 	}
 	sim.Update(t)
 	sim.Finalize()
