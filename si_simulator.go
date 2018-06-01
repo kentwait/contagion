@@ -8,10 +8,10 @@ import (
 
 // import "sync"
 
-// SISimulator creates and runs an SI epidemiological simulation.
+// SISimulation creates and runs an SI epidemiological simulation.
 // Within this simulation, hosts may or may not run
 // independent genetic evolution simulations.
-type SISimulator struct {
+type SISimulation struct {
 	Epidemic
 	DataLogger
 
@@ -23,7 +23,7 @@ type SISimulator struct {
 }
 
 // Run instantiates, runs, and records the a new simulation.
-func (sim *SISimulator) Run(i int) {
+func (sim *SISimulation) Run(i int) {
 	sim.instanceID = i
 	sim.Update(0)
 	for t := 1; t < sim.numGenerations; t++ {
@@ -37,7 +37,7 @@ func (sim *SISimulator) Run(i int) {
 // Update looks at the timer or internal state to decide if
 // the status of the host remains the same of will change.
 // After the status updates, each host's status is recorded to file.
-func (sim *SISimulator) Update(t int) {
+func (sim *SISimulation) Update(t int) {
 	// Update status first
 	c := make(chan StatusPackage)
 	d := make(chan GenotypeFreqPackage)
@@ -107,7 +107,7 @@ func (sim *SISimulator) Update(t int) {
 // Process runs the internal evolution simulation in each host.
 // During intrahost evolution, if new mutations appear, the new sequence
 // and ancestry is recorded to file.
-func (sim *SISimulator) Process(t int) {
+func (sim *SISimulation) Process(t int) {
 	c := make(chan MutationPackage)
 	var wg sync.WaitGroup
 	// Read all hosts and process based on the current status of the host
@@ -138,7 +138,7 @@ func (sim *SISimulator) Process(t int) {
 
 // Transmit facilitates the sampling and migration process of pathogens
 // between hosts.
-func (sim *SISimulator) Transmit(t int) {
+func (sim *SISimulation) Transmit(t int) {
 	c := make(chan TransmissionEvent)
 	d := make(chan TransmissionPackage)
 	var wg sync.WaitGroup
@@ -192,7 +192,7 @@ func (sim *SISimulator) Transmit(t int) {
 }
 
 // Finalize performs processes to finish and close the simulation.
-func (sim *SISimulator) Finalize() {
+func (sim *SISimulation) Finalize() {
 	// Record genotype tree
 	var wg sync.WaitGroup
 	wg.Add(2)
