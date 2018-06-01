@@ -13,15 +13,17 @@ type Config interface {
 	NumInstances() int
 	NumGenerations() int
 	LogFreq() int
+	LogPath() string
 }
 
 // EvoEpiConfig contains parameters to create a simulated infection
 // in a connected network of hosts.
 type EvoEpiConfig struct {
-	SimParams       *epidemicSimConfig      `toml:"simulation"`
-	LogParams       *logConfig              `toml:"logging"`
-	IntrahostModels []*intrahostModelConfig `toml:"intrahost_model"`
-	FitnessModels   []*fitnessModelConfig   `toml:"fitness_model"`
+	SimParams          *epidemicSimConfig      `toml:"simulation"`
+	LogParams          *logConfig              `toml:"logging"`
+	IntrahostModels    []*intrahostModelConfig `toml:"intrahost_model"`
+	FitnessModels      []*fitnessModelConfig   `toml:"fitness_model"`
+	TransmissionModels []*transModelConfig     `toml:"transmission_model"`
 
 	validated bool
 }
@@ -213,6 +215,21 @@ func (c *EvoEpiConfig) Validate() error {
 			hostIDSet[i] = true
 		}
 	}
+	// Validate each transmission model
+	// Check if host_ids are unique
+	hostIDSet = make(map[int]bool)
+	for _, model := range c.TransmissionModels {
+		err := model.Validate()
+		if err != nil {
+			return err
+		}
+		for _, i := range model.HostIDs {
+			if _, exists := hostIDSet[i]; exists {
+				return fmt.Errorf("host id "+IntKeyExists, i)
+			}
+			hostIDSet[i] = true
+		}
+	}
 	// Check if all hosts have been assigned a model
 	for i := 0; i < c.SimParams.HostPopSize; i++ {
 		if !hostIDSet[i] {
@@ -234,6 +251,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	sim.timers = make(map[int]int)
 	sim.intrahostModels = make(map[int]IntrahostModel)
 	sim.fitnessModels = make(map[int]FitnessModel)
+	sim.transModels = make(map[int]TransmissionModel)
 	sim.hostNeighborhoods = make(map[int][]Host)
 	// Create empty hosts
 	for i := 0; i < c.SimParams.HostPopSize; i++ {
@@ -267,6 +285,22 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 		// assign to hosts
 		for _, id := range conf.HostIDs {
 			err := sim.hosts[id].SetFitnessModel(model)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	// Create TransmissionModels
+	for i, conf := range c.TransmissionModels {
+		model, err := conf.CreateModel(i)
+		if err != nil {
+			return nil, err
+		}
+		model.SetModelID(i)
+		sim.transModels[i] = model
+		// assign to hosts
+		for _, id := range conf.HostIDs {
+			err := sim.hosts[id].SetTransmissionModel(model)
 			if err != nil {
 				return nil, err
 			}
@@ -341,6 +375,14 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 			}...)
 		}
 	}
+	// Initialize host statuses to 1
+	for i := range sim.hosts {
+		sim.statuses[i] = 1
+	}
+	// Initialize host timers to -1
+	for i := range sim.hosts {
+		sim.timers[i] = -1
+	}
 
 	return sim, nil
 }
@@ -355,6 +397,10 @@ func (c *EvoEpiConfig) NumGenerations() int { return c.SimParams.NumGenerations 
 // LogFreq returns the number of pathogen generations in the simulation until
 // data is recorded.
 func (c *EvoEpiConfig) LogFreq() int { return int(c.LogParams.LogFreq) }
+
+// LogPath returns the path where to write results.
+// This can a path to a folder, or directory_path/prefix format
+func (c *EvoEpiConfig) LogPath() string { return c.LogParams.LogPath }
 
 type epidemicSimConfig struct {
 	NumGenerations int    `toml:"num_generations"`
@@ -646,4 +692,48 @@ func (c *fitnessModelConfig) CreateModel(id int) (FitnessModel, error) {
 	}
 	// additive_motif
 	return nil, fmt.Errorf("additive_motif not yet implemented")
+}
+
+type transModelConfig struct {
+	ModelName        string  `toml:"model_name"`
+	HostIDs          []int   `toml:"host_ids"`
+	Mode             string  `toml:"mode"` // poisson, constant
+	TransmissionProb float64 `toml:"transmission_prob"`
+	TransmissionSize float64 `toml:"transmission_size"`
+	validated        bool
+}
+
+// Validate checks the validity of the transModelConfig configuration.
+func (c *transModelConfig) Validate() error {
+	// check keywords
+	// fitness_model
+	switch strings.ToLower(c.Mode) {
+	case "poisson":
+	case "constant":
+	default:
+		return fmt.Errorf(UnrecognizedKeywordError, c.Mode, "mode")
+	}
+	c.validated = true
+	return nil
+}
+
+func (c *transModelConfig) CreateModel(id int) (TransmissionModel, error) {
+	if !c.validated {
+		return nil, fmt.Errorf("validate model parameters first")
+	}
+	switch c.Mode {
+	case "poisson":
+		model := new(poissonTransmitter)
+		model.name = c.ModelName
+		model.prob = c.TransmissionProb
+		model.size = c.TransmissionSize
+		return model, nil
+	case "constant":
+		model := new(constantTransmitter)
+		model.name = c.ModelName
+		model.prob = c.TransmissionProb
+		model.size = int(c.TransmissionSize)
+		return model, nil
+	}
+	return nil, fmt.Errorf(UnrecognizedKeywordError, c.Mode, "mode")
 }

@@ -29,4 +29,9 @@ host_ids = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
 fitness_model = "multiplicative"
 fitness_model_path = "examples/test1.sir.fm.txt"
 
-
+[[transmission_model]]
+model_name = "multiplicative"
+host_ids = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ]
+mode = "constant"
+transmission_prob = 1.0
+transmission_size = 1.0

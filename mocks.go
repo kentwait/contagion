@@ -84,7 +84,7 @@ func sampleGenotypeTree(roots, sites int) GenotypeTree {
 
 func sampleEvoEpiSimulation() *evoEpiSimulation {
 	sites := 100
-	mu := 10e-5
+	mu := 0.01
 	constPopSize := 1000
 	initPopSize := 1
 	multiplicative := true
@@ -131,7 +131,7 @@ func sampleEvoEpiSimulation() *evoEpiSimulation {
 
 func sampleEpidemicSimConfig() *epidemicSimConfig {
 	conf := new(epidemicSimConfig)
-	conf.NumGenerations = 100
+	conf.NumGenerations = 10
 	conf.NumIntances = 10
 	conf.HostPopSize = 10
 	conf.EpidemicModel = "sir"
@@ -173,11 +173,22 @@ func sampleFitnessModelConfig() *fitnessModelConfig {
 	return conf
 }
 
+func sampleTransModelConfig() *transModelConfig {
+	conf := new(transModelConfig)
+	conf.HostIDs = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+	conf.ModelName = "constant"
+	conf.Mode = "constant"
+	conf.TransmissionProb = 1.0
+	conf.TransmissionSize = 1
+	return conf
+}
+
 func sampleEvoEpiConfig() *EvoEpiConfig {
 	conf := new(EvoEpiConfig)
 	conf.SimParams = sampleEpidemicSimConfig()
 	conf.LogParams = sampleLogConfig()
 	conf.IntrahostModels = []*intrahostModelConfig{sampleIntrahostModelConfig()}
 	conf.FitnessModels = []*fitnessModelConfig{sampleFitnessModelConfig()}
+	conf.TransmissionModels = []*transModelConfig{sampleTransModelConfig()}
 	return conf
 }

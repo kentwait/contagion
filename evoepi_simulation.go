@@ -17,6 +17,7 @@ type evoEpiSimulation struct {
 	timers             map[int]int
 	intrahostModels    map[int]IntrahostModel
 	fitnessModels      map[int]FitnessModel
+	transModels        map[int]TransmissionModel
 	hostNeighborhoods  map[int][]Host
 	hostNetwork        HostNetwork
 	infectableStatuses []int
