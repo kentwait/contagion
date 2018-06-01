@@ -15,11 +15,24 @@ type SISimulation struct {
 	Epidemic
 	DataLogger
 
-	instanceID         int
-	numGenerations     int
-	infectableStatuses []int
-	pathogenLogFreq    int
-	hostLogFreq        int
+	instanceID     int
+	numGenerations int
+	logFreq        int
+}
+
+// NewSISimulation creates a new SI simulation.
+func NewSISimulation(config Config, logger DataLogger, instance int) (*SISimulation, error) {
+	epidemic, err := config.NewSimulation()
+	if err != nil {
+		return nil, err
+	}
+	sim := new(SISimulation)
+	sim.Epidemic = epidemic
+	sim.DataLogger = logger
+	sim.instanceID = instance
+	sim.numGenerations = config.NumGenerations()
+	sim.logFreq = config.LogFreq()
+	return sim, nil
 }
 
 // Run instantiates, runs, and records the a new simulation.
