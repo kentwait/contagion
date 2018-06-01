@@ -9,6 +9,7 @@ import (
 
 // Genotype represents a unique pathogen sequence.
 type Genotype interface {
+	GenotypeUID() ksuid.KSUID
 	// Sequence returns the sequence of the current node.
 	Sequence() []uint8
 	// SetSequence changes the sequence of genotype.
@@ -31,6 +32,7 @@ type Genotype interface {
 
 type genotype struct {
 	sync.RWMutex
+	uid      ksuid.KSUID
 	sequence []uint8
 	statePos map[uint8][]int // key is the state
 	fitness  map[int]float64 // key is the fitness model id
@@ -50,6 +52,10 @@ func NewGenotype(s []uint8) Genotype {
 	// Initialize other maps
 	g.fitness = make(map[int]float64)
 	return g
+}
+
+func (n *genotype) GenotypeUID() ksuid.KSUID {
+	return n.uid
 }
 
 func (n *genotype) Sequence() []uint8 {
