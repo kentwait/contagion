@@ -1,6 +1,10 @@
 package contagiongo
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/segmentio/ksuid"
+)
 
 // The following are status codes for different preset compartments that
 // describe the current epidemiological status of a host in the simulation.
@@ -48,34 +52,37 @@ type Epidemic interface {
 	// the stored configuration
 	NewInstance() (Epidemic, error)
 
+	GenotypeNodeMap() map[ksuid.KSUID]GenotypeNode
+	GenotypeSet() GenotypeSet
+
 	// The following methods perform intrahost processes associated with
 	// the status. For every generation, one of the following is called for
 	// each host.
 
 	// SusceptibleProcess performs intrahost processes while the host is in
 	// the susceptible status.
-	SusceptibleProcess(host Host, wg *sync.WaitGroup)
+	SusceptibleProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// ExposedProcess performs intrahost processes while the host is in
 	// the exposed status.
-	ExposedProcess(host Host, wg *sync.WaitGroup)
+	ExposedProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup)
 	// InfectedProcess performs intrahost processes while the host is in
 	// the infected status.
-	InfectedProcess(host Host, wg *sync.WaitGroup)
+	InfectedProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup)
 	// InfectiveProcess performs intrahost processes while the host is in
 	// the infective status.
-	InfectiveProcess(host Host, wg *sync.WaitGroup)
+	InfectiveProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup)
 	// RemovedProcess performs intrahost processes while the host is in
 	// the removed status.
-	RemovedProcess(host Host, wg *sync.WaitGroup)
+	RemovedProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// RecoveredProcess performs intrahost processes while the host is in
 	// the recovered status.
-	RecoveredProcess(host Host, wg *sync.WaitGroup)
+	RecoveredProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// DeadProcess performs intrahost processes while the host is in
 	// the dead status.
-	DeadProcess(host Host, wg *sync.WaitGroup)
+	DeadProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// DeadProcess performs intrahost processes while the host is in
 	// the dead status.
-	VaccinatedProcess(host Host, wg *sync.WaitGroup)
+	VaccinatedProcess(i, t int, host Host, wg *sync.WaitGroup)
 }
 
 // EpidemicSimulation is a simulation environment that simulates
@@ -84,10 +91,9 @@ type EpidemicSimulation interface {
 	Epidemic
 	// Run runs the whole simulation
 	Run(recorder DataLogger)
-	Update()
-	Record(recorder DataLogger)
-	Process()
-	Transmit()
+	Update(t int)
+	Process(t int)
+	Transmit(t int)
 }
 
 // Infection encapsulates a single host and the pathogen tree lineage
@@ -118,28 +124,28 @@ type Infection interface {
 
 	// SusceptibleProcess performs intrahost processes while the host is in
 	// the susceptible status.
-	SusceptibleProcess(host Host, wg *sync.WaitGroup)
+	SusceptibleProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// ExposedProcess performs intrahost processes while the host is in
 	// the exposed status.
-	ExposedProcess(host Host, wg *sync.WaitGroup)
+	ExposedProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup)
 	// InfectedProcess performs intrahost processes while the host is in
 	// the infected status.
-	InfectedProcess(host Host, wg *sync.WaitGroup)
+	InfectedProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup)
 	// InfectiveProcess performs intrahost processes while the host is in
 	// the infective status.
-	InfectiveProcess(host Host, wg *sync.WaitGroup)
+	InfectiveProcess(i, t int, host Host, c chan<- MutationPackage, wg *sync.WaitGroup)
 	// RemovedProcess performs intrahost processes while the host is in
 	// the removed status.
-	RemovedProcess(host Host, wg *sync.WaitGroup)
+	RemovedProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// RecoveredProcess performs intrahost processes while the host is in
 	// the recovered status.
-	RecoveredProcess(host Host, wg *sync.WaitGroup)
+	RecoveredProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// DeadProcess performs intrahost processes while the host is in
 	// the dead status.
-	DeadProcess(host Host, wg *sync.WaitGroup)
+	DeadProcess(i, t int, host Host, wg *sync.WaitGroup)
 	// DeadProcess performs intrahost processes while the host is in
 	// the dead status.
-	VaccinatedProcess(host Host, wg *sync.WaitGroup)
+	VaccinatedProcess(i, t int, host Host, wg *sync.WaitGroup)
 }
 
 // InfectionSimulation is a simulation environment that simulates
@@ -149,40 +155,14 @@ type InfectionSimulation interface {
 	Infection
 	// Run runs the whole simulation
 	Run(recorder DataLogger)
-	Update()
-	Record(recorder DataLogger)
-	Process()
-	Transmit()
+	Update(t int)
+	Process(t int)
+	Transmit(t int)
 }
 
-// StatusUpdate is a struct for sending and receiving
-// host status updates.
-type StatusUpdate struct {
-	hostID int
-	status int
-	timer  int
-}
-
-// InfectiveParams is a struct for sending and receiving
-// infective host information.
-type InfectiveParams struct {
-	source  Host
-	popSize int
-}
-
-// Unpack returns the property values of InfectiveParams.
-func (p *InfectiveParams) Unpack() (Host, int) {
-	return p.source, p.popSize
-}
-
-// TransParams is a struct for sending and receiving
+// TransmissionEvent is a struct for sending and receiving
 // transmission event information.
-type TransParams struct {
+type TransmissionEvent struct {
 	destination Host
-	pathogen    interface{}
-}
-
-// Unpack returns the property values of TransParams.
-func (p *TransParams) Unpack() (Host, interface{}) {
-	return p.destination, p.pathogen
+	pathogen    GenotypeNode
 }
