@@ -8,7 +8,7 @@ import (
 // simulation data to file whether it writes a text file or
 // writes to a database.
 type DataLogger interface {
-	SetBasePath(path string)
+	SetBasePath(path string, i int)
 	// WriteGenotypes records a new genotype's ID and sequence to file.
 	WriteGenotypes(c <-chan Genotype)
 	// WriteGenotypeNodes records new genotype node's ID and
