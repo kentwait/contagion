@@ -41,6 +41,8 @@ type genotype struct {
 // NewGenotype creates a new genotype from sequence.
 func NewGenotype(s []uint8) Genotype {
 	g := new(genotype)
+	// Generate UID
+	g.uid = ksuid.New()
 	// Copy sequence
 	g.sequence = make([]uint8, len(s))
 	copy(g.sequence, s)
