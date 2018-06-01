@@ -12,7 +12,6 @@ type CSVLogger struct {
 	genotypePath     string
 	genotypeNodePath string
 	genotypeFreqPath string
-	MutationPath     string
 	statusPath       string
 	mutationPath     string
 }
