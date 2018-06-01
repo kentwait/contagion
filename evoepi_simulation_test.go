@@ -28,7 +28,7 @@ func TestEvoEpiSimulation_Getters(t *testing.T) {
 	}
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
-	for _, n := range sim.tree.Nodes() {
+	for _, n := range sim.tree.NodeMap() {
 		sim.hosts[0].AddPathogen(n)
 	}
 	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
@@ -96,7 +96,7 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	var originalSequence string
-	for _, n := range sim.tree.Nodes() {
+	for _, n := range sim.tree.NodeMap() {
 		sim.hosts[0].AddPathogen(n)
 		originalSequence = n.StringSequence()
 	}
@@ -122,8 +122,10 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 
 	// Test setup
 	var wg sync.WaitGroup
+	c := make(chan MutationPackage)
 	wg.Add(1)
-	sim.SusceptibleProcess(sim.hosts[0], &wg)
+	sim.SusceptibleProcess(0, 0, sim.Host(0), &wg)
+	close(c)
 	wg.Wait()
 
 	// Expectations
@@ -175,7 +177,7 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	var originalSequence string
-	for _, n := range sim.tree.Nodes() {
+	for _, n := range sim.tree.NodeMap() {
 		sim.hosts[0].AddPathogen(n)
 		originalSequence = n.StringSequence()
 		fmt.Println(n.StringSequence())
@@ -204,8 +206,10 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 
 	// Test setup
 	var wg sync.WaitGroup
+	c := make(chan MutationPackage)
 	wg.Add(1)
-	sim.InfectedProcess(sim.hosts[0], &wg)
+	sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
+	close(c)
 	wg.Wait()
 
 	// Expectations
@@ -260,7 +264,7 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	var originalSequence string
-	for _, n := range sim.tree.Nodes() {
+	for _, n := range sim.tree.NodeMap() {
 		sim.hosts[0].AddPathogen(n)
 		originalSequence = n.StringSequence()
 		fmt.Println(n.StringSequence())
@@ -289,8 +293,10 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 
 	// Test setup
 	var wg sync.WaitGroup
+	c := make(chan MutationPackage)
 	wg.Add(1)
-	sim.InfectedProcess(sim.hosts[0], &wg)
+	sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
+	close(c)
 	wg.Wait()
 
 	// Expectations

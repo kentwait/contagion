@@ -156,8 +156,10 @@ func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
 	constPopSize := sim.config.(*EvoEpiConfig).IntrahostModels[0].ConstantPopSize
 	// Run infected process on the simulation
 	var wg sync.WaitGroup
+	c := make(chan MutationPackage)
 	wg.Add(1)
-	sim.InfectedProcess(sim.Host(0), &wg)
+	sim.InfectedProcess(0, 0, sim.Host(0), c, &wg)
+	close(c)
 	wg.Wait()
 
 	// Expectations
