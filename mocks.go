@@ -143,7 +143,7 @@ func sampleEpidemicSimConfig() *epidemicSimConfig {
 func sampleLogConfig() *logConfig {
 	conf := new(logConfig)
 	conf.LogFreq = 1
-	conf.PathogenLogPath = "examples/test1.sir.log"
+	conf.LogPath = "examples/test1.sir.log"
 	return conf
 }
 
