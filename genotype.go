@@ -112,6 +112,7 @@ type GenotypeSet interface {
 	Remove(s []uint8)
 	// Size returns the size of the set.
 	Size() int
+	Map() map[string]Genotype
 }
 
 type genotypeSet struct {
@@ -162,9 +163,11 @@ func (set *genotypeSet) Remove(s []uint8) {
 }
 
 func (set *genotypeSet) Size() int {
-	set.RLock()
-	defer set.RUnlock()
 	return len(set.set)
+}
+
+func (set *genotypeSet) Map() map[string]Genotype {
+	return set.set
 }
 
 // GenotypeNode represents a genotype together with its relationship to its parents and children.
@@ -284,8 +287,9 @@ type GenotypeTree interface {
 	// NewNode creates a new genotype node from a given sequence.
 	// Automatically adds sequence to the genotypeSet if it is not yet present.
 	NewNode(sequence []uint8, parents ...GenotypeNode) GenotypeNode
-	// Nodes returns the map of genotype nodes found in the tree.
-	Nodes() map[ksuid.KSUID]GenotypeNode
+	// Nodes returns the map of genotype node ID found in the tree to its
+	// corresponding genotype.
+	NodeMap() map[ksuid.KSUID]GenotypeNode
 }
 
 type genotypeTree struct {
@@ -338,7 +342,7 @@ func (t *genotypeTree) NewNode(sequence []uint8, parents ...GenotypeNode) Genoty
 	return n
 }
 
-func (t *genotypeTree) Nodes() map[ksuid.KSUID]GenotypeNode {
+func (t *genotypeTree) NodeMap() map[ksuid.KSUID]GenotypeNode {
 	t.RLock()
 	defer t.RUnlock()
 	return t.nodes
