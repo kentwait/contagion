@@ -1,6 +1,8 @@
 package contagiongo
 
-import "github.com/segmentio/ksuid"
+import (
+	"github.com/segmentio/ksuid"
+)
 
 // DataLogger is the general definition of a logger that records
 // simulation data to file whether it writes a text file or
@@ -31,6 +33,7 @@ type GenotypeFreqPackage struct {
 	genID      int
 	hostID     int
 	genotypeID ksuid.KSUID
+	freq       int
 }
 
 // StatusPackage encapsulates the data to be written everytime
@@ -39,7 +42,7 @@ type StatusPackage struct {
 	instanceID int
 	genID      int
 	hostID     int
-	status     uint8
+	status     int
 }
 
 // MutationPackage encapsulates information to be written
