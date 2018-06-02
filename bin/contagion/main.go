@@ -15,7 +15,7 @@ import (
 func main() {
 	numCPUPtr := flag.Int("threads", runtime.NumCPU(), "number of CPU threads")
 	loggerType := flag.String("logger", "csv", "data logger type (csv|sqlite)")
-	seedNum := flag.Int("seed", time.Now().UTC().UnixNano(), "random seed. Uses Unix time in nanoseconds as default")
+	seedNum := flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed. Uses Unix time in nanoseconds as default")
 	// benchmarkPtr := flag.String("benchmark", "", "Benchmark mode. Logs memory and wall time and saves to the specified path")
 	flag.Parse()
 
