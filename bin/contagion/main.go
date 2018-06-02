@@ -2,11 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"runtime"
-	"strings"
 	"time"
 
 	contagion "github.com/kentwait/contagiongo"
@@ -55,7 +53,6 @@ func main() {
 		}
 		sim.Run(i)
 		elapsed := time.Since(start)
-		fmt.Println(strings.Repeat("-", 80))
 		log.Printf("Finished instance %03d in %s.\n", i, elapsed)
 	}
 }
