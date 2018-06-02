@@ -2,7 +2,6 @@ package contagiongo
 
 import (
 	"fmt"
-	"math/rand"
 	"sort"
 	"testing"
 
@@ -41,7 +40,6 @@ func TestSequenceMultinomialReplication(t *testing.T) {
 }
 
 func TestIntrinsicRateReplication(t *testing.T) {
-	rand.Seed(1)
 	set := EmptyGenotypeSet()
 	p1 := sampleGenotypeNode(100, set)
 	p2 := sampleGenotypeNode(100, set)
@@ -71,7 +69,6 @@ func TestIntrinsicRateReplication(t *testing.T) {
 }
 
 func TestSequenceMutate(t *testing.T) {
-	rand.Seed(0)
 	// Create a mock tree
 	tree := EmptyGenotypeTree()
 	rootSeq := []uint8{
@@ -137,7 +134,6 @@ func TestSequenceMutate(t *testing.T) {
 }
 
 func TestSequenceMutate2(t *testing.T) {
-	rand.Seed(0)
 	// Create a mock tree
 	tree := EmptyGenotypeTree()
 	rootSeq := []uint8{

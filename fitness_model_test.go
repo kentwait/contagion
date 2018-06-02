@@ -3,7 +3,6 @@ package contagiongo
 import (
 	"fmt"
 	"math"
-	"math/rand"
 	"testing"
 )
 
@@ -30,7 +29,6 @@ func TestNewMultiplicativeFM(t *testing.T) {
 }
 
 func TestMultiplicativeFM_Fitness(t *testing.T) {
-	rand.Seed(0)
 	matrix := make(map[int]map[uint8]float64)
 	for i := 0; i < 1000; i++ {
 		matrix[i] = map[uint8]float64{
@@ -72,7 +70,6 @@ func TestNewAdditiveFM(t *testing.T) {
 }
 
 func TestAdditiveFM_Fitness(t *testing.T) {
-	rand.Seed(0)
 	matrix := make(map[int]map[uint8]float64)
 	for i := 0; i < 1000; i++ {
 		matrix[i] = map[uint8]float64{

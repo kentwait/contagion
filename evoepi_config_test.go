@@ -2,7 +2,6 @@ package contagiongo
 
 import (
 	"fmt"
-	"math/rand"
 	"sync"
 	"testing"
 )
@@ -140,7 +139,6 @@ func TestEvoEpiConfig_NewSimulation_NewInstance(t *testing.T) {
 }
 
 func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
-	rand.Seed(0)
 	conf := sampleEvoEpiConfig()
 	err := conf.Validate()
 	if err != nil {

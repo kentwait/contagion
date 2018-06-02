@@ -1,7 +1,6 @@
 package contagiongo
 
 import (
-	"math/rand"
 	"sync"
 	"testing"
 )
@@ -72,7 +71,6 @@ func TestEvoEpiSimulation_Getters(t *testing.T) {
 }
 
 func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
-	rand.Seed(0)
 	sites := 100
 	mu := 0.5
 	constPopSize := 100
@@ -152,7 +150,6 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 }
 
 func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
-	rand.Seed(0)
 	sites := 100
 	mu := 0.1
 	constPopSize := 100
@@ -249,7 +246,6 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 }
 
 func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
-	rand.Seed(0)
 	sites := 100
 	mu := 0.1
 	maxPopSize := 1000

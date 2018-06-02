@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math/rand"
 	"runtime"
 	"strings"
 	"time"
@@ -14,8 +15,12 @@ import (
 func main() {
 	numCPUPtr := flag.Int("threads", runtime.NumCPU(), "number of CPU threads")
 	loggerType := flag.String("logger", "csv", "data logger type (csv|sqlite)")
+	seedNum := flag.Int("seed", time.Now().UTC().UnixNano(), "random seed. Uses Unix time in nanoseconds as default")
 	// benchmarkPtr := flag.String("benchmark", "", "Benchmark mode. Logs memory and wall time and saves to the specified path")
 	flag.Parse()
+
+	// Set random number
+	rand.Seed(*seedNum)
 
 	// Set number of CPUs to be used
 	runtime.GOMAXPROCS(*numCPUPtr)

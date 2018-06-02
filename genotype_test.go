@@ -2,7 +2,6 @@ package contagiongo
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 )
 
@@ -119,7 +118,6 @@ func TestEmptyGenotypeTree(t *testing.T) {
 }
 
 func TestGenotypeTree_NewNode(t *testing.T) {
-	rand.Seed(0)
 	tree := EmptyGenotypeTree()
 	sequence := sampleSequence(1000)
 	p1 := tree.NewNode(sequence, 0)
