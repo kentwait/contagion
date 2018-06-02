@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	// sqlite3 driver
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // SQLiteLogger is a DataLogger that writes simulation data
@@ -20,6 +23,12 @@ type SQLiteLogger struct {
 	transmissionPath string
 	mutationPath     string
 	instanceID       int
+}
+
+func NewSQLiteLogger(basepath string, i int) *SQLiteLogger {
+	l := new(SQLiteLogger)
+	l.SetBasePath(basepath, i)
+	return l
 }
 
 func (l *SQLiteLogger) SetBasePath(basepath string, i int) {
@@ -43,7 +52,7 @@ func (l *SQLiteLogger) SetBasePath(basepath string, i int) {
 func (l *SQLiteLogger) Init() error {
 	// General function to create a new table
 	newTable := func(path, tableName, cols string) error {
-		db, err := OpenSQLiteDB(path)
+		db, err := OpenSQLiteDB_Optimized(path)
 		if err != nil {
 			return err
 		}
@@ -97,7 +106,7 @@ func (l *SQLiteLogger) WriteGenotypes(c <-chan Genotype) {
 	path := l.genotypePath
 	_stmt := "insert into " + tableName + "(genotypeID, sequence) values(?, ?)"
 	// Database ops below
-	db, err := OpenSQLiteDB(path)
+	db, err := OpenSQLiteDB_Optimized(path)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -135,7 +144,7 @@ func (l *SQLiteLogger) WriteGenotypeNodes(c <-chan GenotypeNode) {
 	path := l.genotypeNodePath
 	_stmt := "insert into " + tableName + "(nodeID, genotypeID) values(?, ?)"
 	// Database ops below
-	db, err := OpenSQLiteDB(path)
+	db, err := OpenSQLiteDB_Optimized(path)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -173,7 +182,7 @@ func (l *SQLiteLogger) WriteGenotypeFreq(c <-chan GenotypeFreqPackage) {
 	path := l.genotypeFreqPath
 	_stmt := "insert into " + tableName + "(generation, hostID, genotypeID, freq) values(?, ?, ?, ?)"
 	// Database ops below
-	db, err := OpenSQLiteDB(path)
+	db, err := OpenSQLiteDB_Optimized(path)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -213,7 +222,7 @@ func (l *SQLiteLogger) WriteMutations(c <-chan MutationPackage) {
 	path := l.mutationPath
 	_stmt := "insert into " + tableName + "(generation, hostID, parentNodeID, nodeID) values(?, ?, ?, ?)"
 	// Database ops below
-	db, err := OpenSQLiteDB(path)
+	db, err := OpenSQLiteDB_Optimized(path)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -252,7 +261,7 @@ func (l *SQLiteLogger) WriteStatus(c <-chan StatusPackage) {
 	path := l.statusPath
 	_stmt := "insert into " + tableName + "(generation, hostID, status) values(?, ?, ?)"
 	// Database ops below
-	db, err := OpenSQLiteDB(path)
+	db, err := OpenSQLiteDB_Optimized(path)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -291,7 +300,7 @@ func (l *SQLiteLogger) WriteTransmission(c <-chan TransmissionPackage) {
 	path := l.transmissionPath
 	_stmt := "insert into " + tableName + "(generation, fromHostID, toHostID, nodeID) values(?, ?, ?, ?)"
 	// Database ops below
-	db, err := OpenSQLiteDB(path)
+	db, err := OpenSQLiteDB_Optimized(path)
 	if err != nil {
 		log.Fatal(err)
 		return
@@ -324,8 +333,12 @@ func (l *SQLiteLogger) WriteTransmission(c <-chan TransmissionPackage) {
 	tx.Commit()
 }
 
-func OpenSQLiteDB(path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", path)
+func OpenSQLiteDB_Optimized(path string) (*sql.DB, error) {
+	return OpenSQLiteDB(path, "?_journal=WAL&_locking=EXCLUSIVE&_sync=NORMAL")
+}
+func OpenSQLiteDB(path, connectionString string) (*sql.DB, error) {
+	dsn := "file:%s%s"
+	db, err := sql.Open("sqlite3", fmt.Sprintf(dsn, path, connectionString))
 	if err != nil {
 		return nil, err
 	}

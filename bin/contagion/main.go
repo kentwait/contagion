@@ -34,6 +34,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	firstStart := time.Now()
 	for i := 1; i <= conf.NumInstances(); i++ {
 		log.Printf("starting instance %03d\n\n", i)
 		start := time.Now()
@@ -43,7 +44,7 @@ func main() {
 		case "csv":
 			logger = contagion.NewCSVLogger(conf.LogPath(), i)
 		case "sqlite":
-			log.Fatalf("sqlite logger not yet implemented")
+			logger = contagion.NewSQLiteLogger(conf.LogPath(), i)
 		default:
 			log.Fatalf("%s is not a valid logger type (csv|sqlite)", *loggerType)
 		}
@@ -52,7 +53,7 @@ func main() {
 			log.Fatalf("error creating a new simulation from the configuration file: %s", err)
 		}
 		sim.Run(i)
-		elapsed := time.Since(start)
-		log.Printf("Finished instance %03d in %s.\n", i, elapsed)
+		log.Printf("Finished instance %03d in %s.\n\n", i, time.Since(start))
 	}
+	log.Printf("Completed all runs in %s.", time.Since(firstStart))
 }
