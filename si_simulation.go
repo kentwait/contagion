@@ -2,6 +2,7 @@ package contagiongo
 
 import (
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/segmentio/ksuid"
@@ -37,6 +38,7 @@ func NewSISimulation(config Config, logger DataLogger) (*SISimulation, error) {
 
 // Run instantiates, runs, and records the a new simulation.
 func (sim *SISimulation) Run(i int) {
+	sim.Init()
 	sim.instanceID = i
 	sim.Update(0)
 	t := 1
@@ -50,6 +52,15 @@ func (sim *SISimulation) Run(i int) {
 	}
 	sim.Update(t)
 	sim.Finalize()
+}
+
+// Init initializes the simulation and accepts 0 or more parameters.
+// For example, creating datbases etc.
+func (sim *SISimulation) Init(params ...interface{}) {
+	err := sim.DataLogger.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Update looks at the timer or internal state to decide if

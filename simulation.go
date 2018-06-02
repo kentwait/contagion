@@ -90,7 +90,8 @@ type Epidemic interface {
 type EpidemicSimulation interface {
 	Epidemic
 	// Run runs the whole simulation
-	Run(recorder DataLogger)
+	Init(params ...interface{})
+	Run(i int)
 	Update(t int)
 	Process(t int)
 	Transmit(t int)
@@ -154,7 +155,8 @@ type Infection interface {
 type InfectionSimulation interface {
 	Infection
 	// Run runs the whole simulation
-	Run(recorder DataLogger)
+	Init(params ...interface{})
+	Run(i int)
 	Update(t int)
 	Process(t int)
 	Transmit(t int)
