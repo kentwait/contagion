@@ -36,6 +36,44 @@ func (l *CSVLogger) SetBasePath(basepath string, i int) {
 	l.mutationPath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "tree")
 }
 
+func (l *CSVLogger) Init() error {
+	newFile := func(path, header string) error {
+		var b bytes.Buffer
+		_, err := b.WriteString(header)
+		if err != nil {
+			return err
+		}
+		AppendToFile(path, b.Bytes())
+		return nil
+	}
+
+	err := newFile(l.genotypePath, "genotypeID,sequence\n")
+	if err != nil {
+		return err
+	}
+	err = newFile(l.genotypeNodePath, "nodeID,genotypeID\n")
+	if err != nil {
+		return err
+	}
+	err = newFile(l.genotypeFreqPath, "instance,generation,hostID,genotypeID,freq\n")
+	if err != nil {
+		return err
+	}
+	err = newFile(l.mutationPath, "instance,generation,hostID,parentNodeID,nodeID\n")
+	if err != nil {
+		return err
+	}
+	err = newFile(l.statusPath, "instance,generation,hostID,status\n")
+	if err != nil {
+		return err
+	}
+	err = newFile(l.transmissionPath, "instance,generation,fromHostID,toHostID,nodeID\n")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (l *CSVLogger) WriteGenotypes(c <-chan Genotype) {
 	// Format
 	// <genotypeID>  <sequence>
@@ -44,7 +82,7 @@ func (l *CSVLogger) WriteGenotypes(c <-chan Genotype) {
 	// b.WriteString("genotypeID,sequence\n")
 	for genotype := range c {
 		row := fmt.Sprintf(template,
-			genotype.GenotypeUID(),
+			genotype.GenotypeUID().String(),
 			genotype.StringSequence(),
 		)
 		// TODO: log error
@@ -61,8 +99,8 @@ func (l *CSVLogger) WriteGenotypeNodes(c <-chan GenotypeNode) {
 	// b.WriteString("nodeID,genotypeID\n")
 	for node := range c {
 		row := fmt.Sprintf(template,
-			node.UID(),
-			node.GenotypeUID(),
+			node.UID().String(),
+			node.GenotypeUID().String(),
 		)
 		// TODO: log error
 		b.WriteString(row)
@@ -92,10 +130,10 @@ func (l *CSVLogger) WriteGenotypeFreq(c <-chan GenotypeFreqPackage) {
 
 func (l *CSVLogger) WriteMutations(c <-chan MutationPackage) {
 	// Format
-	// <instanceID>  <generation>  <hostID>  <parentGenotypeID>  <currentGenotypeID>
+	// <instanceID>  <generation>  <hostID>  <parentNodeID>  <nodeID>
 	const template = "%d,%d,%d,%s,%s\n"
 	var b bytes.Buffer
-	// b.WriteString("instance,generation,hostID,parentGenotypeID,currentGenotypeID\n")
+	// b.WriteString("instance,generation,hostID,parentNodeID,nodeID\n")
 	for pack := range c {
 		row := fmt.Sprintf(template,
 			pack.instanceID,
@@ -131,10 +169,10 @@ func (l *CSVLogger) WriteStatus(c <-chan StatusPackage) {
 
 func (l *CSVLogger) WriteTransmission(c <-chan TransmissionPackage) {
 	// Format
-	// <instanceID>  <generation>  <fromHostID>  <toHostID> <genotypeID>
+	// <instanceID>  <generation>  <fromHostID>  <toHostID> <genotypeNodeID>
 	const template = "%d,%d,%d,%d,%s\n"
 	var b bytes.Buffer
-	// b.WriteString("instance,generation,fromHostID,toHostID,genotypeID\n")
+	// b.WriteString("instance,generation,fromHostID,toHostID,nodeID\n")
 	for pack := range c {
 		row := fmt.Sprintf(template,
 			pack.instanceID,

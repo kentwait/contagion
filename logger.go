@@ -9,6 +9,11 @@ import (
 // writes to a database.
 type DataLogger interface {
 	SetBasePath(path string, i int)
+	// Init initializes the logger. For example, if the logger writes a
+	// CSV file, Init can create a file and write header information first.
+	// Or if the logger writes to a database, Init can be used to
+	// create a new table.
+	Init() error
 	// WriteGenotypes records a new genotype's ID and sequence to file.
 	WriteGenotypes(c <-chan Genotype)
 	// WriteGenotypeNodes records new genotype node's ID and
