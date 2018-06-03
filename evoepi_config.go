@@ -48,7 +48,7 @@ func (c *EvoEpiConfig) Validate() error {
 			return err
 		}
 		// Check if durations match EpidemicModel
-		switch c.SimParams.EpidemicModel {
+		switch strings.ToLower(c.SimParams.EpidemicModel) {
 		case "si":
 			if model.InfectedDuration != 0 && model.InfectedDuration < c.SimParams.NumGenerations {
 				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
@@ -341,7 +341,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	// Add infectable status
 	sim.infectableStatuses = []int{SusceptibleStatusCode}
 	if c.SimParams.Coinfection {
-		switch c.SimParams.EpidemicModel {
+		switch strings.ToLower(c.SimParams.EpidemicModel) {
 		case "si":
 			sim.infectableStatuses = append(sim.infectableStatuses, []int{
 				InfectedStatusCode,
@@ -444,7 +444,7 @@ func (c *epidemicSimConfig) Validate() error {
 		return fmt.Errorf(InvalidIntParameterError, "host_popsize", c.HostPopSize, "must be greater than or equal to 1")
 	}
 
-	switch c.EpidemicModel {
+	switch strings.ToLower(c.EpidemicModel) {
 	case "si":
 	case "sis":
 	case "sir":
@@ -486,6 +486,10 @@ type intrahostModelConfig struct {
 	MaxPopSize        int         `toml:"max_pop_size"`      // only for bht and fitness
 	GrowthRate        float64     `toml:"growth_rate"`       // only for bht
 
+	// If no duration is assigned, the default value is 0.
+	// Aften calling the first process step, if the current duration is 0,
+	// it turns to -1 and will never triggers the update step.
+	// If running under the fitness mode, do not assign durations.
 	ExposedDuration    int `toml:"exposed_duration"`
 	InfectedDuration   int `toml:"infected_duration"`
 	InfectiveDuration  int `toml:"infective_duration"`

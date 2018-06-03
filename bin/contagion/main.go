@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"runtime"
@@ -48,7 +49,16 @@ func main() {
 		default:
 			log.Fatalf("%s is not a valid logger type (csv|sqlite)", *loggerType)
 		}
-		sim, err := contagion.NewSISimulation(conf, logger)
+		// Create a new simulation based on the epidemic model
+		var sim contagion.EpidemicSimulation
+		switch conf.SimParams.EpidemicModel {
+		case "si":
+			sim, err = contagion.NewSISimulation(conf, logger)
+		case "sir":
+			sim, err = contagion.NewSIRSimulation(conf, logger)
+		default:
+			err = fmt.Errorf("epidemic model %s has not yet been implemented", conf.SimParams.EpidemicModel)
+		}
 		if err != nil {
 			log.Fatalf("error creating a new simulation from the configuration file: %s", err)
 		}
