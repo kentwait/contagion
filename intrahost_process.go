@@ -114,6 +114,79 @@ func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model Intr
 	return c, d
 }
 
+// // RecombineSequences recombines two sequences at a random position.
+// func RecombineSequences(sequences <-chan GenotypeNode, tree GenotypeTree, model IntrahostModel) (<-chan GenotypeNode, <-chan GenotypeNode) {
+// 	var sequenceList []GenotypeNode
+// 	for sequence := range sequences {
+// 		sequenceList = append(sequenceList, sequence)
+// 	}
+// 	// If no sequence received
+// 	if len(sequenceList) == 0 {
+// 		c := make(chan GenotypeNode)
+// 		d := make(chan GenotypeNode)
+// 		close(c)
+// 		close(d)
+// 		return c, d
+// 	}
+// 	rate := model.RecombinationRate()
+// 	// assumes all sequences have the same length
+// 	// which may not be true if indels are implemented in the future
+// 	numSites := sequenceList[0].CurrentGenotype().NumSites() - 1
+// 	// Expected number of recombinations over the entire sequence
+// 	nrate := float64(numSites) * rate
+// 	// Get number of hits in the sequence
+// 	var hits int
+// 	if nrate < 1/float64(numSites) {
+// 		hits = rv.Poisson(nrate)
+// 	} else {
+// 		hits = rv.Binomial(numSites, rate)
+// 	}
+// 	// Get position of hits
+// 	// Returns if hits == 0
+// 	if hits == 0 {
+// 		c := make(chan GenotypeNode)
+// 		d := make(chan GenotypeNode)
+// 		close(c)
+// 		close(d)
+// 		return c, d
+// 	}
+// 	hittablePositions := make([]int, numSites)
+// 	for i := 0; i < numSites; i++ {
+// 		hittablePositions[i] = i
+// 	}
+// 	hitPositions := pickSites(hits, numSites, hittablePositions)
+// 	// Get pathogens to recombine
+// 	// Recombine at site
+// 	indices := make([]int, len(sequenceList))
+// 	c := make(chan GenotypeNode)
+// 	d := make(chan GenotypeNode)
+// 	var wg sync.WaitGroup
+// 	for _, pos := range hitPositions {
+// 		go func(pos int, indices []int, sequenceList []GenotypeNode, wg *sync.WaitGroup) {
+// 			pickedIndices := pickSites(2, len(indices), indices)
+// 			node1 := sequenceList[pickedIndices[0]]
+// 			node2 := sequenceList[pickedIndices[1]]
+// 			// Recombine 2 sequences
+// 			// a-a, b-b -> a-b
+// 			newSequence1 := append(node1.Sequence()[:pos], node2.Sequence()[pos:]...)
+// 			newNode1 := tree.NewNode(newSequence1, 0, node1, node2)
+// 			c <- newNode1
+// 			d <- newNode1
+// 			// a-a, b-b -> b-a
+// 			newSequence2 := append(node2.Sequence()[:pos], node1.Sequence()[pos:]...)
+// 			newNode2 := tree.NewNode(newSequence2, 0, node2, node1)
+// 			c <- newNode2
+// 			d <- newNode2
+// 		}(pos, indices, sequenceList, &wg)
+// 	}
+// 	go func() {
+// 		wg.Wait()
+// 		close(c)
+// 		close(d)
+// 	}()
+// 	return c, d
+// }
+//
 func pickSites(hitsNeeded, numSites int, positions []int) []int {
 	if hitsNeeded == 0 {
 		return []int{}
