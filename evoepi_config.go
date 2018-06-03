@@ -604,19 +604,14 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 	if !c.validated {
 		return nil, fmt.Errorf("validate model parameters first")
 	}
-
 	statusDuration := make(map[int]int)
-	for status, duration := range []int{
-		c.ExposedDuration,
-		c.InfectedDuration,
-		c.InfectiveDuration,
-		c.RemovedDuration,
-		c.RecoveredDuration,
-		c.DeadDuration,
-		c.VaccinatedDuration,
-	} {
-		statusDuration[status] = duration
-	}
+	statusDuration[ExposedStatusCode] = c.ExposedDuration
+	statusDuration[InfectedStatusCode] = c.InfectedDuration
+	statusDuration[InfectiveStatusCode] = c.InfectiveDuration
+	statusDuration[RemovedStatusCode] = c.RemovedDuration
+	statusDuration[RecoveredStatusCode] = c.RecoveredDuration
+	statusDuration[DeadStatusCode] = c.DeadDuration
+	statusDuration[VaccinatedStatusCode] = c.VaccinatedDuration
 
 	switch c.ReplicationModel {
 	case "constant":
