@@ -22,6 +22,7 @@ transition_matrix = [
 recombination_rate = 0.0
 replication_model = "constant"
 constant_pop_size = 100
+infected_duration = 3
 
 [[fitness_model]]
 model_name = "multiplicative"
