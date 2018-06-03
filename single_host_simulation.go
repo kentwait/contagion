@@ -1,5 +1,7 @@
 package contagiongo
 
+// TODO: Update to use code of sir_simulation.go
+
 import (
 	"math"
 	"strings"
