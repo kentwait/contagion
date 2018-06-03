@@ -56,6 +56,8 @@ func main() {
 			sim, err = contagion.NewSISimulation(conf, logger)
 		case "sir":
 			sim, err = contagion.NewSIRSimulation(conf, logger)
+		case "endtrans":
+			sim, err = contagion.NewEndTransSimulation(conf, logger)
 		default:
 			err = fmt.Errorf("epidemic model %s has not yet been implemented", conf.SimParams.EpidemicModel)
 		}
