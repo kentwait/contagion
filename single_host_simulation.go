@@ -69,7 +69,7 @@ func (sim *singleHostSimulation) InfectedProcess(i, t int, host Host, c chan<- M
 		var minLogFitness float64
 		// Compute log total fitness and get max value
 		for i, pathogen := range pathogens {
-			logFitnesses[i] = pathogen.Fitness(host.(*sequenceHost).FitnessModel)
+			logFitnesses[i] = pathogen.Fitness(host.GetFitnessModel())
 			if minLogFitness > logFitnesses[i] {
 				minLogFitness = logFitnesses[i]
 			}
@@ -87,6 +87,7 @@ func (sim *singleHostSimulation) InfectedProcess(i, t int, host Host, c chan<- M
 		}
 		// get current and next pop size based on popsize function
 		currentPopSize := host.PathogenPopSize()
+		// TODO: Expose this in the interface
 		nextPopSize := host.(*sequenceHost).NextPathogenPopSize(currentPopSize)
 		// Execute
 		replicatedC = MultinomialReplication(pathogens, normedFitnesses, nextPopSize)
@@ -95,13 +96,13 @@ func (sim *singleHostSimulation) InfectedProcess(i, t int, host Host, c chan<- M
 		// offspring
 		replicativeFitnesses := make([]float64, len(pathogens))
 		for i, pathogen := range pathogens {
-			replicativeFitnesses[i] = pathogen.Fitness(host.(*sequenceHost).FitnessModel)
+			replicativeFitnesses[i] = pathogen.Fitness(host.GetFitnessModel())
 		}
 		// Execute
 		replicatedC = IntrinsicRateReplication(pathogens, replicativeFitnesses, nil)
 	}
 	// Mutate replicated pathogens
-	mutatedC, newMutantsC := MutateSequence(replicatedC, sim.tree, host.(*sequenceHost).IntrahostModel)
+	mutatedC, newMutantsC := MutateSequence(replicatedC, sim.tree, host.GetIntrahostModel())
 	// Clear current set of pathogens and get new set from the channel
 	host.RemoveAllPathogens()
 	var wg2 sync.WaitGroup

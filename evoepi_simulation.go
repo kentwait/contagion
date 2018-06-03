@@ -105,7 +105,7 @@ func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- Mutat
 		return
 	}
 	var replicatedC <-chan GenotypeNode
-	switch strings.ToLower(host.(*sequenceHost).IntrahostModel.ReplicationMethod()) {
+	switch strings.ToLower(host.GetIntrahostModel().ReplicationMethod()) {
 	case "relative":
 		// Get log fitness values for each pathogen
 		logFitnesses := make([]float64, len(pathogens))
@@ -130,6 +130,7 @@ func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- Mutat
 		}
 		// get current and next pop size based on popsize function
 		currentPopSize := host.PathogenPopSize()
+		// TODO: Expose this in interface
 		nextPopSize := host.(*sequenceHost).NextPathogenPopSize(currentPopSize)
 		// Execute
 		replicatedC = MultinomialReplication(pathogens, normedFitnesses, nextPopSize)
@@ -138,13 +139,13 @@ func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- Mutat
 		// offspring
 		replicativeFitnesses := make([]float64, len(pathogens))
 		for i, pathogen := range pathogens {
-			replicativeFitnesses[i] = pathogen.Fitness(host.(*sequenceHost).FitnessModel)
+			replicativeFitnesses[i] = pathogen.Fitness(host.GetFitnessModel())
 		}
 		// Execute
 		replicatedC = IntrinsicRateReplication(pathogens, replicativeFitnesses, nil)
 	}
 	// Mutate replicated pathogens
-	mutatedC, newMutantsC := MutateSequence(replicatedC, sim.tree, host.(*sequenceHost).IntrahostModel)
+	mutatedC, newMutantsC := MutateSequence(replicatedC, sim.tree, host.GetIntrahostModel())
 	// Clear current set of pathogens and get new set from the channel
 	host.RemoveAllPathogens()
 	var wg2 sync.WaitGroup
