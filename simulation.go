@@ -168,3 +168,12 @@ type TransmissionEvent struct {
 	destination Host
 	pathogen    GenotypeNode
 }
+
+// ExchangeEvent is a struct for sending and receiving
+// exchange event information.
+type ExchangeEvent struct {
+	source        Host
+	destination   Host
+	pathogenIndex int
+	pathogen      GenotypeNode
+}
