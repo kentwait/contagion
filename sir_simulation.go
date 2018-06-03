@@ -2,14 +2,16 @@ package contagiongo
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 
 	"github.com/segmentio/ksuid"
 )
 
-// import "sync"
+// TODO: Refactor to embedded interface instead of struct.
+// This allows individual overriding of methods without redeclaring methods
+// that call those overriden methods. For example, Update() can be overriden
+// to have a different without having to declaring Run().
 
 // SIRSimulation creates and runs an SIR epidemiological simulation.
 // Within this simulation, hosts may or may not run
@@ -40,6 +42,7 @@ func NewSIRSimulation(config Config, logger DataLogger) (*SIRSimulation, error) 
 func (sim *SIRSimulation) Run(i int) {
 	sim.Init()
 	sim.instanceID = i
+	// Initial state
 	sim.Update(0)
 	t := 0
 	for t < sim.numGenerations {
@@ -47,19 +50,11 @@ func (sim *SIRSimulation) Run(i int) {
 		fmt.Printf("instance %04d\tgeneration %05d\n", i, t)
 		sim.Process(t)
 		sim.Transmit(t)
+		// State after t generation
 		sim.Update(t)
 	}
 	fmt.Println(strings.Repeat("-", 80))
 	sim.Finalize()
-}
-
-// Init initializes the simulation and accepts 0 or more parameters.
-// For example, creating datbases etc.
-func (sim *SIRSimulation) Init(params ...interface{}) {
-	err := sim.DataLogger.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 // Update looks at the timer or internal state to decide if
@@ -100,7 +95,7 @@ func (sim *SIRSimulation) Update(t int) {
 					pack.status = newStatus
 				}
 			case InfectedStatusCode:
-				if timer == 0 || host.PathogenPopSize() > 0 {
+				if timer == 0 || host.PathogenPopSize() == 0 {
 					// Set new host status
 					newStatus := RemovedStatusCode
 					newDuration := -1 // Host is permanently removed from the population of infectables

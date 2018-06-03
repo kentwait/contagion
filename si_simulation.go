@@ -41,6 +41,7 @@ func NewSISimulation(config Config, logger DataLogger) (*SISimulation, error) {
 func (sim *SISimulation) Run(i int) {
 	sim.Init()
 	sim.instanceID = i
+	// Initial state
 	sim.Update(0)
 	t := 0
 	for t < sim.numGenerations {
@@ -48,6 +49,7 @@ func (sim *SISimulation) Run(i int) {
 		fmt.Printf("instance %04d\tgeneration %05d\n", i, t)
 		sim.Process(t)
 		sim.Transmit(t)
+		// State after t generation
 		sim.Update(t)
 	}
 	fmt.Println(strings.Repeat("-", 80))
