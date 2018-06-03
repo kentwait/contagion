@@ -209,6 +209,30 @@ func (c *EvoEpiConfig) Validate() error {
 			if model.RemovedDuration == 0 {
 				model.RemovedDuration = c.SimParams.NumGenerations + 1
 			}
+		case "exchange":
+			// Modified version of SIR
+			// infected duration > number of generations
+
+			// infected duration must be set
+			if model.InfectedDuration < 1 {
+				return fmt.Errorf("cannot create %s model if %s (%d) is less than 1",
+					c.SimParams.EpidemicModel,
+					"infected_duration",
+					model.InfectedDuration,
+				)
+			}
+			if model.RemovedDuration != 0 && model.RemovedDuration < c.SimParams.NumGenerations {
+				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
+					c.SimParams.EpidemicModel,
+					"removed_duration",
+					model.RemovedDuration,
+					c.SimParams.NumGenerations,
+				)
+			}
+			// Assign default value
+			if model.RemovedDuration == 0 {
+				model.RemovedDuration = c.SimParams.NumGenerations + 1
+			}
 		}
 		//
 		for _, i := range model.HostIDs {
@@ -402,6 +426,11 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 			sim.infectableStatuses = append(sim.infectableStatuses, []int{
 				InfectedStatusCode,
 			}...)
+		case "exchange":
+			sim.infectableStatuses = append(sim.infectableStatuses, []int{
+				InfectedStatusCode,
+			}...)
+
 		}
 	}
 	// Initialize host statuses to 1
@@ -435,7 +464,7 @@ type epidemicSimConfig struct {
 	NumGenerations int    `toml:"num_generations"`
 	NumIntances    int    `toml:"num_instances"`
 	HostPopSize    int    `toml:"host_popsize"`
-	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans
+	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans, exchange
 	Coinfection    bool   `toml:"coinfection"`
 
 	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
@@ -482,6 +511,7 @@ func (c *epidemicSimConfig) Validate() error {
 	case "seir":
 	case "seirs":
 	case "endtrans":
+	case "exchange":
 	default:
 		return fmt.Errorf(UnrecognizedKeywordError, c.EpidemicModel, "epidemic_model")
 	}

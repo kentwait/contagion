@@ -8,10 +8,10 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-// MigrationSimulation creates and runs a modified version of the
+// ExchangeSimulation creates and runs a modified version of the
 // SIR epidemiological simulation.
-// In MigrationSimulation, all hosts are initially infected.
-type MigrationSimulation struct {
+// In ExchangeSimulation, all hosts are initially infected.
+type ExchangeSimulation struct {
 	SISimulation
 
 	instanceID     int
@@ -19,13 +19,13 @@ type MigrationSimulation struct {
 	logFreq        int
 }
 
-// NewMigrationSimulation creates a new migration simulation.
-func NewMigrationSimulation(config Config, logger DataLogger) (*MigrationSimulation, error) {
+// NewExchangeSimulation creates a new migration simulation.
+func NewExchangeSimulation(config Config, logger DataLogger) (*ExchangeSimulation, error) {
 	epidemic, err := config.NewSimulation()
 	if err != nil {
 		return nil, err
 	}
-	sim := new(MigrationSimulation)
+	sim := new(ExchangeSimulation)
 	sim.Epidemic = epidemic
 	sim.DataLogger = logger
 	sim.numGenerations = config.NumGenerations()
@@ -34,7 +34,7 @@ func NewMigrationSimulation(config Config, logger DataLogger) (*MigrationSimulat
 }
 
 // Run instantiates, runs, and records the a new simulation.
-func (sim *MigrationSimulation) Run(i int) {
+func (sim *ExchangeSimulation) Run(i int) {
 	sim.Init()
 	sim.instanceID = i
 	// Initial state
@@ -55,7 +55,7 @@ func (sim *MigrationSimulation) Run(i int) {
 // Update looks at the timer or internal state to decide if
 // the status of the host remains the same of will change.
 // After the status updates, each host's status is recorded to file.
-func (sim *MigrationSimulation) Update(t int) {
+func (sim *ExchangeSimulation) Update(t int) {
 	// Update status first
 	c := make(chan StatusPackage)
 	d := make(chan GenotypeFreqPackage)
@@ -140,7 +140,7 @@ func (sim *MigrationSimulation) Update(t int) {
 // Process runs the internal evolution simulation in each host.
 // During intrahost evolution, if new mutations appear, the new sequence
 // and ancestry is recorded to file.
-func (sim *MigrationSimulation) Process(t int) {
+func (sim *ExchangeSimulation) Process(t int) {
 	c := make(chan MutationPackage)
 	var wg sync.WaitGroup
 	// Read all hosts and process based on the current status of the host
@@ -173,7 +173,7 @@ func (sim *MigrationSimulation) Process(t int) {
 
 // Transmit facilitates the sampling and migration process of pathogens
 // between hosts.
-func (sim *MigrationSimulation) Transmit(t int) {
+func (sim *ExchangeSimulation) Transmit(t int) {
 	c := make(chan ExchangeEvent)
 	d := make(chan TransmissionPackage)
 	var wg sync.WaitGroup
