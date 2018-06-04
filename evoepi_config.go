@@ -467,7 +467,7 @@ type epidemicSimConfig struct {
 	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans, exchange
 	Coinfection    bool   `toml:"coinfection"`
 
-	PathogenSequencePath string `toml:"pathogen_sequence_path"` // fasta file for seeding infections
+	PathogenSequencePath string `toml:"pathogen_path"` // fasta file for seeding infections
 	HostNetworkPath      string `toml:"host_network_path"`
 	validated            bool
 }
