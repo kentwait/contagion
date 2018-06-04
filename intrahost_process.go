@@ -13,7 +13,7 @@ func MultinomialReplication(pathogens []GenotypeNode, normedFitnesses []float64,
 	c := make(chan GenotypeNode)
 	var wg sync.WaitGroup
 	wg.Add(len(pathogens))
-	for i, count := range rv.Multinomial(newPopSize, normedFitnesses) {
+	for i, count := range rv.MultinomialA(newPopSize, normedFitnesses) {
 		go func(i, count int, wg *sync.WaitGroup) {
 			defer wg.Done()
 			for x := 0; x < count; x++ {

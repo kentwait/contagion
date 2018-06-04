@@ -109,31 +109,32 @@ func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- Mutat
 	case "relative":
 		// Get log fitness values for each pathogen
 		logFitnesses := make([]float64, len(pathogens))
-		var minLogFitness float64
+
+		var maxLogFitness float64
 		// Compute log total fitness and get max value
 		for i, pathogen := range pathogens {
 			logFitnesses[i] = pathogen.Fitness(host.GetFitnessModel())
-			if minLogFitness > logFitnesses[i] {
-				minLogFitness = logFitnesses[i]
+			if maxLogFitness < logFitnesses[i] {
+				maxLogFitness = logFitnesses[i]
 			}
 		}
 		// exp-normalize algorithm
-		// Get normalizing constant by summing all elements
+		// get normalizing constant by summing all elements
 		var c float64
 		for _, logF := range logFitnesses {
-			c += math.Exp(logF - minLogFitness)
+			c += math.Exp(logF - maxLogFitness)
 		}
-		// Normalize such that fitnesses sum to 1.0
-		normedFitnesses := make([]float64, len(pathogens))
+		// normalize
+		normedDecFitnesses := make([]float64, len(pathogens))
 		for i, logF := range logFitnesses {
-			normedFitnesses[i] = math.Exp(logF-minLogFitness) / c
+			normedDecFitnesses[i] = math.Exp(logF-maxLogFitness) / c
 		}
 		// get current and next pop size based on popsize function
 		currentPopSize := host.PathogenPopSize()
 		// TODO: Expose this in interface
 		nextPopSize := host.(*sequenceHost).NextPathogenPopSize(currentPopSize)
 		// Execute
-		replicatedC = MultinomialReplication(pathogens, normedFitnesses, nextPopSize)
+		replicatedC = MultinomialReplication(pathogens, normedDecFitnesses, nextPopSize)
 	case "absolute":
 		// Get decimal fitness values. Each value is the expected number of
 		// offspring
