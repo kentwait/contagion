@@ -78,12 +78,14 @@ func (n *genotype) StringSequence() string {
 
 func (n *genotype) Fitness(f FitnessModel) float64 {
 	id := f.ModelID()
+	n.RLock()
 	fitness, ok := n.fitness[id]
+	n.RUnlock()
 	if !ok {
 		fitness, _ := f.ComputeFitness(n.sequence...)
 		n.Lock()
-		defer n.Unlock()
 		n.fitness[id] = fitness
+		n.Unlock()
 		return fitness
 	}
 	return fitness
