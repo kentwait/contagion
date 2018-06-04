@@ -77,25 +77,27 @@ func MutateSequence(sequences <-chan GenotypeNode, tree GenotypeTree, model Intr
 			copy(sequence, n.Sequence())
 			// Add mutations by state to account for unequal rates
 			totalHits := 0
-			for state, numSites := range n.StateCounts() {
-				probs := model.TransitionProbs(int(state))
-				// Expected number of mutations over the entire sequence
-				nmu := float64(numSites) * mu
-				// Get number of hits in the sequence
-				var hits int
-				if nmu < 1.0 {
-					hits = rv.Poisson(nmu)
-				} else {
-					hits = rv.Binomial(numSites, mu)
+			if mu > 0 {
+				for state, numSites := range n.StateCounts() {
+					probs := model.TransitionProbs(int(state))
+					// Expected number of mutations over the entire sequence
+					nmu := float64(numSites) * mu
+					// Get number of hits in the sequence
+					var hits int
+					if nmu < 1.0 {
+						hits = rv.Poisson(nmu)
+					} else {
+						hits = rv.Binomial(numSites, mu)
+					}
+					// Get position of hits
+					// Returns empty list if hits == 0
+					hitPositions := pickSites(hits, numSites, n.StatePositions(state))
+					// Create new node per hit
+					for _, pos := range hitPositions {
+						sequence[pos] = MutateSite(probs...)
+					}
+					totalHits += hits
 				}
-				// Get position of hits
-				// Returns empty list if hits == 0
-				hitPositions := pickSites(hits, numSites, n.StatePositions(state))
-				// Create new node per hit
-				for _, pos := range hitPositions {
-					sequence[pos] = MutateSite(probs...)
-				}
-				totalHits += hits
 			}
 			if totalHits > 0 {
 				newNode := tree.NewNode(sequence, totalHits, n)
