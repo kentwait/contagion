@@ -211,11 +211,11 @@ func (sim *ExchangeSimulation) Transmit(t int) {
 	// and record
 	var wg2 sync.WaitGroup
 	wg2.Add(2)
-	removePathogens := make(map[int][]int)
+	// removePathogens := make(map[int][]int)
 	go func() {
 		for t := range c {
 			t.destination.AddPathogen(t.pathogen)
-			removePathogens[t.source.ID()] = append(removePathogens[t.source.ID()], t.pathogenIndex)
+			// removePathogens[t.source.ID()] = append(removePathogens[t.source.ID()], t.pathogenIndex)
 		}
 		wg2.Done()
 	}()
@@ -225,7 +225,7 @@ func (sim *ExchangeSimulation) Transmit(t int) {
 	}()
 	wg2.Wait()
 	// Remove pathogens
-	for i, indices := range removePathogens {
-		sim.Host(i).RemovePathogens(indices...)
-	}
+	// for i, indices := range removePathogens {
+	// 	sim.Host(i).RemovePathogens(indices...)
+	// }
 }
