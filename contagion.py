@@ -7,6 +7,7 @@ import os
 import re
 
 from configurator import Configuration
+from configurator import handlers
 from configurator.configuration import IntrahostModel, FitnessModel, TransmissionModel
 from configurator.validators import DirExistsValidator, StatementValidator
 from configurator.sequence_generator import multiple_host_random_fasta as multihost
@@ -371,17 +372,17 @@ def generate_additive_unipreference_fitness(num_sites, growth_rates, save_path):
 EXIT_COMMANDS = ['exit', 'exit()', 'quit', 'quit()', 'q']
 SINGLE_WORD_COMMANDS = EXIT_COMANNDS + ['configure', 'clear']
 PREFIX_COMMAND_HANDLER = {
-    'run': None,
-    'create': None,
-    'append': None,
-    'generate': None,
-    'set': None,
-    'get': None,
-    'reset': None,
-    'load': None,
-    'save': None, 
-    'todb': None, 
-    'tocsv': None,
+    'run': handlers.run_handler,
+    'create': handlers.create_handler,
+    'append': handlers.append_handler,
+    'generate': handlers.generate_handler,
+    'set': handlers.set_handler,
+    'get': handlers.get_handler,
+    'reset': handlers.reset_handler,
+    'load': handlers.load_handler,
+    'save': handlers.save_handler, 
+    'todb': handlers.todb_handler, 
+    'tocsv': handlers.tocsv_handler,
 }
 
 def main(config_path=None, contagion_path='contagion'):
