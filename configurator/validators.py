@@ -169,8 +169,8 @@ def generate_subvalidator(text):
             cursor_position=pos,
         )
 
-def set_subvalidator(text):
-    """Checks if the set statement is valid
+def set_get_subvalidator(text):
+    """Checks if the set/get statement is valid
 
     Parameters
     ----------
@@ -183,12 +183,9 @@ def set_subvalidator(text):
         if k not in CONFIG_PROPERTIES:
             pos = list(re.finditer(k, text))[0].end()
             raise ValidationError(
-                message='{} not a valid config property'.format(k), 
+                message='{} not a valid config property'.format(k),
                 cursor_position=pos,
             )
-
-def get_subvalidator(text):
-    args = [arg for arg in text.split(None) if '=' not in arg]
 
 def reset_subvalidator(text):
     args = [arg for arg in text.split(None) if '=' not in arg]
@@ -210,8 +207,8 @@ PREFIX_COMMAND_VALIDATOR = {
     'create': create_append_subvalidator,
     'append': create_append_subvalidator,
     'generate': generate_subvalidator,
-    'set': set_subvalidator,
-    'get': get_subvalidator,
+    'set': set_get_subvalidator,
+    'get': set_get_subvalidator,
     'reset': reset_subvalidator,
     'load': load_subvalidator,
     'save': save_subvalidator, 
