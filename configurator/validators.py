@@ -187,11 +187,50 @@ def get_set_reset_subvalidator(text):
                 cursor_position=pos,
             )
 
-def load_subvalidator(text):
-    args = [arg for arg in text.split(None) if '=' not in arg]
+def load_save_subvalidator(text):
+    """Checks if the load/save statement is valid
 
-def save_subvalidator(text):
-    args = [arg for arg in text.split(None) if '=' not in arg]
+    Parameters
+    ----------
+    text : str
+        input statement
+
+    """
+    valid_keywords = ['configuration', 'config']
+    args = [arg for arg in text.split(None)[1:] if '=' not in arg]
+    # Check number of arguments
+    if len(args) > 2:
+        raise ValidationError(
+            message='Expected 2 arguments, got {}'.format(len(args)),
+            cursor_position=len(text),
+        )
+    # Check keyword
+    if args[0] not in valid_keywords:
+        pos = list(re.finditer(args[0], text))[0].end()
+        raise ValidationError(
+            message='{} not a valid argument'.format(args[0]),
+            cursor_position=pos,
+        )
+    # Check if path exists if load
+    if text.split(None, 1)[0] == 'load':
+        if not os.path.exists(args[1]):
+            raise ValidationError(
+                message='Path does not exist',
+                cursor_position=len(text),
+            )
+        elif not os.path.isfile(args[1]):
+            raise ValidationError(
+                message='Path does not refer to a file',
+                cursor_position=len(text),
+            )
+    elif text.split(None, 1)[0] == 'save':
+        dirpath = os.path.dirname(args[1])
+        if not os.path.exists(dirpath):
+            pos = list(re.finditer(dirpath, text))[0].end()
+            raise ValidationError(
+                message='Directory path does not exist',
+                cursor_position=pos,
+            )
 
 def todb_subvalidator(text):
     args = [arg for arg in text.split(None) if '=' not in arg]
@@ -207,8 +246,8 @@ PREFIX_COMMAND_VALIDATOR = {
     'set': get_set_reset_subvalidator,
     'get': get_set_reset_subvalidator,
     'reset': get_set_reset_subvalidator,
-    'load': load_subvalidator,
-    'save': save_subvalidator, 
+    'load': load_save_subvalidator,
+    'save': load_save_subvalidator, 
     'todb': todb_subvalidator, 
     'tocsv': tocsv_subvalidator,
 }
