@@ -80,7 +80,7 @@ class Configuration(object):
             print(self.toml_string(), file=f)
 
     def new_intrahost_model_prompt(self, history=None):
-        """Creates a new intrahost_model object.
+        """Creates a new intrahost_model object using answers from prompts.
 
         Parameters
         ----------
@@ -94,7 +94,7 @@ class Configuration(object):
         # Initialize model
         model = IntrahostModel()
 
-        # Add properties
+        # Add values
         # TODO: create name validator
         model.model_name = prompt(
             'Model name: ',
@@ -195,7 +195,50 @@ class Configuration(object):
                 # )
         return model
 
+    def new_fitness_model_prompt(self, history=None):
+        """Creates a new fitness_model object using answers from prompts.
 
+        Parameters
+        ----------
+        history : prompt_toolkit.history.InMemoryHistory
+
+        Returns
+        -------
+        configurator.configuration.FitnessModel
+
+        """
+        # Initialize model
+        model = FitnessModel()
+
+        # Add values
+        model.model_name = prompt(
+            'Model name: ',
+            history=history,
+            validator=None,
+        )
+        host_ids = host_ids = prompt(
+            'Host IDs: ',
+            history=history,
+            validator=None,
+        )
+        model.host_ids = parse_host_ids(host_ids)
+        model.fitness_model = prompt(
+            'Fitness model: ',
+            validator=None,
+            completer=WordCompleter(['multiplicative', 'additive']),
+        )
+        # Ask to generate new fitness matrix or
+        # pass a path to an existing matrix
+        if str(prompt('Do you want to generate a fitness model? Y/n :',
+                      default='Y')).lower() == 'y':
+            model.fitness_model_path = model.new_fitness_matrix_prompt(history=history)
+        else:
+            model.fitness_model_path = prompt(
+                'Fitness model path: ',
+                history=history,
+                validator=None,
+            )
+        return model
 
 class Model(object):
     def __init__(self):
@@ -284,6 +327,8 @@ class FitnessModel(Model):
             config_string += "{k} = {v}\n".format(k=k, v=v)
         config_string += '\n'
 
+    def new_fitness_matrix_prompt(self, history=None):
+        return 'path'
 
 class TransmissionModel(Model):
     def __init__(self):
