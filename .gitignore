@@ -142,5 +142,5 @@ venv.bak/
 .vscode/
 
 # Binaries
-contagion*
+contagion
 data/
