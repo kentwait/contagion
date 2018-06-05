@@ -410,8 +410,8 @@ def main(config_path=None, contagion_path='contagion'):
                         pass
                 # match first word
                 elif text.split(None, 1) in PREFIX_COMMAND_HANDLER.keys():
-                    args = [arg for arg in text.split(None) if '=' not in arg]
-                    kwargs = [kwarg for kwarg in text.split(None) if '=' in kwarg]
+                    args = [arg for arg in text.split(None)[1:] if '=' not in arg]
+                    kwargs = dict([kwarg.split('=') for kwarg in text.split(None)[1:] if '=' in kwarg])
                     PREFIX_COMMAND_HANDLER[text.split(None, 1)](*args, config_obj=config_obj, **kwargs)
 
 if __name__ == '__main__':

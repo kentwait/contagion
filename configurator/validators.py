@@ -80,38 +80,68 @@ def validate_setter(text):
         ) 
 
 # Validators
-def run_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def run_subvalidator(text):
+    """Checks if the run statement is properly formatted
 
-def create_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+    Parameters
+    ----------
+    text : str
+        input statement
 
-def append_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+    """
+    valid_keywords = ['logger', 'threads']
+    valid_logger_values = ['csv', 'sqlite']
+    kwargs = dict([kwarg.split('=') for kwarg in text.split(None)[1:] if '=' in kwarg])
+    for k, val in kwargs.items():
+        if k not in valid_keywords:
+            pos = list(re.finditer(k, text))[0].end()
+            raise ValidationError(
+                message='{} not a valid keyword for the run command'.format(k),
+                cursor_position=pos,
+            )
+        else:
+            if k == 'logger' and val not in valid_logger_values:
+                pos = list(re.finditer(val, text))[0].end()
+                raise ValidationError(
+                    message='{} not a valid value for {}'.format(val, k),
+                    cursor_position=pos,
+                )
+            elif k == 'threads' and re.search(r'\d+', val) is None:
+                pos = list(re.finditer(val, text))[0].end()
+                raise ValidationError(
+                    message='{} not a valid value for {}'.format(val, k),
+                    cursor_position=pos,
+                )
 
-def generate_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def create_subvalidator(text):
+    args = [arg for arg in text.split(None)[1:] if '=' not in arg]
 
-def set_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def append_subvalidator(text):
+    args = [arg for arg in text.split(None)[1:] if '=' not in arg]
 
-def get_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def generate_subvalidator(text):
+    args = [arg for arg in text.split(None)[1:] if '=' not in arg]
 
-def reset_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def set_subvalidator(text):
+    kwargs = dict([kwarg.split('=') for kwarg in text.split(None)[1:] if '=' in kwarg])
 
-def load_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def get_subvalidator(text):
+    args = [arg for arg in text.split(None) if '=' not in arg]
 
-def save_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def reset_subvalidator(text):
+    args = [arg for arg in text.split(None) if '=' not in arg]
 
-def todb_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def load_subvalidator(text):
+    args = [arg for arg in text.split(None) if '=' not in arg]
 
-def tocsv_subvalidator(*args, config_obj=None, **kwargs):
-    pass
+def save_subvalidator(text):
+    args = [arg for arg in text.split(None) if '=' not in arg]
+
+def todb_subvalidator(text):
+    args = [arg for arg in text.split(None) if '=' not in arg]
+
+def tocsv_subvalidator(text):
+    args = [arg for arg in text.split(None) if '=' not in arg]
 
 PREFIX_COMMAND_VALIDATOR = {
     'run': run_subvalidator,
