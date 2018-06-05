@@ -21,28 +21,28 @@ class DirExistsValidator(Validator):
         if text and not os.path.exists(dirpath):
             raise ValidationError(message='{} does not exist'.format(text))
 
-class StatementValidator(Validator):
-    def validate(self, document):
-        text = document.text
-        if text:
-            if len(text.split()) > 1:
-                command_word, stmt = text.split(None, 1)
-                if command_word in OP_COMMANDS:
-                    # command is present
-                    validate_setter(text)
-                elif command_word in SPECIAL_COMMANDS:
-                    pass
-            else:
-                # return a parameter value or command
-                if text in SINGLEVALUE_COMMANDS:
-                    pass
-                elif text in CONFIG_PROPERTIES:
-                    pass
-                else:
-                    raise ValidationError(
-                        message='{} not a valid command or configuration parameter'.format(text), 
-                        cursor_position=len(text),
-                    )
+# class StatementValidator(Validator):
+#     def validate(self, document):
+#         text = document.text
+#         if text:
+#             if len(text.split()) > 1:
+#                 command_word, stmt = text.split(None, 1)
+#                 if command_word in OP_COMMANDS:
+#                     # command is present
+#                     validate_setter(text)
+#                 elif command_word in SPECIAL_COMMANDS:
+#                     pass
+#             else:
+#                 # return a parameter value or command
+#                 if text in SINGLEVALUE_COMMANDS:
+#                     pass
+#                 elif text in CONFIG_PROPERTIES:
+#                     pass
+#                 else:
+#                     raise ValidationError(
+#                         message='{} not a valid command or configuration parameter'.format(text), 
+#                         cursor_position=len(text),
+#                     )
 
 def validate_setter(text):
     command_word, stmt = text.split(None, 1)
@@ -77,3 +77,57 @@ def validate_setter(text):
             message='{} not a valid command'.format(command_word), 
             cursor_position=i,
         ) 
+
+# Validators
+def run_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def create_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def append_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def generate_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def set_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def get_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def reset_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def load_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def save_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def todb_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+def tocsv_subvalidator(*args, config_obj=None, **kwargs):
+    pass
+
+PREFIX_COMMAND_VALIDATOR = {
+    'run': run_subvalidator,
+    'create': create_subvalidator,
+    'append': append_subvalidator,
+    'generate': generate_subvalidator,
+    'set': set_subvalidator,
+    'get': get_subvalidator,
+    'reset': reset_subvalidator,
+    'load': load_subvalidator,
+    'save': save_subvalidator, 
+    'todb': todb_subvalidator, 
+    'tocsv': tocsv_subvalidator,
+}
+
+class StatementValidator(Validator):
+    text = document.text
+        if text:
+            pass
+
