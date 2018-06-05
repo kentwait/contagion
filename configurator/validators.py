@@ -232,11 +232,38 @@ def load_save_subvalidator(text):
                 cursor_position=pos,
             )
 
-def todb_subvalidator(text):
-    args = [arg for arg in text.split(None) if '=' not in arg]
+def to_x_subvalidator(text):
+    """Checks if the todb statement is valid
 
-def tocsv_subvalidator(text):
+    Parameters
+    ----------
+    text : str
+        input statement
+
+    """
     args = [arg for arg in text.split(None) if '=' not in arg]
+    # Check number of args
+    if len(args) > 2:
+        raise ValidationError(
+            message='Expected 2 argument, got {}'.format(len(args)),
+            cursor_position=len(text),
+        )
+    # Checks if basepath dir exists
+    dirpath = os.path.dirname(args[0])
+    if not os.path.exists(dirpath):
+        pos = list(re.finditer(dirpath, text))[0].end()
+        raise ValidationError(
+            message='Directory to basepath does not exist',
+            cursor_position=pos,
+        )
+    # Checks if outpath exists
+    dirpath = os.path.dirname(args[1])
+    if not os.path.exists(dirpath):
+        pos = list(re.finditer(dirpath, text))[0].end()
+        raise ValidationError(
+            message='Directory to save path does not exist',
+            cursor_position=pos,
+        )
 
 PREFIX_COMMAND_VALIDATOR = {
     'run': run_subvalidator,
@@ -248,8 +275,8 @@ PREFIX_COMMAND_VALIDATOR = {
     'reset': get_set_reset_subvalidator,
     'load': load_save_subvalidator,
     'save': load_save_subvalidator, 
-    'todb': todb_subvalidator, 
-    'tocsv': tocsv_subvalidator,
+    'todb': to_x_subvalidator, 
+    'tocsv': to_x_subvalidator,
 }
 
 class StatementValidator(Validator):

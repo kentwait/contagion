@@ -390,7 +390,7 @@ def main(config_path=None, contagion_path='contagion'):
             # load configuration <path>
             # save configuration <path>
             # todb <basepath> <outpath>
-            # tocsv <path> <basepath>
+            # tocsv <basepath> <outpath>
             # exit|exit()|quit|quit()|q
             # clear
             text = prompt(PROMPT, history=history, validator=StatementValidator())
