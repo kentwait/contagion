@@ -114,7 +114,7 @@ def run_subvalidator(text):
                 )
 
 def create_append_subvalidator(text):
-    """Checks if the create statement is valid
+    """Checks if the create or append statement is valid
 
     Parameters
     ----------
@@ -145,7 +145,29 @@ def create_append_subvalidator(text):
         )
 
 def generate_subvalidator(text):
+    """Checks if the generate statement is valid
+
+    Parameters
+    ----------
+    text : str
+        input statement
+
+    """
+    valid_keywords = ['pathogens', 'network', 'fitness_matrix']
     args = [arg for arg in text.split(None)[1:] if '=' not in arg]
+    # Check number of arguments
+    if len(args) > 1:
+        raise ValidationError(
+            message='Expected 1 argument, got {}'.format(len(args)),
+            cursor_position=len(text),
+        )
+    # Check keyword
+    if args[0] not in valid_keywords:
+        pos = list(re.finditer(args[0], text))[0].end()
+        raise ValidationError(
+            message='{} not a valid argument'.format(args[0]),
+            cursor_position=pos,
+        )
 
 def set_subvalidator(text):
     kwargs = dict([kwarg.split('=') for kwarg in text.split(None)[1:] if '=' in kwarg])
