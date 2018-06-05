@@ -3,6 +3,7 @@ import os
 import re
 
 from configurator import Configuration
+from configurator import PREFIX_COMMAND_HANDLER, EXIT_COMMANDS, SINGLE_WORD_COMMANDS
 
 PROMPT = 'contagion> '
 EXIT_COMANNDS = ['exit', 'exit()', 'quit', 'quit()', ]
@@ -127,7 +128,17 @@ PREFIX_COMMAND_VALIDATOR = {
 }
 
 class StatementValidator(Validator):
-    text = document.text
+    def validate(self, document):
+        text = document.text
         if text:
-            pass
-
+            # match with single-word commands
+            if text in SINGLE_WORD_COMMANDS:
+                if text in EXIT_COMANNDS:
+                    pass
+                elif text == 'configure':
+                    pass
+                elif text == 'clear':
+                    pass
+            # match first word
+            elif text.split(None, 1) in PREFIX_COMMAND_VALIDATOR.keys():
+                PREFIX_COMMAND_VALIDATOR[text.split(None, 1)](text)
