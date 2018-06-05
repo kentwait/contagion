@@ -117,6 +117,7 @@ class Configuration(object):
             'Conditioned transition rate matrix: ',
             validator=None,
         )
+        model.transition_matrix = eval(transition_matrix)            
         model.transition_matrix = parse_transition_matrix(transition_matrix)
         model.recombination_rate = float(
             prompt('Recombination rate (recombinations/generation): ',
@@ -372,7 +373,7 @@ class FitnessModel(Model):
         else:
             num_sites = int(prompt('Number of sites: ', validator=None))
             fitnesses = prompt('Enter list of fitness values: ', validator=None)
-            fitnesses = parse_fitness_values(fitnesses)
+            fitnesses = eval(fitnesses)
             if self.fitness_model == 'multiplicative':
                 self.generate_single_preference_matrix(
                     num_sites,
@@ -467,6 +468,7 @@ class FitnessModel(Model):
         with open(save_path, 'w') as f:
             print(text, file=f)
 
+
 class TransmissionModel(Model):
     def __init__(self):
         super().__init__()
@@ -488,7 +490,7 @@ class TransmissionModel(Model):
 
 
 def parse_host_ids(text):
-    """Parses host list input. If preceded by a "!", generate a host list
+    """Parses the host list input string. If preceded by a "!", generate a host list
     using the input as a range.
 
     Parameters
@@ -509,9 +511,3 @@ def parse_host_ids(text):
             skip = 1
         return [i for i in range(start, end, skip)]
     return list(map(int, re.findall(r'\d+', text)))
-
-def parse_transition_matrix(matrix):
-    return []
-
-def parse_fitness_values(values):
-    return []
