@@ -96,7 +96,7 @@ def run_subvalidator(text):
         if k not in valid_keywords:
             pos = list(re.finditer(k, text))[0].end()
             raise ValidationError(
-                message='{} not a valid keyword for the run command'.format(k),
+                message='{} not a valid run command keyword'.format(k),
                 cursor_position=pos,
             )
         else:
@@ -114,7 +114,35 @@ def run_subvalidator(text):
                 )
 
 def create_subvalidator(text):
+    """Checks if the create statement is valid
+
+    Parameters
+    ----------
+    text : str
+        input statement
+
+    """
+    valid_keywords = ['intrahost_model', 'fitness_model', 'transmission_model']
     args = [arg for arg in text.split(None)[1:] if '=' not in arg]
+    # Check number of arguments
+    if len(args) > 2:
+        raise ValidationError(
+            message='Create command has more than two arguments',
+            cursor_position=len(text),
+        )
+    # Check keyword
+    if args[0] not in valid_keywords:
+        pos = list(re.finditer(args[0], text))[0].end()
+        raise ValidationError(
+            message='{} not a create command argument'.format(args[0]),
+            cursor_position=pos,
+        )
+    # Check if model_name is a valid name
+    if re.search(r'^[A-Za-z0-9\_\-\*]+$', args[1]) is None:
+        raise ValidationError(
+            message='{} not a a valid model name'.format(args[0]),
+            cursor_position=len(text),
+        )
 
 def append_subvalidator(text):
     args = [arg for arg in text.split(None)[1:] if '=' not in arg]
