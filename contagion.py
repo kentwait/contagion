@@ -10,7 +10,6 @@ from configurator import Configuration
 from configurator.configuration import IntrahostModel, FitnessModel, TransmissionModel
 from configurator.validators import DirExistsValidator, StatementValidator
 from configurator.sequence_generator import multiple_host_random_fasta as multihost
-import configurator as config
 
 PROMPT = 'contagion> '
 EXIT_COMANNDS = ['exit', 'exit()', 'quit', 'quit()', ]
@@ -155,7 +154,6 @@ def configuration_wizard(config_obj, history=None):
 
     if str(prompt('Do you want to save this configuration? [Y/n]: ', default='Y')).lower() == 'y':
         config_obj.save()
-
 
 def create_model(config_obj, text, history=None):
     # Add model to config
@@ -370,36 +368,65 @@ def generate_additive_unipreference_fitness(num_sites, growth_rates, save_path):
     with open(save_path, 'w') as f:
         print(text, file=f)
 
-def main(config_path=None, contagion_path='contagion'):
-    config_obj = config.Configuration()
-    
-    history = InMemoryHistory()
-    config_path = config_path
-    if config_path == None:
-        config_path = prompt_config_path()
-    config_obj.config_path = config_path
+EXIT_COMMANDS = ['exit', 'exit()', 'quit', 'quit()', 'q']
+SINGLE_WORD_COMMANDS = EXIT_COMANNDS + ['configure', 'clear']
+PREFIX_COMMAND_HANDLER = {
+    'run': None,
+    'create': None,
+    'append': None,
+    'generate': None,
+    'set': None,
+    'get': None,
+    'reset': None,
+    'load': None,
+    'save': None, 
+    'todb': None, 
+    'tocsv': None,
+}
 
+def main(config_path=None, contagion_path='contagion'):
+    # Create configuration object
+    config_obj = Configuration(config_path=config_path, contagion_path=contagion_path)
+    # Instantiate history
+    history = InMemoryHistory()
+    # shell interface loop
     while True:
         try:
+            # Valid statements:
+            # configure
+            # run logger=<csv|sqlite> threads=<int>
+            # create intrahost_model|fitness_model|transmission_model <model_name>
+            # append intrahost_model|fitness_model|transmission_model <model_name>
+            # generate pathogens|network|fitness_matrix
+            # set <configuration property>=<value>
+            # get <configuration property>
+            # reset <configuration property>
+            # load configuration <path>
+            # save configuration <path>
+            # todb <basepath> <outpath>
+            # tocsv <path> <basepath>
+            # exit|exit()|quit|quit()|q
+            # clear
             text = prompt(PROMPT, history=history, validator=StatementValidator())
-        except KeyboardInterrupt:
+        except KeyboardInterrupt:  # Ctrl+C
             continue
-        except EOFError:
+        except EOFError:  # Ctrl+D
             break
         else:
             if text:
-                if text in EXIT_COMANNDS:
-                    break
-                elif text == 'configure':
-                    configuration_wizard(config_obj, history=history)
-                elif text.startswith('create'):
-                    create_model(config_obj, text, history=history)
-                elif text.startswith('set'):
-                    set_property(config_obj, text)
-                else:
-                    print(return_property(config_obj, text))
-
-    print('GoodBye!')
+                # match with single-word commands
+                if text in SINGLE_WORD_COMMANDS:
+                    if text in EXIT_COMANNDS:
+                        pass
+                    elif text == 'configure':
+                        pass
+                    elif text == 'clear':
+                        pass
+                # match first word
+                elif text.split(None, 1) in PREFIX_COMMAND_HANDLER.keys():
+                    args = [arg for arg in text.split(None) if '=' not in arg]
+                    kwargs = [kwarg for kwarg in text.split(None) if '=' in kwarg]
+                    PREFIX_COMMAND_HANDLER[text.split(None, 1)](*args, config_obj=config_obj, **kwargs)
 
 if __name__ == '__main__':
     # TODO: Use click to get contagion path

@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 
 class Configuration(object):
-    def __init__(self):
+    def __init__(self, config_path=None, contagion_path='contagion'):
         # Path to config file
         self.config_path = ''
 
