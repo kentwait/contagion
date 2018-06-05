@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import re
 from prompt_toolkit import prompt
 from prompt_toolkit.contrib.completers import WordCompleter
 
@@ -231,7 +232,10 @@ class Configuration(object):
         # pass a path to an existing matrix
         if str(prompt('Do you want to generate a fitness model? Y/n :',
                       default='Y')).lower() == 'y':
-            model.fitness_model_path = model.new_fitness_matrix_prompt(history=history)
+            model.new_fitness_matrix_prompt(
+                model.fitness_model, 
+                history=history,
+            )
         else:
             model.fitness_model_path = prompt(
                 'Fitness model path: ',
@@ -327,8 +331,141 @@ class FitnessModel(Model):
             config_string += "{k} = {v}\n".format(k=k, v=v)
         config_string += '\n'
 
-    def new_fitness_matrix_prompt(self, history=None):
-        return 'path'
+    def new_fitness_matrix_prompt(self, fitness_model, history=None):
+        """Wizard that creates a new fitness matrix based on answers
+        to prompts.
+
+        Parameters
+        ----------
+        fitness_model : str
+        history : prompt_toolkit.history.InMemoryHistory
+
+        """
+        self.fitness_model_path = prompt(
+            'Fitness model save path: ',
+            history=history,
+            validator=None,
+        )
+        self.fitness_model = fitness_model
+        # generate fitness matrix
+        if str(prompt('Create neutral matrix [Y/n]: ',
+                      default='Y')).lower() == 'y':
+            num_sites = int(prompt('Number of sites: ', validator=None))
+            num_variants = int(
+                prompt('Number of potential states per site: ',
+                       validator=None),
+            )
+            if self.fitness_model == 'multiplicative':
+                self.generate_neutral_matrix(
+                    num_sites,
+                    num_variants,
+                    self.fitness_model_path,
+                )
+            else:
+                growth_rate = float(prompt('Growth rate: ', validator=None))
+                self.generate_additive_neutral_matrix(
+                    num_sites,
+                    num_variants,
+                    growth_rate,
+                    self.fitness_model_path,
+                )
+        else:
+            num_sites = int(prompt('Number of sites: ', validator=None))
+            fitnesses = prompt('Enter list of fitness values: ', validator=None)
+            fitnesses = parse_fitness_values(fitnesses)
+            if self.fitness_model == 'multiplicative':
+                self.generate_single_preference_matrix(
+                    num_sites,
+                    fitnesses,
+                    self.fitness_model_path,
+                )
+            else:
+                growth_rates = prompt('Enter list of growth rates: ')
+                self.generate_additive_single_preference_matrix(
+                    num_sites,
+                    growth_rates,
+                    self.fitness_model_path,
+                )
+
+    @staticmethod
+    def generate_neutral_matrix(num_sites, num_variants, save_path):
+        """Generates a multiplicative neutral fitness matrix 
+        and writes it to file.
+
+        Parameters
+        ----------
+        num_sites : int
+        num_variants : int
+        save_path : str
+
+        """
+        fitness_values = ', '.join(['1.0' for _ in range(num_variants)])
+        text = 'default->' + fitness_values + '\n'
+        text += '0: ' + fitness_values + '\n'
+        text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
+        with open(save_path, 'w') as f:
+            print(text, file=f)
+
+    @staticmethod
+    def generate_additive_neutral_matrix(num_sites, num_variants, growth_rate, save_path):
+        """Generates an additive neutral fitness matrix and writes it to file.
+
+        Parameters
+        ----------
+        num_sites : int
+        num_variants : int
+        growth_rate : float
+        save_path : str
+
+        """
+        fitness_values = ', '.join([str(growth_rate/num_sites) for _ in range(num_variants)])
+        text = 'default->' + fitness_values + '\n'
+        text += '0: ' + fitness_values + '\n'
+        text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
+        with open(save_path, 'w') as f:
+            print(text, file=f)
+
+    @staticmethod
+    def generate_single_preference_matrix(num_sites, fitnesses, save_path):
+        """Generates a multiplicative single preference fitness matrix
+        and writes it to file.
+
+        Parameters
+        ----------
+        num_sites : int
+        fitnesses : list of float
+        save_path : str
+
+        """
+        fitness_values = ', '.join(
+            [str(f) for f in map(float, re.findall(r'\d*\.?\d+', fitnesses))]
+        )
+        text = 'default->' + fitness_values + '\n'
+        text += '0: ' + fitness_values + '\n'
+        text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
+        with open(save_path, 'w') as f:
+            print(text, file=f)
+
+    @staticmethod
+    def generate_additive_single_preference_matrix(num_sites, growth_rates, save_path):
+        """Generates an additive single preference fitness matrix
+        and writes it to file.
+
+        Parameters
+        ----------
+        num_sites : int
+        growth_rates : list of float
+        save_path : str
+
+        """
+        fitness_values = ', '.join(
+            [str(f/num_sites) for f in map(float, re.findall(r'\d*\.?\d+', growth_rates))]
+        )
+        text = 'default->' + fitness_values + '\n'
+        text += '0: ' + fitness_values + '\n'
+        text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
+        with open(save_path, 'w') as f:
+            print(text, file=f)
 
 class TransmissionModel(Model):
     def __init__(self):
@@ -336,7 +473,7 @@ class TransmissionModel(Model):
         self.mode = ''  # poisson, constant
         self.transmission_prob = 0
         self.transmission_size = 0
-    
+
     def toml_string(self):
         config_string = '[[transmission_model]]\n'
         _param_dict = OrderedDict([
@@ -350,8 +487,31 @@ class TransmissionModel(Model):
         config_string += '\n' 
 
 
-def parse_host_ids(ids):
-    return []
+def parse_host_ids(text):
+    """Parses host list input. If preceded by a "!", generate a host list
+    using the input as a range.
+
+    Parameters
+    ----------
+    test : str
+
+    Returns
+    -------
+    list
+
+    """
+    match = re.search(r'^\!\[\s*(\d+)\s*\,\s*(\d+)\s*\,?\s*(\d+)?\s*\,?\]$', text)
+    if match:
+        if len(match.groups()) == 3:
+            start, end, skip = list(map(int, match.groups()))
+        else:
+            start, end = list(map(int, match.groups()))
+            skip = 1
+        return [i for i in range(start, end, skip)]
+    return list(map(int, re.findall(r'\d+', text)))
 
 def parse_transition_matrix(matrix):
+    return []
+
+def parse_fitness_values(values):
     return []
