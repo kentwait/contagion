@@ -134,7 +134,7 @@ func LoadFitnessMatrix(path string) (map[int]map[uint8]float64, error) {
 	}
 	// reNum := regexp.MustCompile(`^\s*\d*`)
 	rePos := regexp.MustCompile(`^\d+`)
-	reValues := regexp.MustCompile(`\d*\.?\d+`)
+	reValues := regexp.MustCompile(`-?\d*\.?\d+`)
 
 	i := 1
 	fitnessMap := make(map[int][]float64)
