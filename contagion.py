@@ -173,79 +173,6 @@ def create_model(config_obj, text, history=None):
         model = create_intrahost_model(epidemic_model, history)
         config_obj.fitness_model_dict[model.model_name] = model
 
-def create_intrahost_model(epidemic_model, history=None):
-    replication_model_completer = WordCompleter(['constant', 'bht', 'fitness'])
-
-    model_name = prompt('Model name: ', history=history, validator=None)
-    host_ids = prompt('Host IDs: ', history=history, validator=None)
-    host_ids = parse_host_ids(host_ids)
-
-    mutation_rate = prompt('Mutation rate (subs/site/generation): ', history=history, validator=None)
-    # transmission matrix
-    transition_matrix = prompt('Conditioned transition rate matrix: ', history=history, validator=None)
-
-    recombination_rate = prompt('Recombination rate (recombinations/generation): ', history=history, validator=None)
-    replication_model = prompt('Replication model: ', history=history, validator=None, completer=replication_model_completer)
-
-    # model dependent params
-    if str(replication_model).lower == 'constant':
-        constant_pop_size = prompt('Population size: ', history=history, validator=None)
-    if str(replication_model).lower == 'bht' or str(replication_model).lower == 'fitness':
-        max_pop_size = prompt('Maximum population size: ', history=history, validator=None)
-    if str(replication_model).lower == 'bht':
-        growth_rate = prompt('Growth rate: ', history=history, validator=None)
-
-    # durations
-    exposed_duration = 0
-    infected_duration = 0
-    infective_duration = 0
-    removed_duration = 0
-    recovered_duration = 0
-    if replication_model != 'fitness':
-        if epidemic_model == 'endtrans':
-            infected_duration = prompt('Duration at infected status: ', history=history, validator=None)
-            removed_duration = prompt('Duration at removed status: ', history=history, validator=None)
-        elif epidemic_model == 'exchange':
-            pass
-        else:
-            if epidemic_model.startswith('se'):
-                exposed_duration = prompt('Duration at exposed status: ', history=history, validator=None)
-            if epidemic_model.startswith('si'):
-                infected_duration = prompt('Duration at infected status: ', history=history, validator=None)
-            if epidemic_model.startswith('sei'):
-                infective_duration = prompt('Duration at infective status: ', history=history, validator=None)
-            if epidemic_model.endswith('r'): 
-                removed_duration = prompt('Duration at removed status: ', history=history, validator=None)
-            if epidemic_model.endswith('rs'):    
-                recovered_duration = prompt('Duration at recovered status: ', history=history, validator=None)
-            # vaccinated_duration = prompt('Duration at vaccinated status: ', history=history, validator=None)
-
-    # Create model
-    model = IntrahostModel()
-    model.model_name = model_name
-    model.host_ids = host_ids
-    model.mutation_rate = float(mutation_rate)
-    # TODO: replace eval with a function
-    model.transition_matrix = eval(transition_matrix)
-    model.recombination_rate = float(recombination_rate)
-    model.replication_model = replication_model
-    # model dependent params
-    if str(replication_model).lower == 'constant':
-        model.constant_pop_size = int(constant_pop_size)
-    if str(replication_model).lower == 'bht' or str(replication_model).lower == 'fitness':
-        model.max_pop_size = int(max_pop_size)
-    if str(replication_model).lower == 'bht':
-        model.growth_rate = float(growth_rate)
-    # Durations
-    model.exposed_duration = int(exposed_duration)
-    model.infected_duration = int(infected_duration)
-    model.infective_duration = int(infective_duration)
-    model.removed_duration = int(removed_duration)
-    model.recovered_duration = int(recovered_duration)
-    # model.vaccinated_duration = vaccinated_duration
-
-    return model
-
 def create_fitness_model(history=None):
     fitness_model_completer = WordCompleter(['multiplicative', 'additive'])
 
@@ -338,37 +265,9 @@ def parse_host_ids(text):
         return repr([i for i in range(int(start), int(end), int(skip))])
     return map(int, re.findall(r'\d+', text))
 
-def generate_neutral_fitness(num_sites, num_variants, save_path):
-    fitness_values = ', '.join(['1.0' for _ in range(num_variants)])
-    text = 'default->' + fitness_values + '\n'
-    text += '0: ' + fitness_values + '\n'
-    text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
-    with open(save_path, 'w') as f:
-        print(text, file=f)
 
-def generate_additive_neutral_fitness(num_sites, num_variants, growth_rate, save_path):
-    fitness_values = ', '.join([str(growth_rate/num_sites) for _ in range(num_variants)])
-    text = 'default->' + fitness_values + '\n'
-    text += '0: ' + fitness_values + '\n'
-    text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
-    with open(save_path, 'w') as f:
-        print(text, file=f)
-
-def generate_unipreference_fitness(num_sites, fitnesses, save_path):
-    fitness_values = ', '.join([str(f) for f in map(float, re.findall(r'\d*\.?\d+', fitnesses))])
-    text = 'default->' + fitness_values + '\n'
-    text += '0: ' + fitness_values + '\n'
-    text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
-    with open(save_path, 'w') as f:
-        print(text, file=f)
         
-def generate_additive_unipreference_fitness(num_sites, growth_rates, save_path):
-    fitness_values = ', '.join([str(f/num_sites) for f in map(float, re.findall(r'\d*\.?\d+', growth_rates))])
-    text = 'default->' + fitness_values + '\n'
-    text += '0: ' + fitness_values + '\n'
-    text += '{}: '.format(num_sites - 1) + fitness_values + '\n'
-    with open(save_path, 'w') as f:
-        print(text, file=f)
+
 
 def main(config_path=None, contagion_path='contagion'):
     # Create configuration object
@@ -402,7 +301,7 @@ def main(config_path=None, contagion_path='contagion'):
             if text:
                 # match with single-word commands
                 if text in SINGLE_WORD_COMMANDS:
-                    if text in EXIT_COMANNDS:
+                    if text in EXIT_COMMANDS:
                         pass
                     elif text == 'configure':
                         pass
