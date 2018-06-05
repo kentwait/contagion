@@ -170,6 +170,14 @@ def generate_subvalidator(text):
         )
 
 def set_subvalidator(text):
+    """Checks if the set statement is valid
+
+    Parameters
+    ----------
+    text : str
+        input statement
+
+    """
     kwargs = dict([kwarg.split('=') for kwarg in text.split(None)[1:] if '=' in kwarg])
 
 def get_subvalidator(text):
