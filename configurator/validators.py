@@ -179,6 +179,13 @@ def set_subvalidator(text):
 
     """
     kwargs = dict([kwarg.split('=') for kwarg in text.split(None)[1:] if '=' in kwarg])
+    for k in kwargs.keys():
+        if k not in CONFIG_PROPERTIES:
+            pos = list(re.finditer(k, text))[0].end()
+            raise ValidationError(
+                message='{} not a valid config property'.format(k), 
+                cursor_position=pos,
+            )
 
 def get_subvalidator(text):
     args = [arg for arg in text.split(None) if '=' not in arg]
