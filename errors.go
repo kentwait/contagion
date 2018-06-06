@@ -1,5 +1,7 @@
 package contagiongo
 
+import "fmt"
+
 const (
 	// IntKeyNotFoundError is the message for "Integer key not found" errors
 	IntKeyNotFoundError = "key %d not found"
@@ -39,7 +41,7 @@ const (
 
 	UnexpectedErrorWhileError = "encountered error while %s: %s"
 	ExpectedErrorWhileError   = "expected an error while %s, instead got none"
-	UnrecognizedKeywordError  = "unrecognized keyword %s for %s"
+	UnrecognizedKeywordError  = "%s is not a valid keyword for %s"
 	FileParsingError          = "error in line %d: %s"
 )
 
@@ -47,3 +49,12 @@ const (
 	IdenticalPointerError    = "memory address of %s (%p) and %s (%p) are identical"
 	NotIdenticalPointerError = "memory address of %s (%p) and %s (%p) are not identical"
 )
+
+func checkKeyword(text, category string, keywords ...string) error {
+	for _, kw := range keywords {
+		if text == kw {
+			return nil
+		}
+	}
+	return fmt.Errorf(UnrecognizedKeywordError, text, category)
+}
