@@ -21,6 +21,8 @@ type SISimulation struct {
 	instanceID     int
 	numGenerations int
 	logFreq        int
+
+	stopConditions []StopCondition
 }
 
 // NewSISimulation creates a new SI simulation.
@@ -51,6 +53,19 @@ func (sim *SISimulation) Run(i int) {
 		sim.Transmit(t)
 		// State after t generation
 		sim.Update(t)
+		// Check stop conditions
+		if len(sim.stopConditions) > 0 {
+			breakSim := false
+			for _, cond := range sim.stopConditions {
+				if proceed := cond.Check(sim); !proceed {
+					breakSim = true
+					break
+				}
+			}
+			if breakSim {
+				break
+			}
+		}
 	}
 	fmt.Println(strings.Repeat("-", 80))
 	sim.Finalize()
