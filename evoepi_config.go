@@ -520,7 +520,7 @@ func (c *epidemicSimConfig) Validate() error {
 }
 
 type logConfig struct {
-	LogFreq   uint   `toml:"log_freq"`
+	LogFreq   int    `toml:"log_freq"`
 	LogPath   string `toml:"log_path"`
 	validated bool
 }
@@ -705,12 +705,11 @@ type fitnessModelConfig struct {
 func (c *fitnessModelConfig) Validate() error {
 	// check keywords
 	// fitness_model
-	switch strings.ToLower(c.FitnessModel) {
-	case "multiplicative":
-	case "additive":
-	case "additive_motif":
-	default:
-		return fmt.Errorf(UnrecognizedKeywordError, c.FitnessModel, "fitness_model")
+	err := checkKeyword(strings.ToLower(c.FitnessModel),
+		"multiplicative", "additive", "additive_motif",
+	)
+	if err != nil {
+		return err
 	}
 
 	// Check FitnessModelPath
@@ -765,12 +764,9 @@ type transModelConfig struct {
 // Validate checks the validity of the transModelConfig configuration.
 func (c *transModelConfig) Validate() error {
 	// check keywords
-	// fitness_model
-	switch strings.ToLower(c.Mode) {
-	case "poisson":
-	case "constant":
-	default:
-		return fmt.Errorf(UnrecognizedKeywordError, c.Mode, "mode")
+	err := checkKeyword(strings.ToLower(c.Mode), "poisson", "constant")
+	if err != nil {
+		return err
 	}
 	c.validated = true
 	return nil
@@ -795,4 +791,22 @@ func (c *transModelConfig) CreateModel(id int) (TransmissionModel, error) {
 		return model, nil
 	}
 	return nil, fmt.Errorf(UnrecognizedKeywordError, c.Mode, "mode")
+}
+
+type stopConditionConfig struct {
+	Condition string `toml:"condition"` // allele, genotype
+	Pos       int    `toml:"pos"`
+	Sequence  string `toml:"sequence"`
+	validated bool
+}
+
+// Validate checks the validity of the stopConditionConfig configuration.
+func (c *stopConditionConfig) Validate() error {
+	// check keywords
+	err := checkKeyword(strings.ToLower(c.Condition), "allele", "genotype")
+	if err != nil {
+		return err
+	}
+	c.validated = true
+	return nil
 }
