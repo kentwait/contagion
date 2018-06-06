@@ -555,7 +555,7 @@ func (c *epidemicSimConfig) Validate() error {
 		return fmt.Errorf(InvalidIntParameterError, "host_popsize", c.HostPopSize, "must be greater than or equal to 1")
 	}
 	// Check keyword of epidemic_model
-	err = checkKeyword(c.EpidemicModel,
+	err = checkKeyword(c.EpidemicModel, "epidemic_model",
 		"si", "sis",
 		"sir", "sirs",
 		"sei", "seir", "seirs",
@@ -763,7 +763,7 @@ type fitnessModelConfig struct {
 func (c *fitnessModelConfig) Validate() error {
 	// check keywords
 	// fitness_model
-	err := checkKeyword(strings.ToLower(c.FitnessModel),
+	err := checkKeyword(strings.ToLower(c.FitnessModel), "fitness_model",
 		"multiplicative", "additive", "additive_motif",
 	)
 	if err != nil {
@@ -822,7 +822,7 @@ type transModelConfig struct {
 // Validate checks the validity of the transModelConfig configuration.
 func (c *transModelConfig) Validate() error {
 	// check keywords
-	err := checkKeyword(strings.ToLower(c.Mode), "poisson", "constant")
+	err := checkKeyword(strings.ToLower(c.Mode), "mode", "poisson", "constant")
 	if err != nil {
 		return err
 	}
@@ -861,7 +861,9 @@ type stopConditionConfig struct {
 // Validate checks the validity of the stopConditionConfig configuration.
 func (c *stopConditionConfig) Validate() error {
 	// check keywords
-	err := checkKeyword(strings.ToLower(c.Condition), "allele_loss", "genotype_loss")
+	err := checkKeyword(strings.ToLower(c.Condition), "condition",
+		"allele_loss", "genotype_loss",
+	)
 	if err != nil {
 		return err
 	}

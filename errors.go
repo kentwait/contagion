@@ -1,6 +1,9 @@
 package contagiongo
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	// IntKeyNotFoundError is the message for "Integer key not found" errors
@@ -52,7 +55,7 @@ const (
 
 func checkKeyword(text, category string, keywords ...string) error {
 	for _, kw := range keywords {
-		if text == kw {
+		if strings.ToLower(text) == strings.ToLower(kw) {
 			return nil
 		}
 	}
