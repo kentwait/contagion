@@ -54,10 +54,10 @@ func (sim *SISimulation) Run(i int) {
 	// State after t generation
 	sim.Update(t)
 	elapsed := time.Since(start).Nanoseconds()
-	fmt.Println(fmt.Sprintf(" \t\t%fms per generation", float64(elapsed)/1e6))
+	fmt.Printf(" \t\t%fms per generation\n", float64(elapsed)/1e6)
 	// Check stop conditions
 	if !sim.Epidemic.CheckConditions() {
-		fmt.Printf(" [stop]       \tgeneration %05d\tone or more stop conditions has been triggered\n", t)
+		fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", t)
 	}
 	for t < sim.numGenerations {
 		t++
@@ -75,7 +75,7 @@ func (sim *SISimulation) Run(i int) {
 		sim.Update(t)
 		// Check stop conditions
 		if !sim.Epidemic.CheckConditions() {
-			fmt.Printf(" [stop]       \tgeneration %05d\tone or more stop conditions has been triggered\n", t)
+			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", t)
 			break
 		}
 	}
