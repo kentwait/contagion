@@ -514,7 +514,7 @@ func (c *EvoEpiConfig) LogPath() string { return c.LogParams.LogPath }
 type epidemicSimConfig struct {
 	NumGenerations int      `toml:"num_generations"`
 	NumIntances    int      `toml:"num_instances"`
-	NumSites       int      `toml:"num_instances"`
+	NumSites       int      `toml:"num_sites"`
 	HostPopSize    int      `toml:"host_popsize"`
 	EpidemicModel  string   `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans, exchange
 	Coinfection    bool     `toml:"coinfection"`
@@ -564,6 +564,7 @@ func (c *epidemicSimConfig) Validate() error {
 	if err != nil {
 		return err
 	}
+	// TODO: Validate NumSites compared to sequence
 	// Check if expected_characters are formed by single-character strings
 	for _, char := range c.ExpectedChars {
 		if len(char) > 1 {
