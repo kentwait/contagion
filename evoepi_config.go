@@ -287,7 +287,7 @@ func (c *EvoEpiConfig) Validate() error {
 			return err
 		}
 		// Check if position within the sequence length
-		if cond.Condition == "allele" {
+		if cond.Condition == "allele_loss" {
 			if cond.Pos >= c.SimParams.NumSites {
 				return fmt.Errorf("position %d is greater than the last position in the expected sequence (%d)", cond.Pos, c.SimParams.NumSites-1)
 			}
@@ -306,7 +306,7 @@ func (c *EvoEpiConfig) Validate() error {
 			if !exists {
 				return fmt.Errorf("%s is not in the list of expected characters %v", cond.Sequence, c.SimParams.ExpectedChars)
 			}
-		} else if cond.Condition == "genotype" {
+		} else if cond.Condition == "genotype_loss" {
 			// Check if all characters in the sequence are expecter characters
 			for i, seqRune := range cond.Sequence {
 				seqChar := string(seqRune)
@@ -851,7 +851,7 @@ func (c *transModelConfig) CreateModel(id int) (TransmissionModel, error) {
 }
 
 type stopConditionConfig struct {
-	Condition string `toml:"condition"` // allele, genotype
+	Condition string `toml:"condition"` // allele_loss, genotype_loss
 	Pos       int    `toml:"pos"`
 	Sequence  string `toml:"sequence"`
 	validated bool
@@ -860,7 +860,7 @@ type stopConditionConfig struct {
 // Validate checks the validity of the stopConditionConfig configuration.
 func (c *stopConditionConfig) Validate() error {
 	// check keywords
-	err := checkKeyword(strings.ToLower(c.Condition), "allele", "genotype")
+	err := checkKeyword(strings.ToLower(c.Condition), "allele_loss", "genotype_loss")
 	if err != nil {
 		return err
 	}
@@ -873,7 +873,7 @@ func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition,
 		return nil, fmt.Errorf("validate model parameters first")
 	}
 	switch c.Condition {
-	case "allele":
+	case "allele_loss":
 		var char uint8
 		for i, seqChar := range charList {
 			if seqChar == c.Sequence {
@@ -882,7 +882,7 @@ func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition,
 			}
 		}
 		return NewAlleleExistsCondition(char, c.Pos), nil
-	case "genotype":
+	case "genotype_loss":
 		sequence := make([]uint8, len(c.Sequence))
 		for i, seqRune := range c.Sequence {
 			seqChar := string(seqRune)
