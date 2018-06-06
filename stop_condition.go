@@ -11,7 +11,7 @@ import (
 // The Check method checks if the simulation still satisfies the
 // imposed condition.
 type StopCondition interface {
-	Check(sim EpidemicSimulation) bool
+	Check(sim Epidemic) bool
 }
 
 // AlleleExists is a stopping condition that checks if
@@ -21,10 +21,10 @@ type alleleExists struct {
 	site int
 }
 
-// AlleleExistsCondition creates a new StopCondition that stops the
+// NewAlleleExistsCondition creates a new StopCondition that stops the
 // simulation once the given char at a particular site becomes
 // extinct.
-func AlleleExistsCondition(char, site int) StopCondition {
+func NewAlleleExistsCondition(char uint8, site int) StopCondition {
 	cond := new(alleleExists)
 	cond.char = uint8(char)
 	cond.site = site
@@ -32,7 +32,7 @@ func AlleleExistsCondition(char, site int) StopCondition {
 }
 
 // Check looks at the
-func (cond *alleleExists) Check(sim EpidemicSimulation) bool {
+func (cond *alleleExists) Check(sim Epidemic) bool {
 	c := make(chan bool)
 	var wg sync.WaitGroup
 	for _, host := range sim.HostMap() {
@@ -74,22 +74,20 @@ type genotypeExists struct {
 	sequence []uint8
 }
 
-// GenotypeExistsCondition creates a new StopCondition that stops the
+// NewGenotypeExistsCondition creates a new StopCondition that stops the
 // simulation once the given sequence genotype becomes
 // extinct.
-func GenotypeExistsCondition(sequence []int8) StopCondition {
+func NewGenotypeExistsCondition(sequence []uint8) StopCondition {
 	cond := new(genotypeExists)
 	cond.sequence = make([]uint8, len(sequence))
-	for i, char := range sequence {
-		cond.sequence[i] = uint8(char)
-	}
+	copy(cond.sequence, sequence)
 	return cond
 }
 
 // Check looks in all infected hosts in the simulation to
 // check if the genotype in question still exists.
 // Return false if the genotype was not found in at least one host.
-func (cond *genotypeExists) Check(sim EpidemicSimulation) bool {
+func (cond *genotypeExists) Check(sim Epidemic) bool {
 	getGenotypes := func(sim EpidemicSimulation) <-chan Genotype {
 		c := make(chan Genotype)
 		genotypeSet := make(map[ksuid.KSUID]bool)
