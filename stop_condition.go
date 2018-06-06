@@ -88,85 +88,88 @@ func NewGenotypeExistsCondition(sequence []uint8) StopCondition {
 // check if the genotype in question still exists.
 // Return false if the genotype was not found in at least one host.
 func (cond *genotypeExists) Check(sim Epidemic) bool {
-	getGenotypes := func(sim Epidemic) <-chan Genotype {
-		c := make(chan Genotype)
-		genotypeSet := make(map[ksuid.KSUID]bool)
-		for _, host := range sim.HostMap() {
-			for _, node := range host.Pathogens() {
-				uid := node.GenotypeUID()
-				if _, exists := genotypeSet[uid]; !exists {
-					c <- node.CurrentGenotype()
-				}
-			}
-		}
-		close(c)
-		return c
-	}
-	getMatches := func(sequence []uint8, c <-chan Genotype) <-chan bool {
-		d := make(chan bool)
-		var wg2 sync.WaitGroup
-		for genotype := range c {
-			go func(genotype Genotype, d chan<- bool, wg2 *sync.WaitGroup) {
-				defer wg2.Done()
-				matchCount := 0
-				for i, char := range genotype.Sequence() {
-					if char == cond.sequence[i] {
-						matchCount++
-					}
-				}
-				if matchCount == len(genotype.Sequence()) {
-					d <- true
-				}
-			}(genotype, d, &wg2)
-		}
-		wg2.Wait()
-		close(d)
-		return d
-	}
-	exists := false
-	for range getMatches(cond.sequence, getGenotypes(sim)) {
-		exists = true
-	}
-	return exists
-
-	// c := make(chan bool)
-	// var wg sync.WaitGroup
-	// for i, host := range sim.HostMap() {
-	// 	wg.Add(1)
-	// 	go func(host Host, c chan<- bool, wg *sync.WaitGroup) {
-	// 		defer wg.Done()
-	// 		resultMap := make(map[ksuid.KSUID]bool)
+	// This pipeline method does not work
+	// getGenotypes := func(sim Epidemic) <-chan Genotype {
+	// 	c := make(chan Genotype)
+	// 	genotypeSet := make(map[ksuid.KSUID]bool)
+	// 	for _, host := range sim.HostMap() {
 	// 		for _, node := range host.Pathogens() {
-	// 			genotype := node.CurrentGenotype()
-	// 			genotypeUID := node.GenotypeUID()
-	// 			if _, exists := resultMap[genotypeUID]; !exists {
-	// 				matchCount := 0
-	// 				for i, char := range genotype.Sequence() {
-	// 					if char == cond.sequence[i] {
-	// 						matchCount++
-	// 					}
-	// 				}
-	// 				if matchCount == len(genotype.Sequence()) {
-	// 					resultMap[genotypeUID] = true
-	// 					c <- true
-	// 				} else {
-	// 					resultMap[genotypeUID] = false
-	// 				}
-	// 			} else {
-	// 				if resultMap[genotypeUID] {
-	// 					c <- true
-	// 				}
+	// 			uid := node.GenotypeUID()
+	// 			if _, exists := genotypeSet[uid]; !exists {
+	// 				c <- node.CurrentGenotype()
 	// 			}
 	// 		}
-	// 	}(host, c, &wg)
-	// }
-	// go func() {
-	// 	wg.Wait()
+	// 	}
 	// 	close(c)
-	// }()
+	// 	return c
+	// }
+	// getMatches := func(sequence []uint8, c <-chan Genotype) <-chan bool {
+	// 	d := make(chan bool)
+	// 	var wg2 sync.WaitGroup
+	// 	for genotype := range c {
+	// 		go func(genotype Genotype, d chan<- bool, wg2 *sync.WaitGroup) {
+	// 			defer wg2.Done()
+	// 			matchCount := 0
+	// 			for i, char := range genotype.Sequence() {
+	// 				if char == cond.sequence[i] {
+	// 					matchCount++
+	// 				}
+	// 			}
+	// 			if matchCount == len(genotype.Sequence()) {
+	// 				d <- true
+	// 			}
+	// 		}(genotype, d, &wg2)
+	// 	}
+	// 	wg2.Wait()
+	// 	close(d)
+	// 	return d
+	// }
 	// exists := false
-	// for e := range c {
+	// for range getMatches(cond.sequence, getGenotypes(sim)) {
 	// 	exists = true
 	// }
 	// return exists
+
+	// TODO: Create more effective method that doesnt duplicate work on
+	// reading genotypes
+	c := make(chan bool)
+	var wg sync.WaitGroup
+	for _, host := range sim.HostMap() {
+		wg.Add(1)
+		go func(host Host, c chan<- bool, wg *sync.WaitGroup) {
+			defer wg.Done()
+			resultMap := make(map[ksuid.KSUID]bool)
+			for _, node := range host.Pathogens() {
+				genotype := node.CurrentGenotype()
+				genotypeUID := node.GenotypeUID()
+				if _, exists := resultMap[genotypeUID]; !exists {
+					matchCount := 0
+					for i, char := range genotype.Sequence() {
+						if char == cond.sequence[i] {
+							matchCount++
+						}
+					}
+					if matchCount == len(genotype.Sequence()) {
+						resultMap[genotypeUID] = true
+						c <- true
+					} else {
+						resultMap[genotypeUID] = false
+					}
+				} else {
+					if resultMap[genotypeUID] {
+						c <- true
+					}
+				}
+			}
+		}(host, c, &wg)
+	}
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+	exists := false
+	for range c {
+		exists = true
+	}
+	return exists
 }
