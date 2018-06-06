@@ -43,7 +43,10 @@ func (l *CSVLogger) Init() error {
 		if err != nil {
 			return err
 		}
-		AppendToFile(path, b.Bytes())
+		err = NewFile(path, b.Bytes())
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -185,6 +188,30 @@ func (l *CSVLogger) WriteTransmission(c <-chan TransmissionPackage) {
 		b.WriteString(row)
 	}
 	AppendToFile(l.transmissionPath, b.Bytes())
+}
+
+// NewFile creates a new file on the given path if it does not exist.
+// Returns an error if the file exists.
+func NewFile(path string, b []byte) error {
+	// Create file
+	if exists, _ := Exists(path); exists {
+		return fmt.Errorf("%s already exists", path)
+	}
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.Write(b)
+	if err != nil {
+		return err
+	}
+	err = f.Sync()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // AppendToFile creates a new file on the given path if it does not exist, or
