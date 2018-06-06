@@ -37,7 +37,7 @@ func main() {
 	}
 	firstStart := time.Now()
 	for i := 1; i <= conf.NumInstances(); i++ {
-		log.Printf("starting instance %03d\n\n", i)
+		log.Printf("starting instance %03d\n", i)
 		start := time.Now()
 		// Create a new logger for every realization
 		var logger contagion.DataLogger
