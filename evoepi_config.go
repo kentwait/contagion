@@ -298,7 +298,7 @@ func (c *EvoEpiConfig) Validate() error {
 			// Check if character in the sequence
 			exists := false
 			for _, char := range c.SimParams.ExpectedChars {
-				if cond.Sequence == char {
+				if strings.ToLower(cond.Sequence) == strings.ToLower(char) {
 					exists = true
 					break
 				}
@@ -312,7 +312,7 @@ func (c *EvoEpiConfig) Validate() error {
 				seqChar := string(seqRune)
 				match := false
 				for _, expChar := range c.SimParams.ExpectedChars {
-					if string(seqChar) == expChar {
+					if strings.ToLower(seqChar) == strings.ToLower(expChar) {
 						match = true
 					}
 				}
@@ -876,7 +876,7 @@ func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition,
 	case "allele_loss":
 		var char uint8
 		for i, seqChar := range charList {
-			if seqChar == c.Sequence {
+			if strings.ToLower(seqChar) == c.Sequence {
 				char = uint8(i)
 				break
 			}
@@ -887,7 +887,7 @@ func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition,
 		for i, seqRune := range c.Sequence {
 			seqChar := string(seqRune)
 			for j, char := range charList {
-				if seqChar == char {
+				if strings.ToLower(seqChar) == strings.ToLower(char) {
 					sequence[i] = uint8(j)
 					break
 				}
