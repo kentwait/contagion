@@ -853,7 +853,7 @@ func (c *transModelConfig) CreateModel(id int) (TransmissionModel, error) {
 
 type stopConditionConfig struct {
 	Condition string `toml:"condition"` // allele_loss, genotype_loss
-	Pos       int    `toml:"pos"`
+	Pos       int    `toml:"position"`
 	Sequence  string `toml:"sequence"`
 	validated bool
 }
@@ -879,7 +879,7 @@ func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition,
 	case "allele_loss":
 		var char uint8
 		for i, seqChar := range charList {
-			if strings.ToLower(seqChar) == c.Sequence {
+			if strings.ToLower(seqChar) == strings.ToLower(c.Sequence) {
 				char = uint8(i)
 				break
 			}
