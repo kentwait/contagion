@@ -88,7 +88,7 @@ func NewGenotypeExistsCondition(sequence []uint8) StopCondition {
 // check if the genotype in question still exists.
 // Return false if the genotype was not found in at least one host.
 func (cond *genotypeExists) Check(sim Epidemic) bool {
-	getGenotypes := func(sim EpidemicSimulation) <-chan Genotype {
+	getGenotypes := func(sim Epidemic) <-chan Genotype {
 		c := make(chan Genotype)
 		genotypeSet := make(map[ksuid.KSUID]bool)
 		for _, host := range sim.HostMap() {
