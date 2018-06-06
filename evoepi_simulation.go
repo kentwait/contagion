@@ -23,6 +23,8 @@ type evoEpiSimulation struct {
 	infectableStatuses []int
 	tree               GenotypeTree
 	config             Config
+
+	stopConditions []StopCondition
 }
 
 func (sim *evoEpiSimulation) Host(id int) Host {
@@ -75,6 +77,14 @@ func (sim *evoEpiSimulation) GenotypeSet() GenotypeSet {
 
 func (sim *evoEpiSimulation) NewInstance() (Epidemic, error) {
 	return sim.config.NewSimulation()
+}
+
+func (sim *evoEpiSimulation) CheckConditions() bool {
+	continueSim := true
+	for _, cond := range sim.stopConditions {
+		continueSim = cond.Check(sim)
+	}
+	return continueSim
 }
 
 // The following methods are used as goroutines that performs tasks within

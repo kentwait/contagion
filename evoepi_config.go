@@ -484,6 +484,14 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	for i := range sim.hosts {
 		sim.timers[i] = -1
 	}
+	// Add stop conditions
+	for _, cond := range c.StopConditions {
+		newCondition, err := cond.CreateCondition(c.SimParams.ExpectedChars)
+		if err != nil {
+			return nil, err
+		}
+		sim.stopConditions = append(sim.stopConditions, newCondition)
+	}
 
 	return sim, nil
 }
@@ -858,4 +866,35 @@ func (c *stopConditionConfig) Validate() error {
 	}
 	c.validated = true
 	return nil
+}
+
+func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition, error) {
+	if !c.validated {
+		return nil, fmt.Errorf("validate model parameters first")
+	}
+	switch c.Condition {
+	case "allele":
+		var char uint8
+		for i, seqChar := range charList {
+			if seqChar == c.Sequence {
+				char = uint8(i)
+				break
+			}
+		}
+		return NewAlleleExistsCondition(char, c.Pos), nil
+	case "genotype":
+		sequence := make([]uint8, len(c.Sequence))
+		for i, seqRune := range c.Sequence {
+			seqChar := string(seqRune)
+			for j, char := range charList {
+				if seqChar == char {
+					sequence[i] = uint8(j)
+					break
+				}
+			}
+		}
+		return NewGenotypeExistsCondition(sequence), nil
+
+	}
+	return nil, fmt.Errorf(UnrecognizedKeywordError, c.Condition, "condition")
 }

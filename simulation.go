@@ -54,6 +54,7 @@ type Epidemic interface {
 
 	GenotypeNodeMap() map[ksuid.KSUID]GenotypeNode
 	GenotypeSet() GenotypeSet
+	CheckConditions() bool
 
 	// The following methods perform intrahost processes associated with
 	// the status. For every generation, one of the following is called for

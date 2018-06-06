@@ -21,8 +21,6 @@ type SISimulation struct {
 	instanceID     int
 	numGenerations int
 	logFreq        int
-
-	stopConditions []StopCondition
 }
 
 // NewSISimulation creates a new SI simulation.
@@ -54,17 +52,9 @@ func (sim *SISimulation) Run(i int) {
 		// State after t generation
 		sim.Update(t)
 		// Check stop conditions
-		if len(sim.stopConditions) > 0 {
-			breakSim := false
-			for _, cond := range sim.stopConditions {
-				if proceed := cond.Check(sim); !proceed {
-					breakSim = true
-					break
-				}
-			}
-			if breakSim {
-				break
-			}
+		if sim.Epidemic.CheckConditions() {
+			log.Print("stop - one or more stop conditions has been triggered")
+			break
 		}
 	}
 	fmt.Println(strings.Repeat("-", 80))
