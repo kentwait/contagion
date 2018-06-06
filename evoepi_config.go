@@ -24,6 +24,7 @@ type EvoEpiConfig struct {
 	IntrahostModels    []*intrahostModelConfig `toml:"intrahost_model"`
 	FitnessModels      []*fitnessModelConfig   `toml:"fitness_model"`
 	TransmissionModels []*transModelConfig     `toml:"transmission_model"`
+	StopConditions     []*stopConditionConfig  `toml:"stop_condition"`
 
 	validated bool
 }
@@ -279,14 +280,56 @@ func (c *EvoEpiConfig) Validate() error {
 			hostIDSet[i] = true
 		}
 	}
+	// Validate each stop condition
+	for _, cond := range c.StopConditions {
+		err := cond.Validate()
+		if err != nil {
+			return err
+		}
+		// Check if position within the sequence length
+		if cond.Condition == "allele_loss" {
+			if cond.Pos >= c.SimParams.NumSites {
+				return fmt.Errorf("position %d is greater than the last position in the expected sequence (%d)", cond.Pos, c.SimParams.NumSites-1)
+			}
+			// Check if single character
+			if len(cond.Sequence) != 1 {
+				return fmt.Errorf("length of sequence is greater than 1")
+			}
+			// Check if character in the sequence
+			exists := false
+			for _, char := range c.SimParams.ExpectedChars {
+				if strings.ToLower(cond.Sequence) == strings.ToLower(char) {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				return fmt.Errorf("%s is not in the list of expected characters %v", cond.Sequence, c.SimParams.ExpectedChars)
+			}
+		} else if cond.Condition == "genotype_loss" {
+			// Check if all characters in the sequence are expecter characters
+			for i, seqRune := range cond.Sequence {
+				seqChar := string(seqRune)
+				match := false
+				for _, expChar := range c.SimParams.ExpectedChars {
+					if strings.ToLower(seqChar) == strings.ToLower(expChar) {
+						match = true
+					}
+				}
+				if !match {
+					return fmt.Errorf("%s in %d is not in the list of expected characters", seqChar, i)
+				}
+			}
+		}
+
+	}
 	// Check if all hosts have been assigned a model
 	for i := 0; i < c.SimParams.HostPopSize; i++ {
 		if !hostIDSet[i] {
 			return fmt.Errorf("host %d was not assigned a fitness model", i)
 		}
 	}
-
-	// TODO: validate file paths
+	// TODO: Validate files
 	c.validated = true
 	return nil
 }
@@ -441,6 +484,14 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 	for i := range sim.hosts {
 		sim.timers[i] = -1
 	}
+	// Add stop conditions
+	for _, cond := range c.StopConditions {
+		newCondition, err := cond.CreateCondition(c.SimParams.ExpectedChars)
+		if err != nil {
+			return nil, err
+		}
+		sim.stopConditions = append(sim.stopConditions, newCondition)
+	}
 
 	return sim, nil
 }
@@ -461,11 +512,13 @@ func (c *EvoEpiConfig) LogFreq() int { return int(c.LogParams.LogFreq) }
 func (c *EvoEpiConfig) LogPath() string { return c.LogParams.LogPath }
 
 type epidemicSimConfig struct {
-	NumGenerations int    `toml:"num_generations"`
-	NumIntances    int    `toml:"num_instances"`
-	HostPopSize    int    `toml:"host_popsize"`
-	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans, exchange
-	Coinfection    bool   `toml:"coinfection"`
+	NumGenerations int      `toml:"num_generations"`
+	NumIntances    int      `toml:"num_instances"`
+	NumSites       int      `toml:"num_sites"`
+	HostPopSize    int      `toml:"host_popsize"`
+	EpidemicModel  string   `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans, exchange
+	Coinfection    bool     `toml:"coinfection"`
+	ExpectedChars  []string `toml:"expected_characters"`
 
 	PathogenSequencePath string `toml:"pathogen_path"` // fasta file for seeding infections
 	HostNetworkPath      string `toml:"host_network_path"`
@@ -501,26 +554,31 @@ func (c *epidemicSimConfig) Validate() error {
 	if c.HostPopSize < 1 {
 		return fmt.Errorf(InvalidIntParameterError, "host_popsize", c.HostPopSize, "must be greater than or equal to 1")
 	}
-
-	switch strings.ToLower(c.EpidemicModel) {
-	case "si":
-	case "sis":
-	case "sir":
-	case "sirs":
-	case "sei":
-	case "seir":
-	case "seirs":
-	case "endtrans":
-	case "exchange":
-	default:
-		return fmt.Errorf(UnrecognizedKeywordError, c.EpidemicModel, "epidemic_model")
+	// Check keyword of epidemic_model
+	err = checkKeyword(c.EpidemicModel, "epidemic_model",
+		"si", "sis",
+		"sir", "sirs",
+		"sei", "seir", "seirs",
+		"endtrans", "exchange",
+	)
+	if err != nil {
+		return err
+	}
+	// TODO: Validate NumSites compared to sequence
+	// Check if expected_characters are formed by single-character strings
+	for _, char := range c.ExpectedChars {
+		if len(char) > 1 {
+			return fmt.Errorf("expected_characters must be a list of single-character strings")
+		} else if len(char) == 0 {
+			return fmt.Errorf("expected_characters items cannot be empty zero-length strings")
+		}
 	}
 	c.validated = true
 	return nil
 }
 
 type logConfig struct {
-	LogFreq   uint   `toml:"log_freq"`
+	LogFreq   int    `toml:"log_freq"`
 	LogPath   string `toml:"log_path"`
 	validated bool
 }
@@ -705,12 +763,11 @@ type fitnessModelConfig struct {
 func (c *fitnessModelConfig) Validate() error {
 	// check keywords
 	// fitness_model
-	switch strings.ToLower(c.FitnessModel) {
-	case "multiplicative":
-	case "additive":
-	case "additive_motif":
-	default:
-		return fmt.Errorf(UnrecognizedKeywordError, c.FitnessModel, "fitness_model")
+	err := checkKeyword(strings.ToLower(c.FitnessModel), "fitness_model",
+		"multiplicative", "additive", "additive_motif",
+	)
+	if err != nil {
+		return err
 	}
 
 	// Check FitnessModelPath
@@ -765,12 +822,9 @@ type transModelConfig struct {
 // Validate checks the validity of the transModelConfig configuration.
 func (c *transModelConfig) Validate() error {
 	// check keywords
-	// fitness_model
-	switch strings.ToLower(c.Mode) {
-	case "poisson":
-	case "constant":
-	default:
-		return fmt.Errorf(UnrecognizedKeywordError, c.Mode, "mode")
+	err := checkKeyword(strings.ToLower(c.Mode), "mode", "poisson", "constant")
+	if err != nil {
+		return err
 	}
 	c.validated = true
 	return nil
@@ -795,4 +849,55 @@ func (c *transModelConfig) CreateModel(id int) (TransmissionModel, error) {
 		return model, nil
 	}
 	return nil, fmt.Errorf(UnrecognizedKeywordError, c.Mode, "mode")
+}
+
+type stopConditionConfig struct {
+	Condition string `toml:"condition"` // allele_loss, genotype_loss
+	Pos       int    `toml:"position"`
+	Sequence  string `toml:"sequence"`
+	validated bool
+}
+
+// Validate checks the validity of the stopConditionConfig configuration.
+func (c *stopConditionConfig) Validate() error {
+	// check keywords
+	err := checkKeyword(strings.ToLower(c.Condition), "condition",
+		"allele_loss", "genotype_loss",
+	)
+	if err != nil {
+		return err
+	}
+	c.validated = true
+	return nil
+}
+
+func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition, error) {
+	if !c.validated {
+		return nil, fmt.Errorf("validate model parameters first")
+	}
+	switch c.Condition {
+	case "allele_loss":
+		var char uint8
+		for i, seqChar := range charList {
+			if strings.ToLower(seqChar) == strings.ToLower(c.Sequence) {
+				char = uint8(i)
+				break
+			}
+		}
+		return NewAlleleExistsCondition(char, c.Pos), nil
+	case "genotype_loss":
+		sequence := make([]uint8, len(c.Sequence))
+		for i, seqRune := range c.Sequence {
+			seqChar := string(seqRune)
+			for j, char := range charList {
+				if strings.ToLower(seqChar) == strings.ToLower(char) {
+					sequence[i] = uint8(j)
+					break
+				}
+			}
+		}
+		return NewGenotypeExistsCondition(sequence), nil
+
+	}
+	return nil, fmt.Errorf(UnrecognizedKeywordError, c.Condition, "condition")
 }

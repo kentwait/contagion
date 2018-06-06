@@ -344,3 +344,12 @@ func OpenSQLiteDB(path, connectionString string) (*sql.DB, error) {
 	}
 	return db, nil
 }
+
+// Finalize should create summary tables that join the databases together
+// Attach databases first then create new tables using create table as
+
+// select a.nodeID, b.genotypeID, b.sequence
+// from genotype.Node001 as a
+// inner join nodes.Genotype001 as b
+// on a.genotypeID = b.genotypeID
+// order by b.sequence asc;

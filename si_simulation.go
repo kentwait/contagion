@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/segmentio/ksuid"
 )
@@ -43,14 +44,41 @@ func (sim *SISimulation) Run(i int) {
 	sim.instanceID = i
 	// Initial state
 	sim.Update(0)
-	t := 0
+
+	// First generation initializes time
+	t := 1
+	fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+	start := time.Now()
+	sim.Process(t)
+	sim.Transmit(t)
+	// State after t generation
+	sim.Update(t)
+	continueSim := sim.Epidemic.CheckConditions()
+	elapsed := time.Since(start).Nanoseconds()
+	fmt.Printf(" \t\t%fms per generation\n", float64(elapsed)/1e6)
+	// Check stop conditions
+	if !continueSim {
+		fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", t)
+	}
 	for t < sim.numGenerations {
 		t++
-		fmt.Printf("instance %04d\tgeneration %05d\n", i, t)
+		// Print only every ten steps is time is short
+		if elapsed < 0.2e9 {
+			if t%10 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+			}
+		} else {
+			fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+		}
 		sim.Process(t)
 		sim.Transmit(t)
 		// State after t generation
 		sim.Update(t)
+		// Check stop conditions
+		if !sim.Epidemic.CheckConditions() {
+			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", t)
+			break
+		}
 	}
 	fmt.Println(strings.Repeat("-", 80))
 	sim.Finalize()

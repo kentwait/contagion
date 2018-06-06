@@ -13,17 +13,18 @@ import (
 
 func main() {
 	numCPUPtr := flag.Int("threads", runtime.NumCPU(), "number of CPU threads")
-	loggerType := flag.String("logger", "csv", "data logger type (csv|sqlite)")
-	seedNum := flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed. Uses Unix time in nanoseconds as default")
+	loggerTypePtr := flag.String("logger", "csv", "data logger type (csv|sqlite)")
+	// quietPtr := flag.Bool("quiet", true, "completely supress feedback")
+	seedNumPtr := flag.Int64("seed", time.Now().UTC().UnixNano(), "random seed. Uses Unix time in nanoseconds as default")
 	// benchmarkPtr := flag.String("benchmark", "", "Benchmark mode. Logs memory and wall time and saves to the specified path")
 	flag.Parse()
-
 	// Set random number
-	rand.Seed(*seedNum)
-
+	rand.Seed(*seedNumPtr)
 	// Set number of CPUs to be used
 	runtime.GOMAXPROCS(*numCPUPtr)
 
+	// Create a new logger
+	// l := log.New(os.Stdout, "", log.LstdFlags)
 	// Load config file
 	configPath := flag.Arg(0)
 	conf, err := contagion.LoadEvoEpiConfig(configPath)
@@ -37,17 +38,17 @@ func main() {
 	}
 	firstStart := time.Now()
 	for i := 1; i <= conf.NumInstances(); i++ {
-		log.Printf("starting instance %03d\n\n", i)
+		log.Printf("starting instance %03d\n", i)
 		start := time.Now()
 		// Create a new logger for every realization
 		var logger contagion.DataLogger
-		switch *loggerType {
+		switch *loggerTypePtr {
 		case "csv":
 			logger = contagion.NewCSVLogger(conf.LogPath(), i)
 		case "sqlite":
 			logger = contagion.NewSQLiteLogger(conf.LogPath(), i)
 		default:
-			log.Fatalf("%s is not a valid logger type (csv|sqlite)", *loggerType)
+			log.Fatalf("%s is not a valid logger type (csv|sqlite)", *loggerTypePtr)
 		}
 		// Create a new simulation based on the epidemic model
 		var sim contagion.EpidemicSimulation
@@ -71,3 +72,17 @@ func main() {
 	}
 	log.Printf("Completed all runs in %s.", time.Since(firstStart))
 }
+
+// func logMemory(interval int) {
+// 	for {
+// 		var m runtime.MemStats
+// 		runtime.ReadMemStats(&m)
+// 		log.F (log.Fields{
+// 			"Alloc":      m.Alloc / 1024,
+// 			"TotalAlloc": m.TotalAlloc / 1024,
+// 			"Sys":        m.Sys / 1024,
+// 			"NumGC":      m.NumGC / 1024,
+// 		}).Info("Logging memory usage")
+// 		time.Sleep(time.Duration(interval) * time.Second)
+// 	}
+// }
