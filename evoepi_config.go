@@ -24,6 +24,7 @@ type EvoEpiConfig struct {
 	IntrahostModels    []*intrahostModelConfig `toml:"intrahost_model"`
 	FitnessModels      []*fitnessModelConfig   `toml:"fitness_model"`
 	TransmissionModels []*transModelConfig     `toml:"transmission_model"`
+	StopConditions     []*stopConditionConfig  `toml:"stop_condition"`
 
 	validated bool
 }
@@ -279,14 +280,56 @@ func (c *EvoEpiConfig) Validate() error {
 			hostIDSet[i] = true
 		}
 	}
+	// Validate each stop condition
+	for _, cond := range c.StopConditions {
+		err := cond.Validate()
+		if err != nil {
+			return err
+		}
+		// Check if position within the sequence length
+		if cond.Condition == "allele" {
+			if cond.Pos >= c.SimParams.NumSites {
+				return fmt.Errorf("position %d is greater than the last position in the expected sequence (%d)", cond.Pos, c.SimParams.NumSites-1)
+			}
+			// Check if single character
+			if len(cond.Sequence) != 1 {
+				return fmt.Errorf("length of sequence is greater than 1")
+			}
+			// Check if character in the sequence
+			exists := false
+			for _, char := range c.SimParams.ExpectedChars {
+				if cond.Sequence == char {
+					exists = true
+					break
+				}
+			}
+			if !exists {
+				return fmt.Errorf("%s is not in the list of expected characters %v", cond.Sequence, c.SimParams.ExpectedChars)
+			}
+		} else if cond.Condition == "genotype" {
+			// Check if all characters in the sequence are expecter characters
+			for i, seqRune := range cond.Sequence {
+				seqChar := string(seqRune)
+				match := false
+				for _, expChar := range c.SimParams.ExpectedChars {
+					if string(seqChar) == expChar {
+						match = true
+					}
+				}
+				if !match {
+					return fmt.Errorf("%s in %d is not in the list of expected characters", seqChar, i)
+				}
+			}
+		}
+
+	}
 	// Check if all hosts have been assigned a model
 	for i := 0; i < c.SimParams.HostPopSize; i++ {
 		if !hostIDSet[i] {
 			return fmt.Errorf("host %d was not assigned a fitness model", i)
 		}
 	}
-
-	// TODO: validate file paths
+	// TODO: Validate files
 	c.validated = true
 	return nil
 }
@@ -461,11 +504,13 @@ func (c *EvoEpiConfig) LogFreq() int { return int(c.LogParams.LogFreq) }
 func (c *EvoEpiConfig) LogPath() string { return c.LogParams.LogPath }
 
 type epidemicSimConfig struct {
-	NumGenerations int    `toml:"num_generations"`
-	NumIntances    int    `toml:"num_instances"`
-	HostPopSize    int    `toml:"host_popsize"`
-	EpidemicModel  string `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans, exchange
-	Coinfection    bool   `toml:"coinfection"`
+	NumGenerations int      `toml:"num_generations"`
+	NumIntances    int      `toml:"num_instances"`
+	NumSites       int      `toml:"num_instances"`
+	HostPopSize    int      `toml:"host_popsize"`
+	EpidemicModel  string   `toml:"epidemic_model"` // si, sir, sirs, sei, seis, seirs, endtrans, exchange
+	Coinfection    bool     `toml:"coinfection"`
+	ExpectedChars  []string `toml:"expected_characters"`
 
 	PathogenSequencePath string `toml:"pathogen_path"` // fasta file for seeding infections
 	HostNetworkPath      string `toml:"host_network_path"`
@@ -501,19 +546,23 @@ func (c *epidemicSimConfig) Validate() error {
 	if c.HostPopSize < 1 {
 		return fmt.Errorf(InvalidIntParameterError, "host_popsize", c.HostPopSize, "must be greater than or equal to 1")
 	}
-
-	switch strings.ToLower(c.EpidemicModel) {
-	case "si":
-	case "sis":
-	case "sir":
-	case "sirs":
-	case "sei":
-	case "seir":
-	case "seirs":
-	case "endtrans":
-	case "exchange":
-	default:
-		return fmt.Errorf(UnrecognizedKeywordError, c.EpidemicModel, "epidemic_model")
+	// Check keyword of epidemic_model
+	err = checkKeyword(c.EpidemicModel,
+		"si", "sis",
+		"sir", "sirs",
+		"sei", "seir", "seirs",
+		"endtrans", "exchange",
+	)
+	if err != nil {
+		return err
+	}
+	// Check if expected_characters are formed by single-character strings
+	for _, char := range c.ExpectedChars {
+		if len(char) > 1 {
+			return fmt.Errorf("expected_characters must be a list of single-character strings")
+		} else if len(char) == 0 {
+			return fmt.Errorf("expected_characters items cannot be empty zero-length strings")
+		}
 	}
 	c.validated = true
 	return nil
