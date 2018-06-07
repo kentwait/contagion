@@ -2,7 +2,6 @@ package contagiongo
 
 import (
 	"bytes"
-	"contagion/utils"
 	"fmt"
 )
 
@@ -139,7 +138,9 @@ func (m adjacencyMatrix) Dump() []byte {
 	for idf, nbrs := range m {
 		for idt, weight := range nbrs {
 			_, err := b.WriteString(fmt.Sprintf(`%d,%d: %f\n`, idf, idt, weight))
-			utils.Check(err)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 	return b.Bytes()
