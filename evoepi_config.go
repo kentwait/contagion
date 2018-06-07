@@ -287,7 +287,7 @@ func (c *EvoEpiConfig) Validate() error {
 			return err
 		}
 		// Check if position within the sequence length
-		if cond.Condition == "allele_loss" {
+		if cond.Condition == "allele_loss" || cond.Condition == "allele_fixloss" {
 			if cond.Pos >= c.SimParams.NumSites {
 				return fmt.Errorf("position %d is greater than the last position in the expected sequence (%d)", cond.Pos, c.SimParams.NumSites-1)
 			}
@@ -852,7 +852,7 @@ func (c *transModelConfig) CreateModel(id int) (TransmissionModel, error) {
 }
 
 type stopConditionConfig struct {
-	Condition string `toml:"condition"` // allele_loss, genotype_loss
+	Condition string `toml:"condition"` // allele_loss, allele_fixloss,  genotype_loss
 	Pos       int    `toml:"position"`
 	Sequence  string `toml:"sequence"`
 	validated bool
@@ -862,7 +862,7 @@ type stopConditionConfig struct {
 func (c *stopConditionConfig) Validate() error {
 	// check keywords
 	err := checkKeyword(strings.ToLower(c.Condition), "condition",
-		"allele_loss", "genotype_loss",
+		"allele_loss", "allele_fixloss", "genotype_loss",
 	)
 	if err != nil {
 		return err
@@ -875,7 +875,7 @@ func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition,
 	if !c.validated {
 		return nil, fmt.Errorf("validate model parameters first")
 	}
-	switch c.Condition {
+	switch strings.ToLower(c.Condition) {
 	case "allele_loss":
 		var char uint8
 		for i, seqChar := range charList {
@@ -885,6 +885,15 @@ func (c *stopConditionConfig) CreateCondition(charList []string) (StopCondition,
 			}
 		}
 		return NewAlleleExistsCondition(char, c.Pos), nil
+	case "allele_fixloss":
+		var char uint8
+		for i, seqChar := range charList {
+			if strings.ToLower(seqChar) == strings.ToLower(c.Sequence) {
+				char = uint8(i)
+				break
+			}
+		}
+		return NewAlleleFixedLostCondition(char, c.Pos), nil
 	case "genotype_loss":
 		sequence := make([]uint8, len(c.Sequence))
 		for i, seqRune := range c.Sequence {
