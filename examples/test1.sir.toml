@@ -4,7 +4,7 @@ num_instances = 10
 host_popsize = 10
 epidemic_model = "sir"
 coinfection = false
-pathogen_sequence_path = "examples/test1.sir.pathogens.fa"
+pathogen_path = "examples/test1.sir.pathogens.fa"
 host_network_path = "examples/test1.sir.network.txt"
 
 [logging]
