@@ -21,7 +21,9 @@ type SISimulation struct {
 
 	instanceID     int
 	numGenerations int
+	t              int
 	logFreq        int
+	stopped        bool
 }
 
 // NewSISimulation creates a new SI simulation.
@@ -46,41 +48,47 @@ func (sim *SISimulation) Run(i int) {
 	sim.Update(0)
 
 	// First generation initializes time
-	t := 1
-	fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+	sim.t = 1
+	fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
 	start := time.Now()
-	sim.Process(t)
-	sim.Transmit(t)
+	sim.Process(sim.t)
+	sim.Transmit(sim.t)
 	// State after t generation
-	sim.Update(t)
+	sim.Update(sim.t)
 	continueSim := sim.Epidemic.CheckConditions()
 	elapsed := time.Since(start).Nanoseconds()
 	fmt.Printf(" \t\t%fms per generation\n", float64(elapsed)/1e6)
 	// Check stop conditions
 	if !continueSim {
-		fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", t)
+		fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.t)
 	}
-	for t < sim.numGenerations {
-		t++
+	for sim.t < sim.numGenerations {
+		sim.t++
 		// Print only every ten steps is time is short
 		if elapsed < 0.02e9 {
-			if t%100 == 0 {
-				fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+			if sim.t%100 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
 			}
 		} else if elapsed < 0.2e9 {
-			if t%10 == 0 {
-				fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+			if sim.t%10 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
 			}
 		} else {
-			fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+			fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
 		}
-		sim.Process(t)
-		sim.Transmit(t)
-		// State after t generation
-		sim.Update(t)
-		// Check stop conditions
-		if !sim.Epidemic.CheckConditions() {
-			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", t)
+		sim.Process(sim.t)
+		sim.Transmit(sim.t)
+		// Check conditions before update
+		stop := !sim.Epidemic.CheckConditions()
+		if stop {
+			sim.stopped = true
+		}
+		// Update after condition. If stop, will override logging setting
+		// and log last generation
+		sim.Update(sim.t)
+		// Feedback that simulation is stopping
+		if stop {
+			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.t)
 			break
 		}
 	}
@@ -162,11 +170,21 @@ func (sim *SISimulation) Update(t int) {
 	var wg2 sync.WaitGroup
 	wg2.Add(2)
 	go func() {
-		sim.WriteStatus(c)
+		if sim.t == 0 || sim.t%sim.logFreq == 0 || sim.stopped {
+			sim.WriteStatus(c)
+		} else {
+			for range c {
+			}
+		}
 		wg2.Done()
 	}()
 	go func() {
-		sim.WriteGenotypeFreq(d)
+		if sim.t == 0 || sim.t%sim.logFreq == 0 || sim.stopped {
+			sim.WriteGenotypeFreq(d)
+		} else {
+			for range d {
+			}
+		}
 		wg2.Done()
 	}()
 	wg2.Wait()
