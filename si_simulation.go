@@ -63,7 +63,11 @@ func (sim *SISimulation) Run(i int) {
 	for t < sim.numGenerations {
 		t++
 		// Print only every ten steps is time is short
-		if elapsed < 0.2e9 {
+		if elapsed < 0.02e9 {
+			if t%100 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
+			}
+		} else if elapsed < 0.2e9 {
 			if t%10 == 0 {
 				fmt.Printf(" instance %04d\tgeneration %05d\n", i, t)
 			}

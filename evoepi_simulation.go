@@ -1,6 +1,7 @@
 package contagiongo
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -83,6 +84,10 @@ func (sim *evoEpiSimulation) CheckConditions() bool {
 	continueSim := true
 	for _, cond := range sim.stopConditions {
 		continueSim = cond.Check(sim)
+		if !continueSim {
+			fmt.Printf(" \t\t- %s -\n", cond.Reason())
+			break
+		}
 	}
 	return continueSim
 }

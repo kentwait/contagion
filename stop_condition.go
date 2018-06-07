@@ -11,6 +11,7 @@ import (
 // The Check method checks if the simulation still satisfies the
 // imposed condition.
 type StopCondition interface {
+	Reason() string
 	Check(sim Epidemic) bool
 }
 
@@ -29,6 +30,10 @@ func NewAlleleExistsCondition(char uint8, site int) StopCondition {
 	cond.char = uint8(char)
 	cond.site = site
 	return cond
+}
+
+func (cond *alleleExists) Reason() string {
+	return "allele lost"
 }
 
 // Check looks at the
@@ -82,6 +87,10 @@ func NewGenotypeExistsCondition(sequence []uint8) StopCondition {
 	cond.sequence = make([]uint8, len(sequence))
 	copy(cond.sequence, sequence)
 	return cond
+}
+
+func (cond *genotypeExists) Reason() string {
+	return "genotype lost"
 }
 
 // Check looks in all infected hosts in the simulation to
@@ -172,4 +181,86 @@ func (cond *genotypeExists) Check(sim Epidemic) bool {
 		exists = true
 	}
 	return exists
+}
+
+// AlleleFixedLost is a stopping condition that checks if
+// a particular allele in a given site has fixed or been lost.
+type alleleFixedLost struct {
+	char   uint8
+	site   int
+	reason string
+}
+
+// NewAlleleFixedLostCondition creates a new StopCondition that stops the
+// simulation once the particular allele in a given site has either
+// been fixed or been lost.
+func NewAlleleFixedLostCondition(char uint8, site int) StopCondition {
+	cond := new(alleleFixedLost)
+	cond.char = uint8(char)
+	cond.site = site
+	return cond
+}
+
+func (cond *alleleFixedLost) Reason() string {
+	return cond.reason
+}
+
+// Check looks in all infected hosts in the simulation to
+// check if the allele at a particular site has been fixed or lost.
+// Check returns false when the allele is either fixed or lost across
+// pathogens in all hosts.
+// Check considers an allele fixed when all pathogens in all hosts
+// have that allele. If the allele cannot be found on any pathogen
+// sequence in any host, the allele is considered lost.
+func (cond *alleleFixedLost) Check(sim Epidemic) bool {
+	c := make(chan bool)
+	var wg sync.WaitGroup
+	for _, host := range sim.HostMap() {
+		wg.Add(1)
+		go func(host Host, c chan<- bool, wg *sync.WaitGroup) {
+			defer wg.Done()
+			resultMap := make(map[ksuid.KSUID]bool)
+			for _, node := range host.Pathogens() {
+				genotypeUID := node.GenotypeUID()
+				if _, exists := resultMap[genotypeUID]; !exists {
+					if node.CurrentGenotype().Sequence()[cond.site] == cond.char {
+						resultMap[genotypeUID] = true
+						c <- true
+					} else {
+						resultMap[genotypeUID] = false
+						c <- false
+					}
+				} else {
+					c <- resultMap[genotypeUID]
+				}
+			}
+		}(host, c, &wg)
+	}
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+	fixed := true
+	lost := true
+	for e := range c {
+		if e {
+			// One true output means it is not yet lost
+			lost = false
+		} else {
+			// One false output means that it is not yet fixed
+			fixed = false
+		}
+	}
+	// Return true if not fixed, or not lost
+	// fixed   lost    continue
+	// true    false   false
+	// false   true    false
+	// false   false   true
+	// true    true    false* (cannot happen)
+	if fixed {
+		cond.reason = "allele fixed"
+	} else if lost {
+		cond.reason = "allele lost"
+	}
+	return !fixed && !lost
 }
