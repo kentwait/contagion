@@ -143,4 +143,7 @@ venv.bak/
 
 # Binaries
 contagion
+contagion_linux_amd64
+
+# Data
 data/
