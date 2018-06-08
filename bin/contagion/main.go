@@ -57,6 +57,8 @@ func main() {
 			sim, err = contagion.NewSISimulation(conf, logger)
 		case "sir":
 			sim, err = contagion.NewSIRSimulation(conf, logger)
+		case "sis":
+			sim, err = contagion.NewSISSimulation(conf, logger)
 		case "endtrans":
 			sim, err = contagion.NewEndTransSimulation(conf, logger)
 		case "exchange":
