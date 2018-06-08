@@ -90,12 +90,15 @@ type Epidemic interface {
 // the spread of disease between hosts in a connected host network.
 type EpidemicSimulation interface {
 	Epidemic
+	DataLogger
+
 	// Run runs the whole simulation
-	Init(params ...interface{})
+	Initialize(params ...interface{})
 	Run(i int)
 	Update(t int)
 	Process(t int)
 	Transmit(t int)
+	Finalize()
 
 	// Metadata
 	SetInstanceID(i int)
@@ -106,6 +109,8 @@ type EpidemicSimulation interface {
 	NumGenerations() int
 	LogTransmission() bool
 	LogFrequency() int
+	SetStopped(b bool)
+	Stopped() bool
 }
 
 // Infection encapsulates a single host and the pathogen tree lineage

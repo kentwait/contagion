@@ -51,7 +51,7 @@ func (sim *SISimulation) InstanceID() int {
 }
 
 func (sim *SISimulation) SetTime(t int) {
-	sim.t = 1
+	sim.t = t
 }
 
 func (sim *SISimulation) Time() int {
@@ -74,36 +74,57 @@ func (sim *SISimulation) LogFrequency() int {
 	return sim.logFreq
 }
 
+func (sim *SISimulation) SetStopped(b bool) {
+	sim.stopped = b
+}
+
+func (sim *SISimulation) Stopped() bool {
+	return sim.stopped
+}
+
 // Run instantiates, runs, and records the a new simulation.
 func (sim *SISimulation) Run(i int) {
-	sim.Init()
+	sim.Initialize()
 	sim.SetInstanceID(i)
 	// Initial state
 	sim.Update(0)
 
-	// First generation initializes time
-	sim.SetTime(1)
-	fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
-	start := time.Now()
-	sim.Process(sim.Time())
-	sim.Transmit(sim.Time())
-	// State after t generation
-	sim.Update(sim.Time())
-	continueSim := sim.Epidemic.CheckConditions()
-	elapsed := time.Since(start).Nanoseconds()
-	fmt.Printf(" \t\t%fms per generation\n", float64(elapsed)/1e6)
-	// Check stop conditions
-	if !continueSim {
-		fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.Time())
+	sim.SetTime(0)
+	var maxElapsed int64
+	// First five generations generation initializes time
+	for sim.Time() < 6 {
+		sim.SetTime(sim.Time() + 1)
+		fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
+		start := time.Now()
+		sim.Process(sim.Time())
+		sim.Transmit(sim.Time())
+		// Check conditions before update
+		stop := !sim.Epidemic.CheckConditions()
+		if stop {
+			sim.SetStopped(true)
+		}
+		// Update after condition. If stop, will override logging setting
+		// and log last generation
+		sim.Update(sim.Time())
+		// Check time elapsed
+		if elapsed := time.Since(start).Nanoseconds(); elapsed > maxElapsed {
+			maxElapsed = elapsed
+		}
+		// Feedback that simulation is stopping
+		if stop {
+			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.Time())
+			break
+		}
 	}
+	fmt.Printf(" \t\texpected time: %fms per generation\n", float64(maxElapsed)/1e6)
 	for sim.Time() < sim.numGenerations {
 		sim.SetTime(sim.Time() + 1)
 		// Print only every ten steps is time is short
-		if elapsed < 0.02e9 {
+		if maxElapsed < 0.02e9 {
 			if sim.Time()%100 == 0 {
 				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
 			}
-		} else if elapsed < 0.2e9 {
+		} else if maxElapsed < 0.2e9 {
 			if sim.Time()%10 == 0 {
 				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
 			}
@@ -115,7 +136,7 @@ func (sim *SISimulation) Run(i int) {
 		// Check conditions before update
 		stop := !sim.Epidemic.CheckConditions()
 		if stop {
-			sim.stopped = true
+			sim.SetStopped(true)
 		}
 		// Update after condition. If stop, will override logging setting
 		// and log last generation
@@ -132,7 +153,7 @@ func (sim *SISimulation) Run(i int) {
 
 // Init initializes the simulation and accepts 0 or more parameters.
 // For example, creating datbases etc.
-func (sim *SISimulation) Init(params ...interface{}) {
+func (sim *SISimulation) Initialize(params ...interface{}) {
 	err := sim.DataLogger.Init()
 	if err != nil {
 		log.Fatal(err)
@@ -204,7 +225,7 @@ func (sim *SISimulation) Update(t int) {
 	var wg2 sync.WaitGroup
 	wg2.Add(2)
 	go func() {
-		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.stopped {
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.Stopped() {
 			sim.WriteStatus(c)
 		} else {
 			for range c {
@@ -213,7 +234,7 @@ func (sim *SISimulation) Update(t int) {
 		wg2.Done()
 	}()
 	go func() {
-		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.stopped {
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.Stopped() {
 			sim.WriteGenotypeFreq(d)
 		} else {
 			for range d {
