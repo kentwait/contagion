@@ -96,6 +96,16 @@ type EpidemicSimulation interface {
 	Update(t int)
 	Process(t int)
 	Transmit(t int)
+
+	// Metadata
+	SetInstanceID(i int)
+	InstanceID() int
+	SetTime(t int)
+	Time() int
+	SetGenerations(n int)
+	NumGenerations() int
+	LogTransmission() bool
+	LogFrequency() int
 }
 
 // Infection encapsulates a single host and the pathogen tree lineage

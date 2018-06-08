@@ -42,44 +42,76 @@ func NewSISimulation(config Config, logger DataLogger) (*SISimulation, error) {
 	return sim, nil
 }
 
+func (sim *SISimulation) SetInstanceID(i int) {
+	sim.instanceID = i
+}
+
+func (sim *SISimulation) InstanceID() int {
+	return sim.instanceID
+}
+
+func (sim *SISimulation) SetTime(t int) {
+	sim.t = 1
+}
+
+func (sim *SISimulation) Time() int {
+	return sim.t
+}
+
+func (sim *SISimulation) SetGenerations(n int) {
+	sim.numGenerations = n
+}
+
+func (sim *SISimulation) NumGenerations() int {
+	return sim.numGenerations
+}
+
+func (sim *SISimulation) LogTransmission() bool {
+	return sim.logTransmission
+}
+
+func (sim *SISimulation) LogFrequency() int {
+	return sim.logFreq
+}
+
 // Run instantiates, runs, and records the a new simulation.
 func (sim *SISimulation) Run(i int) {
 	sim.Init()
-	sim.instanceID = i
+	sim.SetInstanceID(i)
 	// Initial state
 	sim.Update(0)
 
 	// First generation initializes time
-	sim.t = 1
-	fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
+	sim.SetTime(1)
+	fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
 	start := time.Now()
-	sim.Process(sim.t)
-	sim.Transmit(sim.t)
+	sim.Process(sim.Time())
+	sim.Transmit(sim.Time())
 	// State after t generation
-	sim.Update(sim.t)
+	sim.Update(sim.Time())
 	continueSim := sim.Epidemic.CheckConditions()
 	elapsed := time.Since(start).Nanoseconds()
 	fmt.Printf(" \t\t%fms per generation\n", float64(elapsed)/1e6)
 	// Check stop conditions
 	if !continueSim {
-		fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.t)
+		fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.Time())
 	}
-	for sim.t < sim.numGenerations {
-		sim.t++
+	for sim.Time() < sim.numGenerations {
+		sim.SetTime(sim.Time() + 1)
 		// Print only every ten steps is time is short
 		if elapsed < 0.02e9 {
-			if sim.t%100 == 0 {
-				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
+			if sim.Time()%100 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
 			}
 		} else if elapsed < 0.2e9 {
-			if sim.t%10 == 0 {
-				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
+			if sim.Time()%10 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
 			}
 		} else {
-			fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.t)
+			fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
 		}
-		sim.Process(sim.t)
-		sim.Transmit(sim.t)
+		sim.Process(sim.Time())
+		sim.Transmit(sim.Time())
 		// Check conditions before update
 		stop := !sim.Epidemic.CheckConditions()
 		if stop {
@@ -87,10 +119,10 @@ func (sim *SISimulation) Run(i int) {
 		}
 		// Update after condition. If stop, will override logging setting
 		// and log last generation
-		sim.Update(sim.t)
+		sim.Update(sim.Time())
 		// Feedback that simulation is stopping
 		if stop {
-			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.t)
+			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.Time())
 			break
 		}
 	}
@@ -122,7 +154,7 @@ func (sim *SISimulation) Update(t int) {
 		// Simulation-level record of status and timer of particular host
 		timer := sim.HostTimer(hostID)
 		pack := StatusPackage{
-			instanceID: sim.instanceID,
+			instanceID: sim.InstanceID(),
 			genID:      t,
 			hostID:     hostID,
 			status:     sim.HostStatus(hostID), // current host status before checking
@@ -161,7 +193,7 @@ func (sim *SISimulation) Update(t int) {
 					freq:       freq,
 				}
 			}
-		}(sim.instanceID, t, host, timer, pack, c, d, &wg)
+		}(sim.InstanceID(), t, host, timer, pack, c, d, &wg)
 	}
 	go func() {
 		wg.Wait()
@@ -172,7 +204,7 @@ func (sim *SISimulation) Update(t int) {
 	var wg2 sync.WaitGroup
 	wg2.Add(2)
 	go func() {
-		if sim.t == 0 || sim.t%sim.logFreq == 0 || sim.stopped {
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.stopped {
 			sim.WriteStatus(c)
 		} else {
 			for range c {
@@ -181,7 +213,7 @@ func (sim *SISimulation) Update(t int) {
 		wg2.Done()
 	}()
 	go func() {
-		if sim.t == 0 || sim.t%sim.logFreq == 0 || sim.stopped {
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.stopped {
 			sim.WriteGenotypeFreq(d)
 		} else {
 			for range d {
@@ -205,9 +237,9 @@ func (sim *SISimulation) Process(t int) {
 		wg.Add(1)
 		switch sim.HostStatus(hostID) {
 		case SusceptibleStatusCode:
-			go sim.SusceptibleProcess(sim.instanceID, t, host, &wg)
+			go sim.SusceptibleProcess(sim.InstanceID(), t, host, &wg)
 		case InfectedStatusCode:
-			go sim.InfectedProcess(sim.instanceID, t, host, c, &wg)
+			go sim.InfectedProcess(sim.InstanceID(), t, host, c, &wg)
 		}
 		// Decrement host timer.
 		// If status depends on timer, then timer will go positive integer
@@ -251,7 +283,7 @@ func (sim *SISimulation) Transmit(t int) {
 			for _, infectableStatus := range sim.InfectableStatuses() {
 				if status == infectableStatus {
 					wg.Add(1)
-					go TransmitPathogens(sim.instanceID, t, host, neighbor, count, c, d, &wg)
+					go TransmitPathogens(sim.InstanceID(), t, host, neighbor, count, c, d, &wg)
 				}
 			}
 
