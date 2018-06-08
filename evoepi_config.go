@@ -14,6 +14,7 @@ type Config interface {
 	NumGenerations() int
 	LogFreq() int
 	LogPath() string
+	LogTransmission() bool
 }
 
 // EvoEpiConfig contains parameters to create a simulated infection
@@ -511,6 +512,9 @@ func (c *EvoEpiConfig) LogFreq() int { return int(c.LogParams.LogFreq) }
 // This can a path to a folder, or directory_path/prefix format
 func (c *EvoEpiConfig) LogPath() string { return c.LogParams.LogPath }
 
+// LogTransmission indicates whether transmissions are logged or discarded.
+func (c *EvoEpiConfig) LogTransmission() bool { return c.LogParams.LogTransmission }
+
 type epidemicSimConfig struct {
 	NumGenerations int      `toml:"num_generations"`
 	NumIntances    int      `toml:"num_instances"`
@@ -578,9 +582,10 @@ func (c *epidemicSimConfig) Validate() error {
 }
 
 type logConfig struct {
-	LogFreq   int    `toml:"log_freq"`
-	LogPath   string `toml:"log_path"`
-	validated bool
+	LogFreq         int    `toml:"log_freq"`
+	LogTransmission bool   `toml:"log_transmission"`
+	LogPath         string `toml:"log_path"`
+	validated       bool
 }
 
 func (c *logConfig) Validate() error {

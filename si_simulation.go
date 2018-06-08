@@ -19,11 +19,12 @@ type SISimulation struct {
 	Epidemic
 	DataLogger
 
-	instanceID     int
-	numGenerations int
-	t              int
-	logFreq        int
-	stopped        bool
+	instanceID      int
+	numGenerations  int
+	t               int
+	logFreq         int
+	stopped         bool
+	logTransmission bool
 }
 
 // NewSISimulation creates a new SI simulation.
@@ -37,6 +38,7 @@ func NewSISimulation(config Config, logger DataLogger) (*SISimulation, error) {
 	sim.DataLogger = logger
 	sim.numGenerations = config.NumGenerations()
 	sim.logFreq = config.LogFreq()
+	sim.logTransmission = config.LogTransmission()
 	return sim, nil
 }
 
@@ -271,7 +273,12 @@ func (sim *SISimulation) Transmit(t int) {
 		wg2.Done()
 	}()
 	go func() {
-		sim.WriteTransmission(d)
+		if sim.logTransmission {
+			sim.WriteTransmission(d)
+		} else {
+			for range d {
+			}
+		}
 		wg2.Done()
 	}()
 	wg2.Wait()
