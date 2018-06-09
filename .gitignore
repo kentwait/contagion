@@ -145,9 +145,5 @@ venv.bak/
 contagion
 contagion_linux_amd64
 
-<<<<<<< HEAD
-# Data folder
-=======
 # Data
->>>>>>> master
 data/
