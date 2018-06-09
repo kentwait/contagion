@@ -15,10 +15,10 @@ import (
 func TransmitPathogens(i, t int, src, dst Host, count int, c chan<- TransmissionEvent, d chan<- TransmissionPackage, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// Check if migration size if larger than the current population size
-	// If larger, skip
+	// If larger, make migrants equal to existing size
 	numMigrants := src.GetTransmissionModel().TransmissionSize()
 	if numMigrants > count {
-		return
+		numMigrants = count
 	}
 	// Determine if tranmission occurs or not based on source's
 	// transmission probability
