@@ -4,54 +4,94 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
+	rv "github.com/kentwait/randomvariate"
 	"github.com/segmentio/ksuid"
 )
-
-// TODO: Refactor to embedded interface instead of struct.
-// This allows individual overriding of methods without redeclaring methods
-// that call those overriden methods. For example, Update() can be overriden
-// to have a different without having to declaring Run().
 
 // SIRSimulation creates and runs an SIR epidemiological simulation.
 // Within this simulation, hosts may or may not run
 // independent genetic evolution simulations.
 type SIRSimulation struct {
-	SISimulation
-
-	instanceID     int
-	numGenerations int
-	logFreq        int
+	EpidemicSimulation
 }
 
 // NewSIRSimulation creates a new SI simulation.
 func NewSIRSimulation(config Config, logger DataLogger) (*SIRSimulation, error) {
-	epidemic, err := config.NewSimulation()
+	sim := new(SIRSimulation)
+	var err error
+	sim.EpidemicSimulation, err = NewSISimulation(config, logger)
 	if err != nil {
 		return nil, err
 	}
-	sim := new(SIRSimulation)
-	sim.Epidemic = epidemic
-	sim.DataLogger = logger
-	sim.numGenerations = config.NumGenerations()
-	sim.logFreq = config.LogFreq()
 	return sim, nil
 }
 
 // Run instantiates, runs, and records the a new simulation.
 func (sim *SIRSimulation) Run(i int) {
-	sim.Init()
-	sim.instanceID = i
+	sim.Initialize()
+	sim.SetInstanceID(i)
 	// Initial state
 	sim.Update(0)
-	t := 0
-	for t < sim.numGenerations {
-		t++
-		fmt.Printf("instance %04d\tgeneration %05d\n", i, t)
-		sim.Process(t)
-		sim.Transmit(t)
-		// State after t generation
-		sim.Update(t)
+
+	sim.SetTime(0)
+	var maxElapsed int64
+	// First five generations generation initializes time
+	for sim.Time() < 6 {
+		sim.SetTime(sim.Time() + 1)
+		fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
+		start := time.Now()
+		sim.Process(sim.Time())
+		sim.Transmit(sim.Time())
+		// Check conditions before update
+		stop := !sim.CheckConditions()
+		if stop {
+			sim.SetStopped(true)
+		}
+		// Update after condition. If stop, will override logging setting
+		// and log last generation
+		sim.Update(sim.Time())
+		// Check time elapsed
+		if elapsed := time.Since(start).Nanoseconds(); elapsed > maxElapsed {
+			maxElapsed = elapsed
+		}
+		// Feedback that simulation is stopping
+		if stop {
+			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.Time())
+			break
+		}
+	}
+	fmt.Printf(" \t\texpected time: %fms per generation\n", float64(maxElapsed)/1e6)
+	for sim.Time() < sim.NumGenerations() {
+		sim.SetTime(sim.Time() + 1)
+		// Print only every ten steps is time is short
+		if maxElapsed < 0.02e9 {
+			if sim.Time()%100 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
+			}
+		} else if maxElapsed < 0.2e9 {
+			if sim.Time()%10 == 0 {
+				fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
+			}
+		} else {
+			fmt.Printf(" instance %04d\tgeneration %05d\n", i, sim.Time())
+		}
+		sim.Process(sim.Time())
+		sim.Transmit(sim.Time())
+		// Check conditions before update
+		stop := !sim.CheckConditions()
+		if stop {
+			sim.SetStopped(true)
+		}
+		// Update after condition. If stop, will override logging setting
+		// and log last generation
+		sim.Update(sim.Time())
+		// Feedback that simulation is stopping
+		if stop {
+			fmt.Printf(" [stop]       \tgeneration %05d\tstop condition triggered\n", sim.Time())
+			break
+		}
 	}
 	fmt.Println(strings.Repeat("-", 80))
 	sim.Finalize()
@@ -72,10 +112,10 @@ func (sim *SIRSimulation) Update(t int) {
 		// Simulation-level record of status and timer of particular host
 		timer := sim.HostTimer(hostID)
 		pack := StatusPackage{
-			instanceID: sim.instanceID,
+			instanceID: sim.InstanceID(),
 			genID:      t,
 			hostID:     hostID,
-			status:     sim.HostStatus(hostID), // current host status before checking
+			status:     sim.HostStatus(hostID), // invalid status
 		}
 		wg.Add(1)
 		go func(i, t int, host Host, timer int, pack StatusPackage, c chan<- StatusPackage, d chan<- GenotypeFreqPackage, wg *sync.WaitGroup) {
@@ -90,7 +130,9 @@ func (sim *SIRSimulation) Update(t int) {
 					newStatus := InfectedStatusCode
 					newDuration := host.GetIntrahostModel().StatusDuration(newStatus)
 					sim.SetHostStatus(host.ID(), newStatus)
-					sim.SetHostTimer(host.ID(), newDuration)
+					// Makes the duration poisson
+					sim.SetHostTimer(host.ID(), rv.Poisson(float64(newDuration)))
+					// sim.SetHostTimer(host.ID(), newDuration)
 					// Update status in pack and send
 					pack.status = newStatus
 				}
@@ -98,11 +140,12 @@ func (sim *SIRSimulation) Update(t int) {
 				if timer == 0 || host.PathogenPopSize() == 0 {
 					// Set new host status
 					newStatus := RemovedStatusCode
-					newDuration := -1 // Host is permanently removed from the population of infectables
+					newDuration := -1 // Host goes back to being susceptible
 					sim.SetHostStatus(host.ID(), newStatus)
 					sim.SetHostTimer(host.ID(), newDuration)
 					// Update status in pack and send
 					pack.status = newStatus
+					host.RemoveAllPathogens()
 				}
 			}
 			// Send pack after all changes
@@ -121,7 +164,7 @@ func (sim *SIRSimulation) Update(t int) {
 					freq:       freq,
 				}
 			}
-		}(sim.instanceID, t, host, timer, pack, c, d, &wg)
+		}(sim.InstanceID(), t, host, timer, pack, c, d, &wg)
 	}
 	go func() {
 		wg.Wait()
@@ -132,11 +175,21 @@ func (sim *SIRSimulation) Update(t int) {
 	var wg2 sync.WaitGroup
 	wg2.Add(2)
 	go func() {
-		sim.WriteStatus(c)
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.Stopped() {
+			sim.WriteStatus(c)
+		} else {
+			for range c {
+			}
+		}
 		wg2.Done()
 	}()
 	go func() {
-		sim.WriteGenotypeFreq(d)
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.Stopped() {
+			sim.WriteGenotypeFreq(d)
+		} else {
+			for range d {
+			}
+		}
 		wg2.Done()
 	}()
 	wg2.Wait()
@@ -155,11 +208,11 @@ func (sim *SIRSimulation) Process(t int) {
 		wg.Add(1)
 		switch sim.HostStatus(hostID) {
 		case SusceptibleStatusCode:
-			go sim.SusceptibleProcess(sim.instanceID, t, host, &wg)
+			go sim.SusceptibleProcess(sim.InstanceID(), t, host, &wg)
 		case InfectedStatusCode:
-			go sim.InfectedProcess(sim.instanceID, t, host, c, &wg)
+			go sim.InfectedProcess(sim.InstanceID(), t, host, c, &wg)
 		case RemovedStatusCode:
-			go sim.RemovedProcess(sim.instanceID, t, host, &wg)
+			go sim.RemovedProcess(sim.InstanceID(), t, host, &wg)
 		}
 		// Decrement host timer.
 		// If status depends on timer, then timer will go positive integer
