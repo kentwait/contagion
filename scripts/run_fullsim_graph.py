@@ -390,7 +390,7 @@ def generate_sequence_fasta_multihost(path, infected_hostlist=[], npathogens=500
             for _ in range(npathogens):
                 print(entry_format.format(i, SEQUENCE), file=f)
 
-def generate_fm(path, Ns, N=500, nsites=1):
+def generate_fm(path, Ns, N=500, nsites=1000):
     """Generates a multiplicative fitness matrix
 
     Parameters
@@ -418,7 +418,7 @@ def generate_fm(path, Ns, N=500, nsites=1):
         print(default_fm.format(logF), file=f)
         print(fm_format.format(0, logF), file=f)
         if nsites > 1:
-            print(fm_format.format(nsites, logF), file=f)
+            print(fm_format.format(nsites-1, logF), file=f)
 
 def generate_toml(path, pathogen_path, network_path, fm_path, csv_path, mu,
                   num_generations=10000, duration=10, transmission_prob=1.0, transmission_size=5, coinfection=False,
