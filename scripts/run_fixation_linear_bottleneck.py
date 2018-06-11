@@ -887,14 +887,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Check if basepath exists
+    basepath = os.path.abspath(os.path.join(args.data_path, args.base_relpath))
+    assert os.path.exists(basepath), "Data base path does not exist. Check data_path ({}) and base_relpath ({}) values".format(args.data_path, args.base_relpath)
+
     # Assert that inputs are present
     assert args.duration, 'No durations set'
     assert args.transmission_size, 'No transmission sizes set'
     assert args.Ns, 'No Ns values set'
-
-    # Check if basepath exists
-    basepath = os.path.abspath(os.path.join(args.data_path, args.base_relpath))
-    assert os.path.exists(basepath), "Data base path does not exist. Check data_path ({}) and base_relpath ({}) values".format(args.path, args.base_relpath)
 
     # Write sequences file
     pathogen_path = os.path.join(basepath, FASTA_FILENAME)
@@ -968,7 +968,10 @@ if __name__ == '__main__':
                         iters=args.instances,
                     )
                 )
-                summarize_fixations(summary_path, log_path, Ns, reversed_values=True if Ns < 0 else False)
+                if Ns != 0:
+                    summarize_fixations(summary_path, log_path, -Ns, reversed_values=True)
+                summarize_fixations(summary_path, log_path, Ns, reversed_values=False)
+       
 
                 # Archive folder
                 archive_path = os.path.join(

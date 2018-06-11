@@ -589,19 +589,18 @@ if __name__ == '__main__':
     parser.add_argument("--threads", help="number of threads to run Contagion", type=int, default=2)
     parser.add_argument("--overwrite", help="overwrites existing files", action='store_true')
     parser.add_argument("--reduce_output", help="Only summaries are shown", action='store_true')
-    
 
     args = parser.parse_args()
+
+    # Check if basepath exists
+    basepath = os.path.abspath(os.path.join(args.data_path, args.base_relpath))
+    assert os.path.exists(basepath), "Data base path does not exist. Check data_path ({}) and base_relpath ({}) values".format(args.data_path, args.base_relpath)
 
     # Assert that inputs are present
     assert args.network, 'No networks set (reg, gnp, pow)'
     assert args.duration, 'No durations set'
     assert args.transmission_size, 'No transmission sizes set'
-    assert args.Ns, 'No Ns values set'
-
-    # Check if basepath exists
-    basepath = os.path.abspath(os.path.join(args.data_path, args.base_relpath))
-    assert os.path.exists(basepath), "Data base path does not exist. Check data_path ({}) and base_relpath ({}) values".format(args.path, args.base_relpath)
+    assert args.Ns, 'No Ns values set'    
 
     # data/fixation_graph_bottleneck/graph
     for network in args.network:
@@ -741,12 +740,20 @@ if __name__ == '__main__':
                             Ns=Ns
                         )
                     )
+                    if Ns != 0:
+                        summarize_fixation_graph(
+                            summary_path, 
+                            log_path, 
+                            -Ns, 
+                            network, 
+                            reversed_values=True
+                        )
                     summarize_fixation_graph(
                         summary_path, 
                         log_path, 
                         Ns, 
                         network, 
-                        reversed_values=True if Ns < 0 else False
+                        reversed_values=False
                     )
 
                     # Archive folder
