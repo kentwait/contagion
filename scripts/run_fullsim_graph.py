@@ -675,6 +675,7 @@ if __name__ == '__main__':
                         transmission_prob=args.transmission_prob, 
                         transmission_size=args.transmission_size,
                         instances=1,
+                        coinfection=args.coinfection,
                     )
                     # Run simulation
                     if not args.reduce_output:
