@@ -561,6 +561,7 @@ if __name__ == '__main__':
     parser.add_argument("--threads", help="number of threads to run Contagion, default: 2", type=int, default=2)
     parser.add_argument("--overwrite", help="overwrites existing files", action='store_true')
     parser.add_argument("--reduce_output", help="Only summaries are shown", action='store_true')
+    parser.add_argument("--no_compression", help="Do not compress results", action='store_true')
 
     args = parser.parse_args()
 
@@ -737,17 +738,18 @@ if __name__ == '__main__':
                 pickle.dump(ns_df, open(df_pickle_path, 'wb'))
                 df_list = []
 
-                # Archive folder
-                archive_path = os.path.join(
-                    basepath, 
-                    ARCHIVE_FILENAME.format(
-                        network=network,
-                        mu=mu, 
-                        Ns=Ns,
+                if not args.no_compression:
+                    # Archive folder
+                    archive_path = os.path.join(
+                        basepath, 
+                        ARCHIVE_FILENAME.format(
+                            network=network,
+                            mu=mu, 
+                            Ns=Ns,
+                        )
                     )
-                )
-                proc.call(['tar', '-czf', archive_path, '-C', ns_path, '.'])
-                # Delete folder
-                proc.call(['rm', '-R', ns_path])
+                    proc.call(['tar', '-czf', archive_path, '-C', ns_path, '.'])
+                    # Delete folder
+                    proc.call(['rm', '-R', ns_path])
 
     print('Done.')
