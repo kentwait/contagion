@@ -62,8 +62,10 @@ func (sim *SISSimulation) Run(i int) {
 			break
 		}
 	}
-	fmt.Printf(" \t\texpected time: %fms per generation\n", float64(maxElapsed)/1e6)
-	for sim.Time() < sim.NumGenerations() {
+	if !sim.Stopped() {
+		fmt.Printf(" \t\texpected time: %fms per generation\n", float64(maxElapsed)/1e6)
+	}
+	for sim.Time() < sim.NumGenerations() && !sim.Stopped() {
 		sim.SetTime(sim.Time() + 1)
 		// Print only every ten steps is time is short
 		if maxElapsed < 0.02e9 {
