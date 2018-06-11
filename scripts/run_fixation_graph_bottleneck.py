@@ -405,14 +405,14 @@ def generate_fm(path, Ns, N=500, nsites=1):
             print(fm_format.format(nsites, logF), file=f)
 
 def generate_toml(path, pathogen_path, network_path, fm_path, csv_path,
-                  num_generations=10000, duration=10, transmission_prob=1.0, transmission_size=5,
+                  num_generations=10000, duration=10, transmission_prob=1.0, transmission_size=5, coinfection=False,
                   instances=1):
     template = """[simulation]
 num_generations = {num_generations}
 num_instances = {instances}
 host_popsize = 20
 epidemic_model = "sis"
-coinfection = false
+coinfection = {coinfection}
 pathogen_path = "{pathogen_path}"
 host_network_path = "{network_path}"
 num_sites = 1
@@ -474,6 +474,7 @@ position = 0
             duration=duration,
             transmission_prob=transmission_prob,
             transmission_size=transmission_size,
+            coinfection='true' if coinfection else 'false',
             instances=instances,
         ), file=f)
 
@@ -583,10 +584,12 @@ if __name__ == '__main__':
     parser.add_argument("--generations", help="number of realizations", type=int, default=10000)
     parser.add_argument("--npathogens", help="number of pathogens", type=int, default=500)
     parser.add_argument("--infected_nhosts", help="number of infected hosts in 20-host network", type=int, default=1)
-    parser.add_argument('--transmission_prob', help='transmission probability, default: 1.0', type=float, default=1.0)
+    parser.add_argument('--transmission_prob', help='transmission probability, default: 1.0', type=float, default=0.5)
+    parser.add_argument("--coinfection", help="Allows coinfection", action='store_true')
     parser.add_argument("--threads", help="number of threads to run Contagion", type=int, default=2)
     parser.add_argument("--overwrite", help="overwrites existing files", action='store_true')
     parser.add_argument("--reduce_output", help="Only summaries are shown", action='store_true')
+    
 
     args = parser.parse_args()
 
