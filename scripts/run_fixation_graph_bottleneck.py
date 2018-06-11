@@ -642,9 +642,8 @@ if __name__ == '__main__':
                         tsize=transmission_size,
                     )
                 )
-                if os.path.exists(tsize_path) and args.overwrite:
-                    proc.call(['rm', '-R', tsize_path])
-                os.makedirs(tsize_path)
+                if not os.path.exists(tsize_path):
+                    os.makedirs(tsize_path)
 
                 # data/fixation_graph_bottleneck/graph/graph_t005/graph_t005_m001/graph_t00d_m001_Ns+0
                 for Ns in args.Ns:
