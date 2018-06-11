@@ -5,6 +5,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/segmentio/ksuid"
 )
 
 // import "sync"
@@ -103,6 +105,101 @@ func (sim *EndTransSimulation) Run(i int) {
 	}
 	fmt.Println(strings.Repeat("-", 80))
 	sim.Finalize()
+}
+
+func (sim *EndTransSimulation) Update(t int) {
+	// Update status first
+	c := make(chan StatusPackage)
+	d := make(chan GenotypeFreqPackage)
+	var wg sync.WaitGroup
+	// Read all hosts and process hosts concurrently
+	// These succeeding steps connects the simulation's record of
+	// each host's status and timer with the host's internal state.
+	for hostID, host := range sim.HostMap() {
+		// Simulation-level record of status and timer of particular host
+		timer := sim.HostTimer(hostID)
+		pack := StatusPackage{
+			instanceID: sim.InstanceID(),
+			genID:      t,
+			hostID:     hostID,
+			status:     sim.HostStatus(hostID), // invalid status
+		}
+		wg.Add(1)
+		go func(i, t int, host Host, timer int, pack StatusPackage, c chan<- StatusPackage, d chan<- GenotypeFreqPackage, wg *sync.WaitGroup) {
+			defer wg.Done()
+			// Add cases depending on the compartmental model being used
+			// In this case, SI only uses susceptible and infected statuses
+			switch pack.status {
+			case SusceptibleStatusCode:
+				// Use timer or number of pathogens
+				if timer == 0 || host.PathogenPopSize() > 0 {
+					// Set new host status
+					newStatus := InfectedStatusCode
+					newDuration := host.GetIntrahostModel().StatusDuration(newStatus)
+					sim.SetHostStatus(host.ID(), newStatus)
+					// Makes the duration poisson
+					sim.SetHostTimer(host.ID(), newDuration)
+					// sim.SetHostTimer(host.ID(), newDuration)
+					// Update status in pack and send
+					pack.status = newStatus
+				}
+			case InfectedStatusCode:
+				if timer == 0 || host.PathogenPopSize() == 0 {
+					// Set new host status
+					newStatus := RemovedStatusCode
+					newDuration := -1 // Host goes back to being susceptible
+					sim.SetHostStatus(host.ID(), newStatus)
+					sim.SetHostTimer(host.ID(), newDuration)
+					// Update status in pack and send
+					pack.status = newStatus
+					host.RemoveAllPathogens()
+				}
+			}
+			// Send pack after all changes
+			c <- pack
+			// Record pathogen frequencies
+			counts := make(map[ksuid.KSUID]int)
+			for _, p := range host.Pathogens() {
+				counts[p.GenotypeUID()]++
+			}
+			for uid, freq := range counts {
+				d <- GenotypeFreqPackage{
+					instanceID: i,
+					genID:      t,
+					hostID:     host.ID(),
+					genotypeID: uid,
+					freq:       freq,
+				}
+			}
+		}(sim.InstanceID(), t, host, timer, pack, c, d, &wg)
+	}
+	go func() {
+		wg.Wait()
+		close(c)
+		close(d)
+	}()
+	// Write status  and genotype frequencies using DataLogger
+	var wg2 sync.WaitGroup
+	wg2.Add(2)
+	go func() {
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.Stopped() {
+			sim.WriteStatus(c)
+		} else {
+			for range c {
+			}
+		}
+		wg2.Done()
+	}()
+	go func() {
+		if sim.Time() == 0 || sim.Time()%sim.LogFrequency() == 0 || sim.Stopped() {
+			sim.WriteGenotypeFreq(d)
+		} else {
+			for range d {
+			}
+		}
+		wg2.Done()
+	}()
+	wg2.Wait()
 }
 
 // Transmit facilitates the sampling and migration process of pathogens
