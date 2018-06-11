@@ -28,8 +28,8 @@ NETWORK_FILENAME = 't{duration:0>2d}.list.fa'
 FM_FILENAME = 'Ns{Ns:+.0f}.fm.txt'
 TOML_FILENAME = 'config.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.toml'
 LOG_FILENAME = 'log.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.txt'
-SUMMARY_FILENAME = 'summary.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.txt'
-ARCHIVE_FILENAME = 'run.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.tar.gz'
+SUMMARY_FILENAME = 'summary.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.iters{iters}txt'
+ARCHIVE_FILENAME = 'run.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.iters{iters}.tar.gz'
 
 def generate_linear_network(path, hosts=2001):
     """Generates a linear network and writes to file.
@@ -811,36 +811,51 @@ def summarize_fixations(summary_path, log_path, Ns, reversed_values=False):
                 if match:
                     fixed_gens.append(int(match.group()))
                 fixed_flag = False
-
+    
     with open(summary_path, 'w') as f:
+        print('-'*80)
         if reversed_values:
             print(os.path.abspath(log_path))
             print('Ns:      {:+.0f}'.format(Ns))
             print('fixed:   {}\t{:.4f}'.format(lost, lost/float(iters)))
-            print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)))
+            if len(lost_gens) != 0:
+                print('mean tf: {:.4f} generations'.format(np.mean(lost_gens)))
+            else:
+                print('mean tf: None')
             print('lost:    {}\t{:.4f}'.format(fixed, fixed/float(iters)))
             print('trials:  {}'.format(iters))
 
             print(os.path.abspath(log_path), file=f)
             print('Ns:      {:+.0f}'.format(Ns), file=f)
             print('fixed:   {}\t{:.4f}'.format(lost, lost/float(iters)), file=f)
-            print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)), file=f)
+            if len(lost_gens) != 0:
+                print('mean tf: {:.4f} generations'.format(np.mean(lost_gens)), file=f)
+            else:
+                print('mean tf: None', file=f)
             print('lost:    {}\t{:.4f}'.format(fixed, fixed/float(iters)), file=f)
             print('trials:  {}'.format(iters), file=f)
         else:
             print(os.path.abspath(log_path))
             print('Ns:      {:+.0f}'.format(Ns))
             print('fixed:   {}\t{:.4f}'.format(fixed, fixed/float(iters)))
-            print('mean tf: {:.4f} generations'.format(np.mean(lost_gens)))
+            if len(fixed_gens) != 0:
+                print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)))
+            else:
+                print('mean tf: None', file=f)
             print('lost:    {}\t{:.4f}'.format(lost, lost/float(iters)))
             print('trials:  {}'.format(iters))
 
             print(os.path.abspath(log_path), file=f)
             print('Ns:      {:+.0f}'.format(Ns), file=f)
             print('fixed:   {}\t{:.4f}'.format(fixed, fixed/float(iters)), file=f)
-            print('mean tf: {:.4f} generations'.format(np.mean(lost_gens)), file=f)
+            if len(fixed_gens) != 0:
+                print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)), file=f)
+            else:
+                print('mean tf: None', file=f)
             print('lost:    {}\t{:.4f}'.format(lost, lost/float(iters)), file=f)
             print('trials:  {}'.format(iters), file=f)
+        print('-'*80)
+
 
 def run_contagion(toml_path, contagion_path=CONTAGION_PATH, threads=-1):
     cmd = [contagion_path, '-threads', str(threads), toml_path]
@@ -857,9 +872,9 @@ if __name__ == '__main__':
     parser.add_argument('data_path', help='path to directory where data will be saved', type=str, default=DEFAULT_PATH)
     parser.add_argument('--base_relpath', help='basepath of the data relative to the data path', type=str, 
                         default=DEFAULT_BASE_RELPATH)
-    parser.add_argument('--duration', nargs='+', help='duration of infection', type=int)
-    parser.add_argument('--transmission_size', nargs='+', help='transmission size', type=int)
-    parser.add_argument('--Ns', nargs='+', help='scaled selection coefficient Ns', type=float)
+    parser.add_argument('--duration', nargs='+', help='duration/s of infection', type=int)
+    parser.add_argument('--transmission_size', nargs='+', help='transmission size/s', type=int)
+    parser.add_argument('--Ns', nargs='+', help='scaled selection coefficient/s Ns', type=float)
     parser.add_argument("--p", help="initial frequency", type=float, default=0.5)
     parser.add_argument("--instances", help="number of realizations", type=int, default=1000)
     parser.add_argument("--generations", help="number of realizations", type=int, default=10000)
@@ -868,6 +883,7 @@ if __name__ == '__main__':
     parser.add_argument('--transmission_prob', help='transmission probability, default: 1.0', type=float, default=1.0)
     parser.add_argument("--threads", help="number of threads to run Contagion", type=int, default=2)
     parser.add_argument("--overwrite", help="overwrites existing files", action='store_true')
+    parser.add_argument("--reduce_output", help="Only summaries are shown", action='store_true')
 
     args = parser.parse_args()
 
@@ -887,9 +903,8 @@ if __name__ == '__main__':
     for duration in args.duration:
         # Create directory
         duration_path = os.path.join(basepath, DURATION_BASENAME.format(duration=duration))
-        if os.path.exists(duration_path) and args.overwrite:
-            proc.call(['rm', '-R', duration_path])
-        os.makedirs(duration_path)
+        if not os.path.exists(duration_path):
+            os.makedirs(duration_path)
 
         # Write network
         network_path = os.path.join(duration_path, NETWORK_FILENAME.format(duration=duration))
@@ -898,9 +913,8 @@ if __name__ == '__main__':
         for transmission_size in args.transmission_size:
             # Create directory
             tsize_path = os.path.join(duration_path, TSIZE_BASENAME.format(duration=duration, tsize=transmission_size))
-            if os.path.exists(tsize_path) and args.overwrite:
-                proc.call(['rm', '-R', tsize_path])
-            os.makedirs(tsize_path)
+            if not os.path.exists(tsize_path):
+                os.makedirs(tsize_path)
 
             for Ns in args.Ns:
                 # Create directory
@@ -925,7 +939,7 @@ if __name__ == '__main__':
                     pathogen_path, 
                     network_path, 
                     fm_path, 
-                    log_path,
+                    ns_path + '/',
                     num_generations=args.generations, 
                     duration=duration, 
                     transmission_prob=args.transmission_prob, 
@@ -934,20 +948,38 @@ if __name__ == '__main__':
                 )
 
                 # Run simulation
-                print('Duration:           {}'.format(duration))
-                print('Transmission size:  {}'.format(transmission_size))
-                print('Ns:                 {:+.0f}'.format(Ns))
+                if not args.reduce_output:
+                    print('Duration:           {}'.format(duration))
+                    print('Transmission size:  {}'.format(transmission_size))
+                    print('Ns:                 {:+.0f}'.format(Ns))
                 with open(log_path, 'w') as f:
                     for output in run_contagion(toml_path, threads=args.threads, contagion_path=CONTAGION_PATH):
-                        print(output.decode('utf-8'), end='')
+                        if not args.reduce_output:
+                            print(output.decode('utf-8'), end='')
                         print(output.decode('utf-8'), end='', file=f)
 
                 # Read log file and write summarary
-                summary_path = os.path.join(basepath, SUMMARY_FILENAME.format(duration=duration, tsize=transmission_size, Ns=Ns))
+                summary_path = os.path.join(
+                    basepath, 
+                    SUMMARY_FILENAME.format(
+                        duration=duration, 
+                        tsize=transmission_size, 
+                        Ns=Ns,
+                        iters=args.instances,
+                    )
+                )
                 summarize_fixations(summary_path, log_path, Ns, reversed_values=True if Ns < 0 else False)
 
                 # Archive folder
-                archive_path = os.path.join(basepath, ARCHIVE_FILENAME.format(duration=duration, tsize=transmission_size, Ns=Ns))
+                archive_path = os.path.join(
+                    basepath, 
+                    ARCHIVE_FILENAME.format(
+                        duration=duration, 
+                        tsize=transmission_size, 
+                        Ns=Ns,
+                        iters=args.instances,
+                    )
+                )
                 proc.call(['tar', '-czf', archive_path, '-C', ns_path, '.'])
                 # Delete folder
                 proc.call(['rm', '-R', ns_path])
