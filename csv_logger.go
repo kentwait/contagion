@@ -26,7 +26,7 @@ func NewCSVLogger(basepath string, i int) *CSVLogger {
 
 func (l *CSVLogger) SetBasePath(basepath string, i int) {
 	if info, err := os.Stat(basepath); err == nil && info.IsDir() {
-		basepath += fmt.Sprintf("log.%03d", i)
+		basepath += fmt.Sprintf("log")
 	}
 	l.genotypePath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "g")
 	l.genotypeNodePath = strings.TrimSuffix(basepath, ".") + fmt.Sprintf(".%03d.%s.csv", i, "n")
