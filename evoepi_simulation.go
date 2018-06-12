@@ -168,7 +168,7 @@ func (sim *evoEpiSimulation) InfectedProcess(i, t int, host Host, c chan<- Mutat
 	wg2.Add(2)
 	go func() {
 		for node := range mutatedC {
-			host.AddPathogen(node)
+			host.AddPathogens(node)
 		}
 		wg2.Done()
 	}()

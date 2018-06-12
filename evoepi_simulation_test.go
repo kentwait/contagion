@@ -27,7 +27,7 @@ func TestEvoEpiSimulation_Getters(t *testing.T) {
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	for _, n := range sim.tree.NodeMap() {
-		sim.hosts[0].AddPathogen(n)
+		sim.hosts[0].AddPathogens(n)
 	}
 	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[1].SetFitnessModel(sim.fitnessModels[0])
@@ -94,7 +94,7 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	var originalSequence string
 	for _, n := range sim.tree.NodeMap() {
-		sim.hosts[0].AddPathogen(n)
+		sim.hosts[0].AddPathogens(n)
 		originalSequence = n.StringSequence()
 	}
 	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
@@ -173,7 +173,7 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	var originalSequence string
 	for _, n := range sim.tree.NodeMap() {
-		sim.hosts[0].AddPathogen(n)
+		sim.hosts[0].AddPathogens(n)
 		originalSequence = n.StringSequence()
 		// fmt.Println(n.StringSequence())
 	}
@@ -270,7 +270,7 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	var originalSequence string
 	for _, n := range sim.tree.NodeMap() {
-		sim.hosts[0].AddPathogen(n)
+		sim.hosts[0].AddPathogens(n)
 		originalSequence = n.StringSequence()
 		// fmt.Println(n.StringSequence())
 	}

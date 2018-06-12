@@ -214,7 +214,7 @@ func (sim *ExchangeSimulation) Transmit(t int) {
 	// removePathogens := make(map[int][]int)
 	go func() {
 		for t := range c {
-			t.destination.AddPathogen(t.pathogen)
+			t.destination.AddPathogens(t.pathogen)
 			// removePathogens[t.source.ID()] = append(removePathogens[t.source.ID()], t.pathogenIndex)
 		}
 		wg2.Done()

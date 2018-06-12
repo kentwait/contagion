@@ -425,7 +425,7 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 		for _, s := range sequences {
 			// Seeded pathogens are all roots
 			genotype := sim.tree.NewNode(s, 0)
-			sim.hosts[id].AddPathogen(genotype)
+			sim.hosts[id].AddPathogens(genotype)
 		}
 	}
 	// Add config to simulation

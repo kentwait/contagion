@@ -31,7 +31,7 @@ func sampleInfectedHost(hostID, pathogens, sites int) Host {
 	host := EmptySequenceHost(hostID)
 	tree := sampleGenotypeTree(pathogens, sites)
 	for _, n := range tree.NodeMap() {
-		host.AddPathogen(n)
+		host.AddPathogens(n)
 	}
 	return host
 }
@@ -104,7 +104,7 @@ func sampleEvoEpiSimulation() *evoEpiSimulation {
 	sim.hosts[0].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[0].SetFitnessModel(sim.fitnessModels[0])
 	for _, n := range sim.tree.NodeMap() {
-		sim.hosts[0].AddPathogen(n)
+		sim.hosts[0].AddPathogens(n)
 	}
 	sim.hosts[1].SetIntrahostModel(sim.intrahostModels[0])
 	sim.hosts[1].SetFitnessModel(sim.fitnessModels[0])

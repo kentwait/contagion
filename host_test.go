@@ -66,7 +66,7 @@ func TestSequenceHost_Setters(t *testing.T) {
 	}
 
 	// Add pathogen
-	h.AddPathogen(h.Pathogen(0))
+	h.AddPathogens(h.Pathogen(0))
 	if h.PathogenPopSize() != numPathogens+1 {
 		t.Errorf(UnequalIntParameterError, "number of pathogens", numPathogens+1, h.PathogenPopSize())
 	}

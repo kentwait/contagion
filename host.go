@@ -23,9 +23,9 @@ type Host interface {
 	Pathogens() []GenotypeNode
 	// PathogenPopSize returns the number of pathogens inside the host.
 	PathogenPopSize() int
-	// AddPathogen appends a pathogen to the pathogen space of the host.
+	// AddPathogens appends a pathogen to the pathogen space of the host.
 	// Returns the new pathogen population size.
-	AddPathogen(p GenotypeNode) int
+	AddPathogens(p ...GenotypeNode) int
 	// RemovePathogens removes pathogens based on the list of positions given.
 	// Returns the number of pathogens remaining and any errors encountered.
 	RemovePathogens(ids ...int) (n int, err error)
@@ -98,8 +98,8 @@ func (h *sequenceHost) PathogenPopSize() int {
 	return len(h.pathogens)
 }
 
-func (h *sequenceHost) AddPathogen(p GenotypeNode) int {
-	h.pathogens = append(h.pathogens, p)
+func (h *sequenceHost) AddPathogens(p ...GenotypeNode) int {
+	h.pathogens = append(h.pathogens, p...)
 	return len(h.pathogens)
 }
 

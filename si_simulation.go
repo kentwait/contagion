@@ -323,7 +323,7 @@ func (sim *SISimulation) Transmit(t int) {
 	wg2.Add(2)
 	go func() {
 		for t := range c {
-			t.destination.AddPathogen(t.pathogen)
+			t.destination.AddPathogens(t.pathogen)
 		}
 		wg2.Done()
 	}()
