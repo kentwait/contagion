@@ -90,7 +90,7 @@ func (sim *singleHostSimulation) InfectedProcess(i, t int, host Host, c chan<- M
 		// get current and next pop size based on popsize function
 		currentPopSize := host.PathogenPopSize()
 		// TODO: Expose this in the interface
-		nextPopSize := host.(*sequenceHost).NextPathogenPopSize(currentPopSize)
+		nextPopSize := host.GetIntrahostModel().NextPathogenPopSize(currentPopSize)
 		// Execute
 		replicatedC = MultinomialReplication(pathogens, normedFitnesses, nextPopSize)
 	case "absolute":
