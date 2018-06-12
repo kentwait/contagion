@@ -3745,7 +3745,8 @@ def generate_fm(path, Ns, N=500, nsites=1):
             print(fm_format.format(nsites, logF), file=f)
 
 def generate_toml(path, pathogen_path, network_path, fm_path, csv_path,
-                  num_generations=10000, duration=10, transmission_prob=1.0, transmission_size=5, coinfection=False,
+                  num_generations=10000, duration=10, prob_duration=True,
+                  transmission_prob=1.0, transmission_size=5, coinfection=False,
                   instances=1):
     template = """[simulation]
 num_generations = {num_generations}
@@ -3778,6 +3779,7 @@ recombination_rate = 0.0
 replication_model = "constant"
 constant_pop_size = 500
 infected_duration = {duration}
+constant_duration = {prob_duration}
 
 [[fitness_model]]
 model_name = "multiplicative"
@@ -3812,6 +3814,7 @@ position = 0
             csv_path=csv_path,
             num_generations=num_generations,
             duration=duration,
+            prob_duration='false' if prob_duration else 'true',
             transmission_prob=transmission_prob,
             transmission_size=transmission_size,
             coinfection='true' if coinfection else 'false',
@@ -3929,6 +3932,7 @@ if __name__ == '__main__':
     parser.add_argument("--threads", help="number of threads to run Contagion", type=int, default=2)
     parser.add_argument("--overwrite", help="overwrites existing files", action='store_true')
     parser.add_argument("--reduce_output", help="Only summaries are shown", action='store_true')
+    parser.add_argument("--contant_duration", help="Do not sample from a Poisson distribution to get the duration", action='store_true')
 
     args = parser.parse_args()
 
@@ -4056,6 +4060,7 @@ if __name__ == '__main__':
                             transmission_size=transmission_size,
                             instances=1,
                             coinfection=args.coinfection,
+                            prob_duration=not args.constant_duration,
                         )
                         # Run simulation
                         if not args.reduce_output:
