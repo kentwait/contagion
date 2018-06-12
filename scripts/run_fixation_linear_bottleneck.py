@@ -71,12 +71,13 @@ def generate_single_site_fasta(path, npathogens=500, p=0.5):
 # Linear network configuration
 % 0:0 1:1"""
     entry_format = '>h:0\n{}'
+    sequences = np.random.binomial(1, p, npathogens)
+    while np.sum(sequences) != int(npathogens*p):
+        sequences = np.random.binomial(1, p, npathogens)
     with open(path, 'w') as f:
         print(header, file=f)
-        for _ in range(0, int(npathogens*p)):
-            print(entry_format.format(0), file=f)
-        for _ in range(int(npathogens*p), npathogens):
-            print(entry_format.format(1), file=f)
+        for s in sequences:
+            print(entry_format.format(s), file=f)
 
 def generate_fm(path, Ns, N=500, nsites=1):
     """Generates a multiplicative fitness matrix

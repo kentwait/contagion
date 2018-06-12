@@ -3701,12 +3701,11 @@ def generate_single_site_fasta_multihost(path, infected_hostlist=[], npathogens=
     with open(path, 'w') as f:
         print(header, file=f)
         for i in infected_hostlist:
-            for _ in range(0, int(npathogens*p)):
-                seq = 0
-                print(entry_format.format(host=i, seq=seq), file=f)
-            for _ in range(int(npathogens*p), npathogens):
-                seq = 1
-                print(entry_format.format(host=i, seq=seq), file=f)
+            sequences = np.random.binomial(1, p, npathogens)
+            while np.sum(sequences) != int(npathogens*p):
+                sequences = np.random.binomial(1, p, npathogens)
+            for s in sequences:
+                print(entry_format.format(host=i, seq=s), file=f)
 
 def generate_fm(path, Ns, N=500, nsites=1):
     """Generates a multiplicative fitness matrix
