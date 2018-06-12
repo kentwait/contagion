@@ -28,8 +28,8 @@ FASTA_FILENAME = 'pathogens.fa'
 NETWORK_FILENAME = 't{duration:0>2d}.list.txt'
 FM_FILENAME = 'Ns{Ns:+.0f}.fm.txt'
 TOML_FILENAME = 'config.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.toml'
-LOG_FILENAME = 'log.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.txt'
-SUMMARY_FILENAME = 'df.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.pickle'
+LOG_FILENAME = 'log.{network}.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.txt'
+SUMMARY_FILENAME = 'df.{network}.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.pickle'
 ARCHIVE_FILENAME = 'run.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.tar.gz'
 
 def generate_linear_network(path, hosts=2001):
@@ -867,7 +867,7 @@ def summarize_fixation_graph(summary_path, log_path, Ns, network, reversed_value
         if not fixed_gens:
             print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)))
         else:
-            print('mean tf: None', file=f)
+            print('mean tf: None')
         print('lost:    {}\t{:.4f}'.format(lost, lost/float(iters)))
         print('trials:  {}'.format(iters))
     print('\n')
@@ -950,7 +950,15 @@ if __name__ == '__main__':
 
                 # Write TOML config file inside ns_path
                 toml_path = os.path.join(ns_path, TOML_FILENAME.format(duration=duration, tsize=transmission_size, Ns=Ns))
-                log_path = os.path.join(ns_path, LOG_FILENAME.format(duration=duration, tsize=transmission_size, Ns=Ns))
+                log_path = os.path.join(
+                    ns_path, 
+                    LOG_FILENAME.format(
+                        duration=duration, 
+                        tsize=transmission_size, 
+                        Ns=Ns,
+                        network='linear',
+                    )
+                )
                 generate_toml(
                     toml_path, 
                     pathogen_path, 
@@ -982,6 +990,7 @@ if __name__ == '__main__':
                         duration=duration, 
                         tsize=transmission_size, 
                         Ns=Ns,
+                        network='linear',
                     )
                 )
                 if Ns != 0:

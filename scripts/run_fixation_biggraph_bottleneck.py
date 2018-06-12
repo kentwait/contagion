@@ -3956,7 +3956,7 @@ def summarize_fixation_graph(summary_path, log_path, Ns, network, reversed_value
         if not fixed_gens:
             print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)))
         else:
-            print('mean tf: None', file=f)
+            print('mean tf: None')
         print('lost:    {}\t{:.4f}'.format(lost, lost/float(iters)))
         print('trials:  {}'.format(iters))
     print('\n')
