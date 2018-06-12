@@ -25,17 +25,14 @@ func TransmitPathogens(i, t int, src, dst Host, count int, c chan<- Transmission
 	transmissionProb := src.GetTransmissionModel().TransmissionProb()
 	if rv.Binomial(1, transmissionProb) == 1.0 {
 		// If transmission occurs, randomly pick pathogens to transmit
-		ids := pickPathogens(count, numMigrants)
-		for _, id := range ids {
-			if p := src.Pathogen(id); p != nil {
-				c <- TransmissionEvent{dst, p}
-				d <- TransmissionPackage{
-					instanceID: i,
-					genID:      t,
-					fromHostID: src.ID(),
-					toHostID:   dst.ID(),
-					nodeID:     p.UID(),
-				}
+		for _, p := range src.PickPathogens(numMigrants) {
+			c <- TransmissionEvent{dst, p}
+			d <- TransmissionPackage{
+				instanceID: i,
+				genID:      t,
+				fromHostID: src.ID(),
+				toHostID:   dst.ID(),
+				nodeID:     p.UID(),
 			}
 		}
 	}
@@ -61,37 +58,31 @@ func ExchangePathogens(i, t int, h1, h2 Host, h1Count, h2Count int, c chan<- Exc
 	if rv.Binomial(1, transmissionProb) == 1.0 {
 		// If exchange occurs, randomly pick pathogens in the h1 and h2 hosts
 		// h1 -> h2
-		for _, id := range pickPathogens(h1Count, numMigrants) {
-			if p := h1.Pathogen(id); p != nil {
-				c <- ExchangeEvent{
-					source:        h1,
-					destination:   h2,
-					pathogenIndex: id,
-					pathogen:      p}
-				d <- TransmissionPackage{
-					instanceID: i,
-					genID:      t,
-					fromHostID: h1.ID(),
-					toHostID:   h2.ID(),
-					nodeID:     p.UID(),
-				}
+		for _, p := range h1.PickPathogens(numMigrants) {
+			c <- ExchangeEvent{
+				source:      h1,
+				destination: h2,
+				pathogen:    p}
+			d <- TransmissionPackage{
+				instanceID: i,
+				genID:      t,
+				fromHostID: h1.ID(),
+				toHostID:   h2.ID(),
+				nodeID:     p.UID(),
 			}
 		}
 		// h2 -> h1
-		for _, id := range pickPathogens(h2Count, numMigrants) {
-			if p := h2.Pathogen(id); p != nil {
-				c <- ExchangeEvent{
-					source:        h2,
-					destination:   h1,
-					pathogenIndex: id,
-					pathogen:      p}
-				d <- TransmissionPackage{
-					instanceID: i,
-					genID:      t,
-					fromHostID: h2.ID(),
-					toHostID:   h1.ID(),
-					nodeID:     p.UID(),
-				}
+		for _, p := range h2.PickPathogens(numMigrants) {
+			c <- ExchangeEvent{
+				source:      h2,
+				destination: h1,
+				pathogen:    p}
+			d <- TransmissionPackage{
+				instanceID: i,
+				genID:      t,
+				fromHostID: h2.ID(),
+				toHostID:   h1.ID(),
+				nodeID:     p.UID(),
 			}
 		}
 	}

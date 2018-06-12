@@ -2,7 +2,7 @@ package contagiongo
 
 import (
 	"fmt"
-	"sort"
+	"sync"
 )
 
 // Host encapsulates pathogens together and ties its evolution to a particular
@@ -14,10 +14,10 @@ type Host interface {
 	// simulation. Generally, the host type ID is used to identify hosts
 	// belonging to the same group that share the same properties.
 	TypeID() int
-	// Pathogen returns one pathogen from the current host based on
-	// its given position in the list of pathogens.
-	// Returns nil if no pathogen exists in the specified position.
-	Pathogen(i int) GenotypeNode
+	// PickPathogens returns a random list of pathogens from the
+	// current host.
+	// Returns nil if no pathogen exists.
+	PickPathogens(n int) []GenotypeNode
 	// Pathogens returns a list of all pathogens present in the host.
 	// This elements of the list are pointers to GenotypeNodes.
 	Pathogens() []GenotypeNode
@@ -26,9 +26,6 @@ type Host interface {
 	// AddPathogens appends a pathogen to the pathogen space of the host.
 	// Returns the new pathogen population size.
 	AddPathogens(p ...GenotypeNode) int
-	// RemovePathogens removes pathogens based on the list of positions given.
-	// Returns the number of pathogens remaining and any errors encountered.
-	RemovePathogens(ids ...int) (n int, err error)
 	// RemoveAllPathogens removes all the pathogens from the host.
 	// Internally, this removes all the pointers that refer to GenotypeNodes.
 	RemoveAllPathogens()
@@ -46,13 +43,15 @@ type Host interface {
 }
 
 type sequenceHost struct {
+	sync.RWMutex
 	IntrahostModel
 	FitnessModel
 	TransmissionModel
 
-	id        int
-	typeID    int
-	pathogens []GenotypeNode
+	id             int
+	typeID         int
+	pathogens      map[int]GenotypeNode
+	lastPathogenID int
 }
 
 // EmptySequenceHost creates a new host without an intrahost model and
@@ -64,7 +63,7 @@ func EmptySequenceHost(ids ...int) Host {
 	if len(ids) > 1 {
 		h.typeID = ids[1]
 	}
-	h.pathogens = []GenotypeNode{}
+	h.pathogens = make(map[int]GenotypeNode)
 	h.IntrahostModel = nil
 	h.FitnessModel = nil
 	return h
@@ -78,20 +77,31 @@ func (h *sequenceHost) TypeID() int {
 	return h.typeID
 }
 
-func (h *sequenceHost) Pathogen(i int) GenotypeNode {
-	if i >= len(h.pathogens) {
-		return nil
+func (h *sequenceHost) PickPathogens(n int) []GenotypeNode {
+	h.RLock()
+	defer h.RUnlock()
+	pathogens := make([]GenotypeNode, n)
+	i := 0
+	for _, node := range h.pathogens {
+		pathogens[i] = node
+		i++
+		if i >= 3 {
+			break
+		}
 	}
-	return h.pathogens[i]
+	return pathogens
 }
 
 func (h *sequenceHost) Pathogens() []GenotypeNode {
-	// pathogens := make([]GenotypeNode, len(h.pathogens))
-	// for i, p := range h.pathogens {
-	// 	pathogens[i] = p
-	// }
-	// return pathogens
-	return h.pathogens
+	h.RLock()
+	defer h.RUnlock()
+	pathogens := make([]GenotypeNode, len(h.pathogens))
+	i := 0
+	for _, p := range h.pathogens {
+		pathogens[i] = p
+		i++
+	}
+	return pathogens
 }
 
 func (h *sequenceHost) PathogenPopSize() int {
@@ -99,33 +109,22 @@ func (h *sequenceHost) PathogenPopSize() int {
 }
 
 func (h *sequenceHost) AddPathogens(p ...GenotypeNode) int {
-	h.pathogens = append(h.pathogens, p...)
+	h.Lock()
+	defer h.Unlock()
+	for _, node := range p {
+		h.lastPathogenID++
+		h.pathogens[h.lastPathogenID] = node
+	}
 	return len(h.pathogens)
 }
 
-func (h *sequenceHost) RemovePathogens(ids ...int) (n int, err error) {
-	sort.Ints(ids)
-	// Check if the largest ID is less than the number of pathogens
-	lastID := ids[len(ids)-1]
-	if len(ids) > 0 && lastID >= len(h.pathogens) {
-		return 0, fmt.Errorf("pathogen "+IntKeyNotFoundError, lastID)
-	}
-	for offset, i := range ids {
-		pos := i - offset
-		lastID := len(h.pathogens) - 1
-		// Remove hit from list
-		copy(h.pathogens[pos:], h.pathogens[pos+1:])
-		h.pathogens[lastID] = nil // or the zero value of T
-		h.pathogens = h.pathogens[:lastID]
-	}
-	return len(h.pathogens), nil
-}
-
 func (h *sequenceHost) RemoveAllPathogens() {
+	h.Lock()
+	defer h.Unlock()
 	for i := range h.pathogens {
 		h.pathogens[i] = nil
 	}
-	h.pathogens = h.pathogens[:0]
+	h.pathogens = make(map[int]GenotypeNode)
 }
 
 func (h *sequenceHost) SetIntrahostModel(model IntrahostModel) error {
