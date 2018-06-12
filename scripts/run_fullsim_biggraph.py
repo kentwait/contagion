@@ -3757,7 +3757,7 @@ def generate_fm(path, Ns, N=500, nsites=1000):
             print(fm_format.format(nsites-1, logF), file=f)
 
 def generate_toml(path, pathogen_path, network_path, fm_path, csv_path, mu,
-                  num_generations=10000, duration=10, transmission_prob=1.0, transmission_size=5, coinfection=False,
+                  num_generations=10000, duration=10, transmission_prob=1.0, transmission_size=5, coinfection=False, npathogens=500,
                   instances=1):
     template = """[simulation]
 num_generations = {num_generations}
@@ -3806,7 +3806,7 @@ transition_matrix = [
 ]
 recombination_rate = 0.0
 replication_model = "constant"
-constant_pop_size = 500
+constant_pop_size = {npathogens}
 infected_duration = {duration}
 
 [[fitness_model]]
@@ -3878,6 +3878,7 @@ transmission_size = {transmission_size:.1f}
             transmission_size=transmission_size,
             coinfection='true' if coinfection else 'false',
             instances=instances,
+            npathogens=npathogens,
         ), file=f)
 
 def pickle_csv(csv_path, df_path):
@@ -3962,7 +3963,6 @@ if __name__ == '__main__':
     # Assert that inputs are present
     assert args.network, 'No networks set (reg, gnp, pow)'
     assert args.duration, 'No durations set'
-    assert args.transmission_size, 'No transmission sizes set'
     assert args.Ns, 'No Ns values set'    
 
     # data/fixation_graph_fullsim/graph
@@ -4066,6 +4066,7 @@ if __name__ == '__main__':
                         transmission_size=args.transmission_size,
                         instances=1,
                         coinfection=args.coinfection,
+                        npathogens=args.npathogens,
                     )
                     # Run simulation
                     if not args.reduce_output:
