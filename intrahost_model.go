@@ -1,6 +1,10 @@
 package contagiongo
 
-import "math"
+import (
+	"math"
+
+	rv "github.com/kentwait/randomvariate"
+)
 
 // IntrahostModel is an interface for any type of intrahost model.
 type IntrahostModel interface {
@@ -42,6 +46,7 @@ type IntrahostModel interface {
 
 	// StatusDuration
 	StatusDuration(status int) int
+	ProbabilisticDuration() bool
 }
 
 // ConstantPopModel models a constant pathogen population size within the host.
@@ -123,10 +128,18 @@ func (params *recombinationParams) RecombinationRate() float64 {
 
 type durationParams struct {
 	statusDuration map[int]int
+	probDuration   bool
 }
 
 func (params *durationParams) StatusDuration(status int) int {
+	if params.probDuration {
+		return rv.Poisson(float64(params.statusDuration[status]))
+	}
 	return params.statusDuration[status]
+}
+
+func (params *durationParams) ProbabilisticDuration() bool {
+	return params.probDuration
 }
 
 type constantIntrahostPopModel struct {

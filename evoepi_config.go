@@ -613,13 +613,14 @@ type intrahostModelConfig struct {
 	// Aften calling the first process step, if the current duration is 0,
 	// it turns to -1 and will never triggers the update step.
 	// If running under the fitness mode, do not assign durations.
-	ExposedDuration    int `toml:"exposed_duration"`
-	InfectedDuration   int `toml:"infected_duration"`
-	InfectiveDuration  int `toml:"infective_duration"`
-	RemovedDuration    int `toml:"removed_duration"`
-	RecoveredDuration  int `toml:"recovered_duration"`
-	DeadDuration       int `toml:"dead_duration"`
-	VaccinatedDuration int `toml:"vaccinated_duration"`
+	ProbabilisticDuration bool `toml:"probabilistic_duration"`
+	ExposedDuration       int  `toml:"exposed_duration"`
+	InfectedDuration      int  `toml:"infected_duration"`
+	InfectiveDuration     int  `toml:"infective_duration"`
+	RemovedDuration       int  `toml:"removed_duration"`
+	RecoveredDuration     int  `toml:"recovered_duration"`
+	DeadDuration          int  `toml:"dead_duration"`
+	VaccinatedDuration    int  `toml:"vaccinated_duration"`
 
 	validated bool
 }
@@ -720,6 +721,7 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		model.statusDuration = statusDuration
+		model.probDuration = c.ProbabilisticDuration
 		return model, nil
 	case "bht":
 		model := new(BevertonHoltThresholdPopModel)
@@ -735,6 +737,7 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		model.statusDuration = statusDuration
+		model.probDuration = c.ProbabilisticDuration
 		return model, nil
 	case "fitness":
 		// fitness
@@ -750,6 +753,7 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		model.statusDuration = statusDuration
+		model.probDuration = false // ProbabilisticDuration does not matter because status is not time-dependent
 		return model, nil
 	}
 	return nil, fmt.Errorf(UnrecognizedKeywordError, c.ReplicationModel, "replication_model")
