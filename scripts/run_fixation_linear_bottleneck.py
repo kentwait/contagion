@@ -9,11 +9,12 @@
 # - duration of infection: 5, 10, 20, 40 generations
 # - transmission size: 1, 5, 50, 500 pathogens (constant) or 1, 1%, 10%, 100% bottleneck
 # - Ns at 0, 1, 2, 4, 10
-import numpy as np
-import argparse
 import os
-import subprocess as proc
 import re
+import argparse
+import subprocess as proc
+import numpy as np
+import pandas as pd
 
 DEFAULT_PATH = '/home/kent/data'
 DEFAULT_BASE_RELPATH = 'fixation_linear_bottleneck'
@@ -24,12 +25,12 @@ TSIZE_BASENAME = 't{duration:0>2d}_m{tsize:0>3d}'
 NS_BASENAME = 't{duration:0>2d}_m{tsize:0>3d}_Ns{Ns:+.0f}'
 
 FASTA_FILENAME = 'pathogens.fa'
-NETWORK_FILENAME = 't{duration:0>2d}.list.fa'
+NETWORK_FILENAME = 't{duration:0>2d}.list.txt'
 FM_FILENAME = 'Ns{Ns:+.0f}.fm.txt'
 TOML_FILENAME = 'config.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.toml'
 LOG_FILENAME = 'log.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.txt'
-SUMMARY_FILENAME = 'summary.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.iters{iters}txt'
-ARCHIVE_FILENAME = 'run.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.iters{iters}.tar.gz'
+SUMMARY_FILENAME = 'df.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.pickle'
+ARCHIVE_FILENAME = 'run.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.tar.gz'
 
 def generate_linear_network(path, hosts=2001):
     """Generates a linear network and writes to file.
@@ -779,16 +780,26 @@ position = 0
             instances=instances,
         ), file=f)
 
-def summarize_fixations(summary_path, log_path, Ns, reversed_values=False):
+def summarize_fixation_graph(summary_path, log_path, Ns, network=None, reversed_values=False):
+    # Log filename format
+    # log.{network}.t{duration:0>2d}.m{tsize:0>3d}.Ns{Ns:+.0f}.txt
     assert os.path.exists(log_path), 'Log file in log_path does not exist'
+
+    fname = os.path.basename(log_path)
+    _, network, duration, tsize, Ns, _ = fname.split('.')
+    duration = int(duration[1:])
+    tsize = int(tsize[1:])
+    Ns = int(Ns[2:])
 
     fixed = 0
     lost = 0
     iters = 0
     lost_flag = False
     fixed_flag = False
+    record_flag = False
     lost_gens = []
     fixed_gens = []
+    fixation_list = []
     with open(log_path, 'r') as f:
         for line in f.readlines():
             if 'allele lost' in line:
@@ -806,57 +817,52 @@ def summarize_fixations(summary_path, log_path, Ns, reversed_values=False):
                 match = re.search(r'\d+', line)
                 if match:
                     lost_gens.append(int(match.group()))
-                lost_flag = False
+                record_flag = True
             elif fixed_flag:
                 match = re.search(r'\d+', line)
                 if match:
                     fixed_gens.append(int(match.group()))
+                record_flag = True
+
+            if record_flag:
+                fixation_list.append({
+                    'Time to fixation': None if lost_flag else fixed_gens[-1],
+                    'Time to loss': None if fixed_flag else lost_gens[-1],
+                    'Ns': Ns,
+                    'Fixation probability': True if fixed_flag else False,
+                })
+                lost_flag = False
                 fixed_flag = False
+                record_flag = False
     
-    with open(summary_path, 'w') as f:
-        print('-'*80)
-        if reversed_values:
-            print(os.path.abspath(log_path))
-            print('Ns:      {:+.0f}'.format(Ns))
-            print('fixed:   {}\t{:.4f}'.format(lost, lost/float(iters)))
-            if len(lost_gens) != 0:
-                print('mean tf: {:.4f} generations'.format(np.mean(lost_gens)))
-            else:
-                print('mean tf: None')
-            print('lost:    {}\t{:.4f}'.format(fixed, fixed/float(iters)))
-            print('trials:  {}'.format(iters))
+    df = pd.DataFrame(fixation_list)
+    df.to_pickle(summary_path)
 
-            print(os.path.abspath(log_path), file=f)
-            print('Ns:      {:+.0f}'.format(Ns), file=f)
-            print('fixed:   {}\t{:.4f}'.format(lost, lost/float(iters)), file=f)
-            if len(lost_gens) != 0:
-                print('mean tf: {:.4f} generations'.format(np.mean(lost_gens)), file=f)
-            else:
-                print('mean tf: None', file=f)
-            print('lost:    {}\t{:.4f}'.format(fixed, fixed/float(iters)), file=f)
-            print('trials:  {}'.format(iters), file=f)
+    print('Summary')
+    print('-'*80)
+    if reversed_values:
+        print(os.path.abspath(log_path))
+        print('network: {}'.format(network))
+        print('Ns:      {:+.0f}'.format(Ns))
+        print('fixed:   {}\t{:.4f}'.format(lost, lost/float(iters)))
+        if not lost_gens:
+            print('mean tf: {:.4f} generations'.format(np.mean(lost_gens)))
         else:
-            print(os.path.abspath(log_path))
-            print('Ns:      {:+.0f}'.format(Ns))
-            print('fixed:   {}\t{:.4f}'.format(fixed, fixed/float(iters)))
-            if len(fixed_gens) != 0:
-                print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)))
-            else:
-                print('mean tf: None', file=f)
-            print('lost:    {}\t{:.4f}'.format(lost, lost/float(iters)))
-            print('trials:  {}'.format(iters))
-
-            print(os.path.abspath(log_path), file=f)
-            print('Ns:      {:+.0f}'.format(Ns), file=f)
-            print('fixed:   {}\t{:.4f}'.format(fixed, fixed/float(iters)), file=f)
-            if len(fixed_gens) != 0:
-                print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)), file=f)
-            else:
-                print('mean tf: None', file=f)
-            print('lost:    {}\t{:.4f}'.format(lost, lost/float(iters)), file=f)
-            print('trials:  {}'.format(iters), file=f)
-        print('-'*80)
-
+            print('mean tf: None')
+        print('lost:    {}\t{:.4f}'.format(fixed, fixed/float(iters)))
+        print('trials:  {}'.format(iters))
+    else:
+        print(os.path.abspath(log_path))
+        print('network: {}'.format(network))
+        print('Ns:      {:+.0f}'.format(Ns))
+        print('fixed:   {}\t{:.4f}'.format(fixed, fixed/float(iters)))
+        if not fixed_gens:
+            print('mean tf: {:.4f} generations'.format(np.mean(fixed_gens)))
+        else:
+            print('mean tf: None', file=f)
+        print('lost:    {}\t{:.4f}'.format(lost, lost/float(iters)))
+        print('trials:  {}'.format(iters))
+    print('\n')
 
 def run_contagion(toml_path, contagion_path=CONTAGION_PATH, threads=-1):
     cmd = [contagion_path, '-threads', str(threads), toml_path]
@@ -897,19 +903,11 @@ if __name__ == '__main__':
     assert args.transmission_size, 'No transmission sizes set'
     assert args.Ns, 'No Ns values set'
 
-    # Write sequences file
-    pathogen_path = os.path.join(basepath, FASTA_FILENAME)
-    generate_single_site_fasta(pathogen_path, npathogens=args.npathogens, p=args.p)
-
     for duration in args.duration:
         # Create directory
         duration_path = os.path.join(basepath, DURATION_BASENAME.format(duration=duration))
         if not os.path.exists(duration_path):
             os.makedirs(duration_path)
-
-        # Write network
-        network_path = os.path.join(duration_path, NETWORK_FILENAME.format(duration=duration))
-        generate_linear_network(network_path, hosts=args.nhosts)
 
         for transmission_size in args.transmission_size:
             # Create directory
@@ -931,6 +929,16 @@ if __name__ == '__main__':
                 # Write fitness matrix file inside ns_path
                 fm_path = os.path.join(ns_path, FM_FILENAME.format(Ns=Ns))
                 generate_fm(fm_path, Ns, N=500, nsites=1)
+
+                # Write sequences file
+                pathogen_path = os.path.join(ns_path, FASTA_FILENAME)
+                generate_single_site_fasta(pathogen_path, npathogens=args.npathogens, p=args.p)
+
+                # Write network
+                network_path = os.path.join(
+                    ns_path, 
+                    NETWORK_FILENAME.format(duration=duration))
+                generate_linear_network(network_path, hosts=args.nhosts)
 
                 # Write TOML config file inside ns_path
                 toml_path = os.path.join(ns_path, TOML_FILENAME.format(duration=duration, tsize=transmission_size, Ns=Ns))
@@ -966,13 +974,23 @@ if __name__ == '__main__':
                         duration=duration, 
                         tsize=transmission_size, 
                         Ns=Ns,
-                        iters=args.instances,
                     )
                 )
                 if Ns != 0:
-                    summarize_fixations(summary_path, log_path, -Ns, reversed_values=True)
-                summarize_fixations(summary_path, log_path, Ns, reversed_values=False)
-       
+                    summarize_fixation_graph(
+                        summary_path, 
+                        log_path, 
+                        -Ns,
+                        'linear',
+                        reversed_values=True
+                    )
+                summarize_fixation_graph(
+                    summary_path, 
+                    log_path, 
+                    Ns, 
+                    'linear',
+                    reversed_values=False
+                )
 
                 # Archive folder
                 archive_path = os.path.join(
@@ -981,7 +999,6 @@ if __name__ == '__main__':
                         duration=duration, 
                         tsize=transmission_size, 
                         Ns=Ns,
-                        iters=args.instances,
                     )
                 )
                 proc.call(['tar', '-czf', archive_path, '-C', ns_path, '.'])

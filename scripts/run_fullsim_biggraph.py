@@ -28,7 +28,7 @@ MU_BASENAME = '{network}_mu{mu:.9f}'
 NS_BASENAME = '{network}_mu{mu:.9f}_Ns{Ns:+.0f}'
 
 FASTA_FILENAME = 'pathogens.fa'
-NETWORK_FILENAME = '{network}.list.fa'
+NETWORK_FILENAME = '{network}.list.txt'
 FM_FILENAME = 'Ns{Ns:+.0f}.fm.txt'
 TOML_FILENAME = 'config.{network}.mu{mu:.9f}.Ns{Ns:+.0f}.toml'
 LOG_FILENAME = 'log.{network}.mu{mu:.9f}.Ns{Ns:+.0f}.txt'
@@ -3978,12 +3978,6 @@ if __name__ == '__main__':
         )
         if not os.path.exists(network_dirpath):
             os.makedirs(network_dirpath)
-        # Write network
-        network_path = os.path.join(
-            network_dirpath, 
-            NETWORK_FILENAME.format(network=network)
-        )
-        generate_graph(network_path, network)
 
         # data/fixation_graph_bottleneck/graph/graph_mu0.000100000
         for mu in args.mu:
@@ -4010,6 +4004,13 @@ if __name__ == '__main__':
                     proc.call(['rm', '-R', ns_path])
                 os.makedirs(ns_path)
 
+                # Write network
+                network_path = os.path.join(
+                    ns_path, 
+                    NETWORK_FILENAME.format(network=network)
+                )
+                generate_graph(network_path, network)
+                
                 # Write fitness matrix file inside ns_path
                 fm_path = os.path.join(ns_path, FM_FILENAME.format(Ns=Ns))
                 generate_fm(fm_path, Ns, N=500, nsites=1)
