@@ -78,6 +78,9 @@ func (h *sequenceHost) TypeID() int {
 }
 
 func (h *sequenceHost) PickPathogens(n int) []GenotypeNode {
+	if n < 1 {
+		return []GenotypeNode{}
+	}
 	h.RLock()
 	defer h.RUnlock()
 	pathogens := make([]GenotypeNode, n)
