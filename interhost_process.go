@@ -16,6 +16,9 @@ func TransmitPathogens(i, t int, src, dst Host, count int, c chan<- Transmission
 	defer wg.Done()
 	// Check if migration size if larger than the current population size
 	// If larger, make migrants equal to existing size
+	if count < 1 {
+		return
+	}
 	numMigrants := src.GetTransmissionModel().TransmissionSize()
 	if numMigrants > count {
 		numMigrants = count
