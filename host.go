@@ -85,7 +85,7 @@ func (h *sequenceHost) PickPathogens(n int) []GenotypeNode {
 	for _, node := range h.pathogens {
 		pathogens[i] = node
 		i++
-		if i >= 3 {
+		if i >= n {
 			break
 		}
 	}

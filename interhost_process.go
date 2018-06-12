@@ -26,13 +26,15 @@ func TransmitPathogens(i, t int, src, dst Host, count int, c chan<- Transmission
 	if rv.Binomial(1, transmissionProb) == 1.0 {
 		// If transmission occurs, randomly pick pathogens to transmit
 		for _, p := range src.PickPathogens(numMigrants) {
-			c <- TransmissionEvent{dst, p}
-			d <- TransmissionPackage{
-				instanceID: i,
-				genID:      t,
-				fromHostID: src.ID(),
-				toHostID:   dst.ID(),
-				nodeID:     p.UID(),
+			if p != nil {
+				c <- TransmissionEvent{dst, p}
+				d <- TransmissionPackage{
+					instanceID: i,
+					genID:      t,
+					fromHostID: src.ID(),
+					toHostID:   dst.ID(),
+					nodeID:     p.UID(),
+				}
 			}
 		}
 	}
@@ -59,30 +61,36 @@ func ExchangePathogens(i, t int, h1, h2 Host, h1Count, h2Count int, c chan<- Exc
 		// If exchange occurs, randomly pick pathogens in the h1 and h2 hosts
 		// h1 -> h2
 		for _, p := range h1.PickPathogens(numMigrants) {
-			c <- ExchangeEvent{
-				source:      h1,
-				destination: h2,
-				pathogen:    p}
-			d <- TransmissionPackage{
-				instanceID: i,
-				genID:      t,
-				fromHostID: h1.ID(),
-				toHostID:   h2.ID(),
-				nodeID:     p.UID(),
+			if p != nil {
+				c <- ExchangeEvent{
+					source:      h1,
+					destination: h2,
+					pathogen:    p,
+				}
+				d <- TransmissionPackage{
+					instanceID: i,
+					genID:      t,
+					fromHostID: h1.ID(),
+					toHostID:   h2.ID(),
+					nodeID:     p.UID(),
+				}
 			}
 		}
 		// h2 -> h1
 		for _, p := range h2.PickPathogens(numMigrants) {
-			c <- ExchangeEvent{
-				source:      h2,
-				destination: h1,
-				pathogen:    p}
-			d <- TransmissionPackage{
-				instanceID: i,
-				genID:      t,
-				fromHostID: h2.ID(),
-				toHostID:   h1.ID(),
-				nodeID:     p.UID(),
+			if p != nil {
+				c <- ExchangeEvent{
+					source:      h2,
+					destination: h1,
+					pathogen:    p,
+				}
+				d <- TransmissionPackage{
+					instanceID: i,
+					genID:      t,
+					fromHostID: h2.ID(),
+					toHostID:   h1.ID(),
+					nodeID:     p.UID(),
+				}
 			}
 		}
 	}
