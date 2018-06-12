@@ -622,8 +622,8 @@ type intrahostModelConfig struct {
 	RecoveredDuration  int `toml:"recovered_duration"`
 	DeadDuration       int `toml:"dead_duration"`
 	VaccinatedDuration int `toml:"vaccinated_duration"`
-	// If ConstantDuration is true, will not use rv.Poisson to pick the duration
-	ConstantDuration bool `toml:"constant_duration"`
+	// If ProbDuration is false, will not use rv.Poisson to pick the duration
+	ProbDuration bool `toml:"probabilistic_duration"`
 
 	validated bool
 }
@@ -724,7 +724,7 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		model.statusDuration = statusDuration
-		model.probDuration = !c.ConstantDuration
+		model.probDuration = c.ProbDuration
 		return model, nil
 	case "bht":
 		model := new(BevertonHoltThresholdPopModel)
@@ -740,7 +740,7 @@ func (c *intrahostModelConfig) CreateModel(id int) (IntrahostModel, error) {
 			copy(model.transitionMatrix[i], c.TransitionMatrix[i])
 		}
 		model.statusDuration = statusDuration
-		model.probDuration = !c.ConstantDuration
+		model.probDuration = c.ProbDuration
 		return model, nil
 	case "fitness":
 		// fitness

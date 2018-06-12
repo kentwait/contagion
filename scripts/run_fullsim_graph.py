@@ -455,7 +455,7 @@ recombination_rate = 0.0
 replication_model = "constant"
 constant_pop_size = {npathogens}
 infected_duration = {duration}
-constant_duration = {prob_duration}
+probabilistic_duration = {prob_duration}
 
 [[fitness_model]]
 model_name = "multiplicative"
@@ -486,7 +486,7 @@ transmission_size = {transmission_size:.1f}
             csv_path=csv_path,
             num_generations=num_generations,
             duration=duration,
-            prob_duration='false' if prob_duration else 'true',
+            prob_duration=prob_duration,
             transmission_prob=transmission_prob,
             transmission_size=transmission_size,
             coinfection='true' if coinfection else 'false',
@@ -566,7 +566,7 @@ if __name__ == '__main__':
     parser.add_argument("--overwrite", help="overwrites existing files", action='store_true')
     parser.add_argument("--reduce_output", help="Only summaries are shown", action='store_true')
     parser.add_argument("--no_compression", help="Do not compress results", action='store_true')
-    parser.add_argument("--contant_duration", help="Do not sample from a Poisson distribution to get the duration", action='store_true')
+    parser.add_argument("--probabilistic_duration", help="Actual duration is sampled from a Poisson distribution using this value as the mean", action='store_true')
 
     args = parser.parse_args()
 
@@ -681,7 +681,7 @@ if __name__ == '__main__':
                         instances=1,
                         coinfection=args.coinfection,
                         npathogens=args.npathogens,
-                        prob_duration=not args.constant_duration,
+                        prob_duration=args.probabilistic_duration,
                     )
                     # Run simulation
                     if not args.reduce_output:
