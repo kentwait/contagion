@@ -2,6 +2,7 @@ package contagiongo
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 )
 
@@ -421,11 +422,12 @@ func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
 		return nil, err
 	}
 	// Seed pathogens into host/s
-	for id, sequences := range hostPathogenMap {
-		for _, s := range sequences {
+	for i, sequences := range hostPathogenMap {
+		sequenceIDs := rand.Perm(len(sequences))
+		for _, j := range sequenceIDs {
 			// Seeded pathogens are all roots
-			genotype := sim.tree.NewNode(s, 0)
-			sim.hosts[id].AddPathogens(genotype)
+			genotype := sim.tree.NewNode(sequences[j], 0)
+			sim.hosts[i].AddPathogens(genotype)
 		}
 	}
 	// Add config to simulation
