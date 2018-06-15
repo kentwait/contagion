@@ -131,7 +131,6 @@ func (sim *SIRSimulation) Update(t int) {
 					newStatus := InfectedStatusCode
 					newDuration := host.GetIntrahostModel().StatusDuration(newStatus)
 					sim.SetHostStatus(host.ID(), newStatus)
-					// Makes the duration poisson
 					sim.SetHostTimer(host.ID(), newDuration)
 					// sim.SetHostTimer(host.ID(), newDuration)
 					// Update status in pack and send

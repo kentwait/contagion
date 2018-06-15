@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	rv "github.com/kentwait/randomvariate"
 	"github.com/segmentio/ksuid"
 )
 
@@ -132,8 +131,7 @@ func (sim *SISSimulation) Update(t int) {
 					newStatus := InfectedStatusCode
 					newDuration := host.GetIntrahostModel().StatusDuration(newStatus)
 					sim.SetHostStatus(host.ID(), newStatus)
-					// Makes the duration poisson
-					sim.SetHostTimer(host.ID(), rv.Poisson(float64(newDuration)))
+					sim.SetHostTimer(host.ID(), newDuration)
 					// sim.SetHostTimer(host.ID(), newDuration)
 					// Update status in pack and send
 					pack.status = newStatus
