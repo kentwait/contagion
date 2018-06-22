@@ -9887,6 +9887,7 @@ if __name__ == '__main__':
     parser.add_argument("--generations", help="number of realizations, default: 1000", type=int, default=1000)
     parser.add_argument("--npathogens", help="number of pathogens, default: 500", type=int, default=500)
     parser.add_argument("--infected_nhosts", help="number of infected hosts in 200-host network, default: 1", type=int, default=1)
+    parser.add_argument('--specific_infected_hosts', nargs='*', help='host IDs to sample from for infection. Must be greater than infected_nhosts', type=int)
     parser.add_argument('--transmission_prob', help='transmission probability, default: 0.5', type=float, default=0.5)
     parser.add_argument("--coinfection", help="Allows coinfection", action='store_true')
     parser.add_argument("--sample_from_generation", help="generation number to sample from, default: 1000", type=int, default=1000)
@@ -9981,7 +9982,13 @@ if __name__ == '__main__':
                     # Write sequences file
                     pathogen_path = os.path.join(instance_path, FASTA_FILENAME)
                     # Permute every instance
-                    infected_hostlist = np.random.permutation(HOST_COUNT)[:args.infected_nhosts]
+                    if args.specific_infected_hosts and len(args.specific_infected_hosts) >= args.infected_nhosts:
+                        pos = np.random.randint(
+                            len(args.specific_infected_hosts),
+                            size=args.infected_nhosts)
+                        infected_hostlist = np.array(args.specific_infected_hosts)[pos]
+                    else:
+                        infected_hostlist = np.random.permutation(HOST_COUNT)[:args.infected_nhosts]
                     generate_sequence_fasta_multihost(
                         pathogen_path, 
                         infected_hostlist=infected_hostlist,
