@@ -283,21 +283,21 @@ func (l *CSVLogger) WriteTransmission(c <-chan TransmissionPackage) {
 func NewFile(path string, b []byte) error {
 	// Create file
 	if exists, _ := Exists(path); exists {
-		return fmt.Errorf("%s already exists", path)
+		return fmt.Errorf(FileExistsError, path)
 	}
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf(FileOpenError, err)
 	}
 	defer f.Close()
 
 	_, err = f.Write(b)
 	if err != nil {
-		return err
+		return fmt.Errorf(FileWriteError, err)
 	}
 	err = f.Sync()
 	if err != nil {
-		return err
+		return fmt.Errorf(FileSyncError, err)
 	}
 	return nil
 }
@@ -308,17 +308,17 @@ func AppendToFile(path string, b []byte) error {
 	// Create file
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return err
+		return fmt.Errorf(FileOpenError, err)
 	}
 	defer f.Close()
 
 	_, err = f.Write(b)
 	if err != nil {
-		return err
+		return fmt.Errorf(FileWriteError, err)
 	}
 	err = f.Sync()
 	if err != nil {
-		return err
+		return fmt.Errorf(FileSyncError, err)
 	}
 	return nil
 }
@@ -381,7 +381,7 @@ func (l *SQLiteLogger) Init() error {
 		sqlStmt := fmt.Sprintf(_sqlStmt, fullTableName, cols, fullTableName)
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
-			return fmt.Errorf("%q: %s", err, sqlStmt)
+			return fmt.Errorf(SQLExecError, err, sqlStmt)
 		}
 		return nil
 	}
@@ -659,7 +659,7 @@ func OpenSQLiteDB(path, connectionString string) (*sql.DB, error) {
 	dsn := "file:%s%s"
 	db, err := sql.Open("sqlite3", fmt.Sprintf(dsn, path, connectionString))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf(SQLOpenError, err)
 	}
 	return db, nil
 }

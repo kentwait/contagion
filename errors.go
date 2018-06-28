@@ -53,7 +53,7 @@ const (
 	NotIdenticalPointerError = "memory address of %s (%p) and %s (%p) are not identical"
 )
 
-// The following are errors related to the adjacency matrix
+// Errors related to the adjacency matrix
 const (
 	// ConnectionExistsError indicates that a connection between
 	// the source host and the destination host exists and
@@ -65,6 +65,24 @@ const (
 	// SelfLoopError indicates that the start and end host are the
 	// same based on host ID, which results in a self-loop.
 	SelfLoopError = "connection stats and ends at the same host (%d)"
+)
+
+// Errors related to the data logger
+const (
+	// FileExistsError indicates that a file exists at the
+	// given path (string).
+	FileExistsError = "error creating new file: %s already exists"
+	FileOpenError   = "error opening file: %v"
+	FileWriteError  = "error writing to file: %v"
+	FileSyncError   = "error commiting contents of the file to disk: %v"
+	// SQLOpenError indicates that an error was encountered while
+	// open a database connection. Includes the error returned
+	// by sql.Open.
+	SQLOpenError = "error opening SQL connection: %v"
+	// SQLExecError indicates that an error was encountered while executing
+	// an SQL statement. Returns the error raised by the database
+	// connection and the SQL statement that produced the error.
+	SQLExecError = "error executing SQL statement: %v (SQL statement: %s)"
 )
 
 func checkKeyword(text, category string, keywords ...string) error {
