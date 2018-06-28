@@ -40,42 +40,69 @@ func NewSISimulation(config Config, logger DataLogger) (*SISimulation, error) {
 	return sim, nil
 }
 
+// SetInstanceID sets the instance ID of the current realized simulation.
 func (sim *SISimulation) SetInstanceID(i int) {
 	sim.instanceID = i
 }
 
+// InstanceID returns the ID of the current realized simulation.
 func (sim *SISimulation) InstanceID() int {
 	return sim.instanceID
 }
 
+// SetTime sets the current internal time of the simulation.
+// The simulation's internal time is based on the number of iterations
+// that has taken place. This is equivalent to the number of pathogen
+// generations.
 func (sim *SISimulation) SetTime(t int) {
 	sim.t = t
 }
 
+// Time returns the current internal time of the simulation.
+// The simulation's internal time should be the number of iterations
+// that has taken place. This is equivalent to the number of pathogen
+// generations.
 func (sim *SISimulation) Time() int {
 	return sim.t
 }
 
+// SetGenerations sets the total number of pathogen generations
+// the simulation will simulate. This is equivalent to the total
+// number of iterations of the simulation.
 func (sim *SISimulation) SetGenerations(n int) {
 	sim.numGenerations = n
 }
 
+// NumGenerations returns the total number of pathogen generations
+// the simulation will simulate. This is equivalent to the total
+// number of iterations of the simulation.
 func (sim *SISimulation) NumGenerations() int {
 	return sim.numGenerations
 }
 
+// LogTransmission returns true is transmission events
+// are saved to disk. If false, transmssion events occur but
+// are not recorded.
 func (sim *SISimulation) LogTransmission() bool {
 	return sim.logTransmission
 }
 
+// LogFrequency returns the interval in number of pathogen
+// generation between data recordings.
 func (sim *SISimulation) LogFrequency() int {
 	return sim.logFreq
 }
 
+// SetStopped sets the internal status of the current simulation.
+// If set to true, this indicates that the simulation has stopped.
+// If set to false, the current simulation has not yet stopped. By
+// default, the value of internal status is false.
 func (sim *SISimulation) SetStopped(b bool) {
 	sim.stopped = b
 }
 
+// Stopped returns true if the current simulation has stopped.
+// If it returns false, the current simulation has not yet stopped
 func (sim *SISimulation) Stopped() bool {
 	return sim.stopped
 }
