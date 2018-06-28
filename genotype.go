@@ -220,6 +220,7 @@ type genotypeNode struct {
 	Genotype
 	uid      ksuid.KSUID
 	subs     int
+	recombs  int
 	parents  []GenotypeNode
 	children []GenotypeNode
 }
@@ -297,6 +298,7 @@ type GenotypeTree interface {
 	// NewNode creates a new genotype node from a given sequence.
 	// Automatically adds sequence to the genotypeSet if it is not yet present.
 	NewNode(sequence []uint8, subs int, parents ...GenotypeNode) GenotypeNode
+	NewRecombinantNode(sequence []uint8, recombs int, parents ...GenotypeNode) GenotypeNode
 	// Nodes returns the map of genotype node ID found in the tree to its
 	// corresponding genotype.
 	NodeMap() map[ksuid.KSUID]GenotypeNode
@@ -329,6 +331,37 @@ func (t *genotypeTree) NewNode(sequence []uint8, subs int, parents ...GenotypeNo
 	n := new(genotypeNode)
 	n.uid = ksuid.New()
 	n.subs = subs
+	// Assign its parent
+	if len(parents) > 0 {
+		n.parents = make([]GenotypeNode, len(parents))
+		copy(n.parents, parents)
+	} else {
+		n.parents = []GenotypeNode{}
+	}
+	// Initialize children
+	n.children = []GenotypeNode{}
+	// Assign genotype
+	n.Genotype = genotype
+
+	// Add new sequence as child of its parent
+	for _, parent := range parents {
+		parent.AddChild(n)
+	}
+
+	// Add to tree map
+	t.Lock()
+	defer t.Unlock()
+	t.nodes[n.uid] = n
+	return n
+}
+
+func (t *genotypeTree) NewRecombinantNode(sequence []uint8, recombs int, parents ...GenotypeNode) GenotypeNode {
+	genotype := t.set.AddSequence(sequence)
+
+	// Create new node
+	n := new(genotypeNode)
+	n.uid = ksuid.New()
+	n.recombs = recombs
 	// Assign its parent
 	if len(parents) > 0 {
 		n.parents = make([]GenotypeNode, len(parents))
