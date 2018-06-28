@@ -21,10 +21,6 @@ const (
 	// an GraphPathogen cannot be asserted for an interface
 	GraphPathogenTypeAssertionError = "error asserting PathogenNode interface"
 
-	// ZeroItemsError is the message for errors where at least one item must be
-	// passed into the function.
-	ZeroItemsError = "one or more items are required"
-
 	InvalidFloatParameterError  = "invalid %s %f, %s"
 	InvalidIntParameterError    = "invalid %s %d, %s"
 	InvalidStringParameterError = "invalid %s %s, %s"
@@ -84,6 +80,29 @@ const (
 	// connection and the SQL statement that produced the error.
 	SQLExecError = "error executing SQL statement: %v (SQL statement: %s)"
 )
+
+// Errors related to the motif model
+
+// MotifExistsError indicates that a motif with the same
+// sequence and positions already exists in the model.
+func MotifExistsError(motifID string) error {
+	return fmt.Errorf("motif %s already exists", motifID)
+}
+
+// OverlappingMotifError indicates that a particular site
+// cannot be used again because it is already being considered
+// by another motif in the model.
+func OverlappingMotifError(pos int) error {
+	return fmt.Errorf("site %d is already considered by another motif", pos)
+}
+
+// General errors
+
+// ZeroItemsError indicates that the length of a list or set is
+// empty but at least one item is required.
+func ZeroItemsError() error {
+	return fmt.Errorf("one or more items are required")
+}
 
 func checkKeyword(text, category string, keywords ...string) error {
 	for _, kw := range keywords {

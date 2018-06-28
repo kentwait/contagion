@@ -2,9 +2,10 @@ package contagiongo
 
 import (
 	"bytes"
-	"fmt"
 	"strconv"
 	"sync"
+
+	"github.com/pkg/errors"
 )
 
 // FitnessModel represents a general method to determine the fitness value
@@ -76,7 +77,7 @@ func (fm *multiplicativeFM) ComputeFitness(chars ...uint8) (fitness float64, err
 	// Matrix values are in log
 	// Returns log fitness total
 	if len(chars) < 0 {
-		return 0, fmt.Errorf(ZeroItemsError)
+		return 0, errors.Wrap(ZeroItemsError(), "computing multiplicative fitness failed")
 	}
 	var logFitness float64
 	for i, v := range chars {
@@ -123,7 +124,7 @@ func (fm *additiveFM) ComputeFitness(chars ...uint8) (fitness float64, err error
 	// Matrix values are in decimal
 	// Returns decimal fitness total
 	if len(chars) < 0 {
-		return 0, fmt.Errorf(ZeroItemsError)
+		return 0, errors.Wrap(ZeroItemsError(), "computing additive fitness failed")
 	}
 	var decFitness float64
 	for i, v := range chars {
@@ -282,7 +283,7 @@ func (m *motifModel) AddMotif(sequence []uint8, pos []int, value float64) error 
 	for _, i := range pos {
 		if _, exists := m.positions[i]; exists {
 			m.RUnlock()
-			return fmt.Errorf("site %d is already considered by another motif")
+			return OverlappingMotifError(i)
 		}
 	}
 	m.RUnlock()
@@ -290,10 +291,11 @@ func (m *motifModel) AddMotif(sequence []uint8, pos []int, value float64) error 
 	m.Lock()
 	defer m.Unlock()
 	newMotif := newMotif(sequence, pos, value)
-	if _, exists := m.motifs[newMotif.MotifID()]; exists {
-		return fmt.Errorf("motif already exists")
+	newMotifID := newMotif.MotifID()
+	if _, exists := m.motifs[newMotifID]; exists {
+		return MotifExistsError(newMotifID)
 	}
-	m.motifs[newMotif.MotifID()] = newMotif
+	m.motifs[newMotifID] = newMotif
 	for _, i := range pos {
 		m.positions[i] = true
 	}
