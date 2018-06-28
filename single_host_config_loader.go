@@ -106,14 +106,14 @@ func (c *SingleHostConfig) NewSimulation() (Infection, error) {
 	// Create FitnessModel
 	switch c.FitnessModel {
 	case "multiplicative":
-		matrix, err := LoadFitnessMatrix(c.FitnessModelPath)
+		matrix, err := LoadFitnessMatrix(c.FitnessModelPath, "log")
 		if err != nil {
 			return nil, err
 		}
 		fm := NewMultiplicativeFM(0, "multiplicative", matrix)
 		sim.fitnessModel = fm
 	case "additive":
-		matrix, err := LoadFitnessMatrix(c.FitnessModelPath)
+		matrix, err := LoadFitnessMatrix(c.FitnessModelPath, "dec")
 		if err != nil {
 			return nil, err
 		}

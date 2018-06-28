@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -113,12 +114,13 @@ func LoadSequences(path string) (map[int][][]uint8, error) {
 
 // LoadFitnessMatrix parses and loads the fitness matrix encoded in the
 // text file at the given path.
-func LoadFitnessMatrix(path string) (map[int]map[uint8]float64, error) {
+func LoadFitnessMatrix(path string, valueType string) (map[int]map[uint8]float64, error) {
 	/*
 		Format:
 
 		# This is a comment
 		# Any line starting with a # is skipped
+		log
 		default->1.0, 1.0, 1.0 1.0
 		0: 1.0, 1.0, 1.0, 0.5
 		1: 1.0, 1.0, 1.0, 0.5
@@ -136,6 +138,9 @@ func LoadFitnessMatrix(path string) (map[int]map[uint8]float64, error) {
 	rePos := regexp.MustCompile(`^\d+`)
 	reValues := regexp.MustCompile(`-?\d*\.?\d+`)
 
+	// Assumes that the default input type is base 10
+	inputValueType := "dec" // or log
+
 	i := 1
 	fitnessMap := make(map[int][]float64)
 	var defaultValues []float64
@@ -149,6 +154,10 @@ func LoadFitnessMatrix(path string) (map[int]map[uint8]float64, error) {
 		if strings.HasPrefix(line, "#") {
 			// ignore comment lines
 			continue
+		} else if strings.HasPrefix(line, "dec") || strings.HasPrefix(line, "base10") {
+			inputValueType = "dec"
+		} else if strings.HasPrefix(line, "log") || strings.HasPrefix(line, "ln") {
+			inputValueType = "log"
 		} else if strings.HasPrefix(line, "default") {
 			// Load default values
 			// These values will be used if the site is not included in the
@@ -174,6 +183,17 @@ func LoadFitnessMatrix(path string) (map[int]map[uint8]float64, error) {
 			var values []float64
 			for _, vStr := range reValues.FindAllString(valuesStr, -1) {
 				v, _ := strconv.ParseFloat(vStr, 64)
+				// Convert values if there is a mismatch
+				switch {
+				case valueType == "log" && inputValueType == "base10":
+					fallthrough
+				case valueType == "log" && inputValueType == "dec":
+					v = math.Log(v)
+				case valueType == "base10" && inputValueType == "log":
+					fallthrough
+				case valueType == "dec" && inputValueType == "log":
+					v = math.Exp(v)
+				}
 				values = append(values, v)
 			}
 			if _, ok := fitnessMap[pos]; ok {

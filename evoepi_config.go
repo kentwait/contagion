@@ -804,14 +804,14 @@ func (c *fitnessModelConfig) CreateModel(id int) (FitnessModel, error) {
 	// Create FitnessModel
 	switch c.FitnessModel {
 	case "multiplicative":
-		matrix, err := LoadFitnessMatrix(c.FitnessModelPath)
+		matrix, err := LoadFitnessMatrix(c.FitnessModelPath, "log")
 		if err != nil {
 			return nil, err
 		}
 		fm := NewMultiplicativeFM(id, "multiplicative", matrix)
 		return fm, nil
 	case "additive":
-		matrix, err := LoadFitnessMatrix(c.FitnessModelPath)
+		matrix, err := LoadFitnessMatrix(c.FitnessModelPath, "dec")
 		if err != nil {
 			return nil, err
 		}
