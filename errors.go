@@ -53,6 +53,20 @@ const (
 	NotIdenticalPointerError = "memory address of %s (%p) and %s (%p) are not identical"
 )
 
+// The following are errors related to the adjacency matrix
+const (
+	// ConnectionExistsError indicates that a connection between
+	// the source host and the destination host exists and
+	// has the following value in float64.
+	ConnectionExistsError = "connection (%d,%d): %f already exists"
+	// ConnectionExistsError indicates that a connection between
+	// hosts a and b (int) does not exist.
+	ConnectionDoesNotExistError = "connection (%d,%d) does not exist"
+	// SelfLoopError indicates that the start and end host are the
+	// same based on host ID, which results in a self-loop.
+	SelfLoopError = "connection stats and ends at the same host (%d)"
+)
+
 func checkKeyword(text, category string, keywords ...string) error {
 	for _, kw := range keywords {
 		if strings.ToLower(text) == strings.ToLower(kw) {

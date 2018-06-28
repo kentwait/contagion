@@ -90,7 +90,7 @@ func (m adjacencyMatrix) AddConnection(a, b int) error {
 
 func (m adjacencyMatrix) AddWeightedConnection(a, b int, w float64) error {
 	if m.ConnectionExists(a, b) {
-		return fmt.Errorf("Connection (%d,%d): %f already exists", a, b, m[a][b])
+		return fmt.Errorf(ConnectionExistsError, a, b, m[a][b])
 	}
 	// Check if the inner map has been initialized.
 	// If not, initialize before assigning a value
@@ -103,7 +103,7 @@ func (m adjacencyMatrix) AddWeightedConnection(a, b int, w float64) error {
 
 func (m adjacencyMatrix) UpdateConnectionWeight(a, b int, w float64) error {
 	if !m.ConnectionExists(a, b) {
-		return fmt.Errorf("Connection (%d,%d) does not exist", a, b)
+		return fmt.Errorf(ConnectionDoesNotExistError, a, b)
 	}
 	m[a][b] = w
 	return nil
@@ -120,7 +120,7 @@ func (m adjacencyMatrix) UpsertConnectionWeight(a, b int, w float64) {
 
 func (m adjacencyMatrix) DeleteConnection(a, b int) error {
 	if !m.ConnectionExists(a, b) {
-		return fmt.Errorf("connection (%d,%d) does not exist", a, b)
+		return fmt.Errorf(ConnectionDoesNotExistError, a, b)
 	}
 	delete(m[a], b)
 	return nil
@@ -180,15 +180,15 @@ func (m adjacencyMatrix) AddBiConnection(a, b int) error {
 func (m adjacencyMatrix) AddWeightedBiConnection(a, b int, w float64) error {
 	// a-b must not create a self loop
 	if a == b {
-		return fmt.Errorf("start and end nodes are the same")
+		return fmt.Errorf(SelfLoopError, a)
 	}
 	// Both a-b and b-a connections must not exist
 	// If either forward or reverse orientation exists, returns an error
 	if abExists := m.ConnectionExists(a, b); abExists {
-		return fmt.Errorf("connection (%d,%d): %f already exists", a, b, m[a][b])
+		return fmt.Errorf(ConnectionExistsError, a, b, m[a][b])
 	}
 	if baExists := m.ConnectionExists(b, a); baExists {
-		return fmt.Errorf("connection (%d,%d): %f already exists", b, a, m[b][a])
+		return fmt.Errorf(ConnectionExistsError, b, a, m[b][a])
 	}
 	// Guaranteed that both a-b and b-a do not exist
 	m.AddWeightedConnection(a, b, w)
@@ -201,16 +201,16 @@ func (m adjacencyMatrix) AddWeightedBiConnection(a, b int, w float64) error {
 func (m adjacencyMatrix) UpdateBiConnectionWeight(a, b int, w float64) error {
 	// a-b must not create a self loop
 	if a == b {
-		return fmt.Errorf("start and end nodes are the same")
+		return fmt.Errorf(SelfLoopError, a)
 	}
 	// Both a-b and b-a connections must exist in order to update
 	// If either forward or reverse orientation does not exist,
 	// returns an error
 	if !m.ConnectionExists(a, b) {
-		return fmt.Errorf("Connection (%d,%d) does not exist", a, b)
+		return fmt.Errorf(ConnectionDoesNotExistError, a, b)
 	}
 	if !m.ConnectionExists(b, a) {
-		return fmt.Errorf("connection (%d,%d) does not exist", b, a)
+		return fmt.Errorf(ConnectionDoesNotExistError, b, a)
 	}
 	// Guaranteed that both a-b and b-a exist
 	m[a][b] = w
@@ -230,13 +230,13 @@ func (m adjacencyMatrix) UpsertBiConnectionWeight(a, b int, w float64) {
 func (m adjacencyMatrix) DeleteBiConnection(a, b int) error {
 	// a-b must not create a self loop
 	if a == b {
-		return fmt.Errorf("start and end nodes are the same")
+		return fmt.Errorf(SelfLoopError, a)
 	}
 	if !m.ConnectionExists(a, b) {
-		return fmt.Errorf("connection (%d,%d) does not exist", a, b)
+		return fmt.Errorf(ConnectionDoesNotExistError, a, b)
 	}
 	if !m.ConnectionExists(b, a) {
-		return fmt.Errorf("connection (%d,%d) does not exist", b, a)
+		return fmt.Errorf(ConnectionDoesNotExistError, b, a)
 	}
 	delete(m[a], b)
 	delete(m[b], a)
