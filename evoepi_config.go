@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // Config represents any top level TOML configuration
@@ -54,12 +56,11 @@ func (c *EvoEpiConfig) Validate() error {
 		switch strings.ToLower(c.SimParams.EpidemicModel) {
 		case "si":
 			if model.InfectedDuration != 0 && model.InfectedDuration < c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"infected_duration",
+				err := InfectedDurationTooShortError(
 					model.InfectedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			// Assign default value
 			if model.InfectedDuration == 0 {
@@ -67,29 +68,26 @@ func (c *EvoEpiConfig) Validate() error {
 			}
 		case "sis":
 			if model.InfectedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"infected_duration",
+				err := InfectedDurationTooLongError(
 					model.InfectedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 		case "sir":
 			if model.RemovedDuration != 0 && model.RemovedDuration < c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"removed_duration",
+				err := RemovedDurationTooShortError(
 					model.RemovedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.InfectedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"infected_duration",
+				err := InfectedDurationTooLongError(
 					model.InfectedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			// Assign default value
 			if model.RemovedDuration == 0 {
@@ -97,37 +95,33 @@ func (c *EvoEpiConfig) Validate() error {
 			}
 		case "sirs":
 			if model.InfectedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"infected_duration",
+				err := InfectedDurationTooLongError(
 					model.InfectedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.RemovedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"removed_duration",
+				err := RemovedDurationTooLongError(
 					model.RemovedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 		case "sei":
 			if model.InfectiveDuration != 0 && model.InfectiveDuration < c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"infective_duration",
+				err := InfectiveDurationTooShortError(
 					model.InfectiveDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.ExposedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"exposed_duration",
+				err := ExposedDurationTooLongError(
 					model.ExposedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			// Assign default value
 			if model.InfectiveDuration == 0 {
@@ -135,28 +129,25 @@ func (c *EvoEpiConfig) Validate() error {
 			}
 		case "seir":
 			if model.RemovedDuration != 0 && model.RemovedDuration < c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"removed_duration",
+				err := RemovedDurationTooShortError(
 					model.RemovedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.ExposedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"exposed_duration",
+				err := ExposedDurationTooLongError(
 					model.ExposedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.InfectiveDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"exposed_duration",
+				err := InfectiveDurationTooLongError(
 					model.InfectiveDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			// Assign default value
 			if model.RemovedDuration == 0 {
@@ -164,28 +155,25 @@ func (c *EvoEpiConfig) Validate() error {
 			}
 		case "seirs":
 			if model.ExposedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"exposed_duration",
+				err := ExposedDurationTooLongError(
 					model.ExposedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.InfectiveDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"exposed_duration",
+				err := InfectiveDurationTooLongError(
 					model.InfectiveDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.RemovedDuration > c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is greater than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"removed_duration",
+				err := RemovedDurationTooLongError(
 					model.RemovedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 		case "endtrans":
 			// Modified version of SI or SIR
@@ -194,19 +182,15 @@ func (c *EvoEpiConfig) Validate() error {
 
 			// infected duration must be set
 			if model.InfectedDuration < 1 {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than 1",
-					c.SimParams.EpidemicModel,
-					"infected_duration",
-					model.InfectedDuration,
-				)
+				err := fmt.Errorf("%s (%d) is less than 1", "infected_duration", model.InfectedDuration)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.RemovedDuration != 0 && model.RemovedDuration < c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"removed_duration",
+				err := RemovedDurationTooShortError(
 					model.RemovedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			// Assign default value
 			if model.RemovedDuration == 0 {
@@ -218,19 +202,15 @@ func (c *EvoEpiConfig) Validate() error {
 
 			// infected duration must be set
 			if model.InfectedDuration < 1 {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than 1",
-					c.SimParams.EpidemicModel,
-					"infected_duration",
-					model.InfectedDuration,
-				)
+				err := fmt.Errorf("%s (%d) is less than 1", "infected_duration", model.InfectedDuration)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			if model.RemovedDuration != 0 && model.RemovedDuration < c.SimParams.NumGenerations {
-				return fmt.Errorf("cannot create %s model if %s (%d) is less than the number of generations (%d)",
-					c.SimParams.EpidemicModel,
-					"removed_duration",
+				err := RemovedDurationTooShortError(
 					model.RemovedDuration,
 					c.SimParams.NumGenerations,
 				)
+				return errors.Wrapf(err, "cannot create %s model", c.SimParams.EpidemicModel)
 			}
 			// Assign default value
 			if model.RemovedDuration == 0 {
@@ -240,7 +220,8 @@ func (c *EvoEpiConfig) Validate() error {
 		//
 		for _, i := range model.HostIDs {
 			if _, exists := hostIDSet[i]; exists {
-				return fmt.Errorf("host id "+IntKeyExists, i)
+				err := IntKeyExists(i)
+				return errors.Wrap(err, "host ID exists")
 			}
 			hostIDSet[i] = true
 		}
@@ -248,7 +229,7 @@ func (c *EvoEpiConfig) Validate() error {
 	// Check if all hosts have been assigned a model
 	for i := 0; i < c.SimParams.HostPopSize; i++ {
 		if !hostIDSet[i] {
-			return fmt.Errorf("host %d was not assigned a intrahost model", i)
+			return errors.Wrapf(EmptyModelError(), "host %d was not assigned a intrahost model", i)
 		}
 	}
 
@@ -262,7 +243,8 @@ func (c *EvoEpiConfig) Validate() error {
 		}
 		for _, i := range model.HostIDs {
 			if _, exists := hostIDSet[i]; exists {
-				return fmt.Errorf("host id "+IntKeyExists, i)
+				err := IntKeyExists(i)
+				return errors.Wrap(err, "host ID exists")
 			}
 			hostIDSet[i] = true
 		}
@@ -277,7 +259,8 @@ func (c *EvoEpiConfig) Validate() error {
 		}
 		for _, i := range model.HostIDs {
 			if _, exists := hostIDSet[i]; exists {
-				return fmt.Errorf("host id "+IntKeyExists, i)
+				err := IntKeyExists(i)
+				return errors.Wrap(err, "host ID exists")
 			}
 			hostIDSet[i] = true
 		}
@@ -306,7 +289,7 @@ func (c *EvoEpiConfig) Validate() error {
 				}
 			}
 			if !exists {
-				return fmt.Errorf("%s is not in the list of expected characters %v", cond.Sequence, c.SimParams.ExpectedChars)
+				return InvalidStateCharError(cond.Sequence, 0)
 			}
 		} else if cond.Condition == "genotype_loss" {
 			// Check if all characters in the sequence are expecter characters
@@ -316,10 +299,11 @@ func (c *EvoEpiConfig) Validate() error {
 				for _, expChar := range c.SimParams.ExpectedChars {
 					if strings.ToLower(seqChar) == strings.ToLower(expChar) {
 						match = true
+						break
 					}
 				}
 				if !match {
-					return fmt.Errorf("%s in %d is not in the list of expected characters", seqChar, i)
+					return InvalidStateCharError(seqChar, i)
 				}
 			}
 		}
@@ -328,7 +312,7 @@ func (c *EvoEpiConfig) Validate() error {
 	// Check if all hosts have been assigned a model
 	for i := 0; i < c.SimParams.HostPopSize; i++ {
 		if !hostIDSet[i] {
-			return fmt.Errorf("host %d was not assigned a fitness model", i)
+			return errors.Wrapf(EmptyModelError(), "host %d was not assigned a fitness model", i)
 		}
 	}
 	// TODO: Validate files
@@ -535,19 +519,19 @@ func (c *epidemicSimConfig) Validate() error {
 	// Check PathogenSequencePath
 	exists, err := Exists(c.PathogenSequencePath)
 	if err != nil {
-		return fmt.Errorf("error checking if file in %s exists: %s", c.PathogenSequencePath, err)
+		return FileExistsCheckError(err, c.PathogenSequencePath)
 	}
 	if !exists {
-		return fmt.Errorf("file in %s does not exist", c.PathogenSequencePath)
+		return FileDoesNotExistError(c.PathogenSequencePath)
 	}
 
 	// Check HostNetworkPath
 	exists, err = Exists(c.HostNetworkPath)
 	if err != nil {
-		return fmt.Errorf("error checking if file in %s exists: %s", c.HostNetworkPath, err)
+		return FileExistsCheckError(err, c.HostNetworkPath)
 	}
 	if !exists {
-		return fmt.Errorf("file in %s does not exist", c.HostNetworkPath)
+		return FileDoesNotExistError(c.HostNetworkPath)
 	}
 
 	// Check parameter values

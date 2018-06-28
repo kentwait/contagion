@@ -8,12 +8,6 @@ import (
 )
 
 const (
-	// IntKeyNotFoundError is the message for "Integer key not found" errors
-	IntKeyNotFoundError = "key %d not found"
-
-	// IntKeyExists is the message printed when a given key already exists
-	IntKeyExists = "key %d already exists"
-
 	// GraphPathogenTypeAssertionError is the message printed when
 	// an GraphPathogen cannot be asserted for an interface
 	GraphPathogenTypeAssertionError = "error asserting PathogenNode interface"
@@ -45,6 +39,68 @@ const (
 	NotIdenticalPointerError = "memory address of %s (%p) and %s (%p) are not identical"
 )
 
+// Errors related to creating a simulation from the configuration file
+
+// DurationTooShortError indicates that the duration of a particular interval
+// is shorter than expected.
+func DurationTooShortError(interval string, intervalDuration int, condition string, conditionValue int) error {
+	return fmt.Errorf("%s (%d) is less than the %s (%d)", interval, intervalDuration, condition, conditionValue)
+}
+
+// ExposedDurationTooShortError indicates that the duration in the
+// exposed state is too short.
+func ExposedDurationTooShortError(intervalDuration int, conditionValue int) error {
+	return DurationTooShortError("exposed_duration", intervalDuration, "number of generations", conditionValue)
+}
+
+// InfectedDurationTooShortError indicates that the duration in the
+// infected state is too short.
+func InfectedDurationTooShortError(intervalDuration int, conditionValue int) error {
+	return DurationTooShortError("infected_duration", intervalDuration, "number of generations", conditionValue)
+}
+
+// InfectiveDurationTooShortError indicates that the duration in the
+// infective state is too short.
+func InfectiveDurationTooShortError(intervalDuration int, conditionValue int) error {
+	return DurationTooShortError("infective_duration", intervalDuration, "number of generations", conditionValue)
+}
+
+// RemovedDurationTooShortError indicates that the duration in the
+// removed state is too short.
+func RemovedDurationTooShortError(intervalDuration int, conditionValue int) error {
+	return DurationTooShortError("removed_duration", intervalDuration, "number of generations", conditionValue)
+}
+
+// DurationTooLongError indicates that the duration of a particular interval
+// is longer than expected.
+func DurationTooLongError(interval string, intervalDuration int, condition string, conditionValue int) error {
+	return fmt.Errorf("%s (%d) is less than the %s (%d)", interval, intervalDuration, condition, conditionValue)
+}
+
+// ExposedDurationTooLongError indicates that the duration in the exposed
+// state is too long.
+func ExposedDurationTooLongError(intervalDuration int, conditionValue int) error {
+	return DurationTooLongError("exposed_duration", intervalDuration, "number of generations", conditionValue)
+}
+
+// InfectedDurationTooLongError indicates that the duration in the
+// infected state is too long.
+func InfectedDurationTooLongError(intervalDuration int, conditionValue int) error {
+	return DurationTooLongError("infected_duration", intervalDuration, "number of generations", conditionValue)
+}
+
+// InfectiveDurationTooLongError indicates that the duration in the
+// infective state is too long.
+func InfectiveDurationTooLongError(intervalDuration int, conditionValue int) error {
+	return DurationTooLongError("infective_duration", intervalDuration, "number of generations", conditionValue)
+}
+
+// RemovedDurationTooLongError indicates that the duration in the removed
+// state is too long.
+func RemovedDurationTooLongError(intervalDuration int, conditionValue int) error {
+	return DurationTooLongError("removed_duration", intervalDuration, "number of generations", conditionValue)
+}
+
 // Errors related to model assignment
 
 // ModelExistsError indicates that an existing model already exists
@@ -74,9 +130,17 @@ func SetTransmissionModelExistsError(modelName string, modelID int) error {
 	return errors.Wrap(err, "setting transmission model failed")
 }
 
-// func EmptyModelError() error {
-// 	return fmt.Errorf("model %s (%d) already exists", modelName, modelID)
-// }  = "model does not exist"
+// EmptyModelError indicates that a model should exist but instead
+// is nil.
+func EmptyModelError() error {
+	return fmt.Errorf("model does not exist")
+}
+
+// InvalidStateCharError indicates that a character encountered is
+// not in the set of expected characters.
+func InvalidStateCharError(char string, pos int) error {
+	return fmt.Errorf("char %s at position %d is not in the set of expected characters")
+}
 
 // Errors related to reading and parsing files
 
@@ -135,6 +199,19 @@ func SelfLoopError(hostID int) error {
 // FileExistsError indicates that a file exists at the given path.
 func FileExistsError(path string) error {
 	return fmt.Errorf("%s already exists", path)
+}
+
+// FileExistsCheckError indicates an error was encountered while
+// checking if the files exists. This is not the same with an error
+// because a file exists.
+func FileExistsCheckError(err error, path string) error {
+	return errors.Wrapf(err, "check to see if file exists at %s failed", path)
+}
+
+// FileDoesNotExistError indicates that a file does not exist
+// at the given path when it is expected to.
+func FileDoesNotExistError(path string) error {
+	return fmt.Errorf("%s does not exist", path)
 }
 
 // FileOpenError indicates that an error was encountered while
@@ -218,4 +295,14 @@ func checkKeyword(text, category string, keywords ...string) error {
 		}
 	}
 	return fmt.Errorf(UnrecognizedKeywordError, text, category)
+}
+
+// IntKeyExists indicates that the given integer key already exists.
+func IntKeyExists(key int) error {
+	return fmt.Errorf("key %d already exists", key)
+}
+
+// IntKeyNotFoundError indicates that the given integer key does not exist.
+func IntKeyNotFoundError(key int) error {
+	return fmt.Errorf("key %d not found", key)
 }
