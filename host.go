@@ -28,19 +28,29 @@ type Host interface {
 	// RemoveAllPathogens removes all the pathogens from the host.
 	// Internally, this removes all the pointers that refer to GenotypeNodes.
 	RemoveAllPathogens()
-	// SetModel associates the current host to a given intrahost model.
+	// SetIntrahostModel associates the current host to a given intrahost model.
 	// The intrahost model governs intrahost processes by specifying the
 	// mutation, replication, recombination, and infection modes and parameters
 	// to be used.
 	SetIntrahostModel(intrahostModel IntrahostModel) error
+	// SetFitnessModel associates the current host to a given fitness model.
 	SetFitnessModel(fitnessModel FitnessModel) error
+	// SetTransmissionModel associates the current host to a given
+	// transmission model. This model sets the transmission probability
+	// (if not set in the adjacency matrix) and the transmission size.
 	SetTransmissionModel(transmissionModel TransmissionModel) error
-
+	// GetIntrahostModel retrieves the associated intrahost model
+	// for the current host.
 	GetIntrahostModel() IntrahostModel
+	// GetFitnessModel retrieves the associated fitness model
+	// for the current host.
 	GetFitnessModel() FitnessModel
+	// GetTransmissionModel retrieves the associated transmission model
+	// for the current host.
 	GetTransmissionModel() TransmissionModel
 }
 
+// sequenceHost is a type of host that represents pathogens as GenotypeNodes
 type sequenceHost struct {
 	sync.RWMutex
 	IntrahostModel
@@ -156,9 +166,11 @@ func (h *sequenceHost) SetTransmissionModel(model TransmissionModel) error {
 func (h *sequenceHost) GetIntrahostModel() IntrahostModel {
 	return h.IntrahostModel
 }
+
 func (h *sequenceHost) GetFitnessModel() FitnessModel {
 	return h.FitnessModel
 }
+
 func (h *sequenceHost) GetTransmissionModel() TransmissionModel {
 	return h.TransmissionModel
 }
