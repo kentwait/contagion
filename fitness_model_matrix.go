@@ -110,6 +110,9 @@ func (fm *additiveFM) ComputeFitness(chars ...uint8) (fitness float64, err error
 	for i, v := range chars {
 		decFitness += fm.matrix[i][uint8(v)]
 	}
+	if decFitness < 0 {
+		decFitness = 0.0
+	}
 	return decFitness, nil
 }
 
