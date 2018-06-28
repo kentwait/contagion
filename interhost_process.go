@@ -8,6 +8,22 @@ import (
 	rv "github.com/kentwait/randomvariate"
 )
 
+// TransmissionEvent is a struct for sending and receiving
+// transmission event information.
+type TransmissionEvent struct {
+	destination Host
+	pathogen    GenotypeNode
+}
+
+// ExchangeEvent is a struct for sending and receiving
+// exchange event information.
+type ExchangeEvent struct {
+	source      Host
+	destination Host
+	// pathogenIndex int
+	pathogen GenotypeNode
+}
+
 // TransmitPathogens transmits the pathogen to its neighboring host/s.
 // If transmission occurs, sends transmitted node over the channel to
 // be added to the recepient. Also sends node information in order to
