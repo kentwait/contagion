@@ -82,14 +82,14 @@ func sampleGenotypeTree(roots, sites int) GenotypeTree {
 	return tree
 }
 
-func sampleEvoEpiSimulation() *evoEpiSimulation {
+func sampleSequenceNodeEpidemic() *SequenceNodeEpidemic {
 	sites := 100
 	mu := 0.01
 	constPopSize := 1000
 	initPopSize := 1
 	multiplicative := true
 
-	sim := new(evoEpiSimulation)
+	sim := new(SequenceNodeEpidemic)
 	sim.tree = sampleGenotypeTree(initPopSize, sites)
 	sim.intrahostModels = map[int]IntrahostModel{
 		0: sampleIntrahostModel(mu, constPopSize),

@@ -5,14 +5,14 @@ import (
 	"testing"
 )
 
-func TestEvoEpiSimulation_Getters(t *testing.T) {
+func TestSequenceNodeEpidemic_Getters(t *testing.T) {
 	sites := 100
 	mu := 10e-5
 	constPopSize := 1000
 	initPopSize := 1
 	multiplicative := true
 
-	sim := new(evoEpiSimulation)
+	sim := new(SequenceNodeEpidemic)
 	sim.tree = sampleGenotypeTree(initPopSize, sites)
 	sim.intrahostModels = map[int]IntrahostModel{
 		0: sampleIntrahostModel(mu, constPopSize),
@@ -70,14 +70,14 @@ func TestEvoEpiSimulation_Getters(t *testing.T) {
 	}
 }
 
-func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
+func TestSequenceNodeEpidemic_SusceptibleProcess(t *testing.T) {
 	sites := 100
 	mu := 0.5
 	constPopSize := 100
 	initPopSize := 10
 	multiplicative := true
 
-	sim := new(evoEpiSimulation)
+	sim := new(SequenceNodeEpidemic)
 	// Creates a tree with n roots of all identical sequences (same genotype)
 	sim.tree = sampleGenotypeTree(initPopSize, sites)
 	sim.intrahostModels = map[int]IntrahostModel{
@@ -149,14 +149,14 @@ func TestEvoEpiSimulation_SusceptibleProcess(t *testing.T) {
 	}
 }
 
-func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
+func TestSequenceNodeEpidemic_InfectedProcess_Relative(t *testing.T) {
 	sites := 100
 	mu := 0.1
 	constPopSize := 100
 	initPopSize := 10
 	multiplicative := true
 
-	sim := new(evoEpiSimulation)
+	sim := new(SequenceNodeEpidemic)
 	// Creates a tree with n roots of all identical sequences (same genotype)
 	sim.tree = sampleGenotypeTree(initPopSize, sites)
 	sim.intrahostModels = map[int]IntrahostModel{
@@ -245,7 +245,7 @@ func TestEvoEpiSimulation_InfectedProcess_Relative(t *testing.T) {
 	}
 }
 
-func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
+func TestSequenceNodeEpidemic_InfectedProcess_Additive(t *testing.T) {
 	sites := 100
 	mu := 0.1
 	maxPopSize := 1000
@@ -253,7 +253,7 @@ func TestEvoEpiSimulation_InfectedProcess_Additive(t *testing.T) {
 	growthRate := 2
 	multiplicative := false
 
-	sim := new(evoEpiSimulation)
+	sim := new(SequenceNodeEpidemic)
 	// Creates a tree with n roots of all identical sequences (same genotype)
 	sim.tree = sampleGenotypeTree(initPopSize, sites)
 	sim.intrahostModels = map[int]IntrahostModel{

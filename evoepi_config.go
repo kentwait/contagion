@@ -338,7 +338,7 @@ func (c *EvoEpiConfig) Validate() error {
 
 // NewSimulation creates a new SingleHostSimulation simulation.
 func (c *EvoEpiConfig) NewSimulation() (Epidemic, error) {
-	sim := new(evoEpiSimulation)
+	sim := new(SequenceNodeEpidemic)
 	// Initialize maps
 	sim.hosts = make(map[int]Host)
 	sim.statuses = make(map[int]int)

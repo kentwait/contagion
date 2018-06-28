@@ -22,7 +22,7 @@ func TestEvoEpiConfig_NewSimulation(t *testing.T) {
 		t.Error(err)
 	}
 	sim0, err := conf.NewSimulation()
-	sim := sim0.(*evoEpiSimulation)
+	sim := sim0.(*SequenceNodeEpidemic)
 	if err != nil {
 		t.Error(err)
 	}
@@ -91,13 +91,13 @@ func TestEvoEpiConfig_NewSimulation_NewInstance(t *testing.T) {
 	}
 
 	// Check is configs have the same pointer
-	sim0ConfigPtr := fmt.Sprintf("%p", sim0.(*evoEpiSimulation).config)
-	sim1ConfigPtr := fmt.Sprintf("%p", sim1.(*evoEpiSimulation).config)
+	sim0ConfigPtr := fmt.Sprintf("%p", sim0.(*SequenceNodeEpidemic).config)
+	sim1ConfigPtr := fmt.Sprintf("%p", sim1.(*SequenceNodeEpidemic).config)
 	if sim0ConfigPtr != sim1ConfigPtr {
 		t.Errorf(
 			NotIdenticalPointerError,
-			"sim0 host 0", sim0.(*evoEpiSimulation).config,
-			"sim1 host 0", sim1.(*evoEpiSimulation).config,
+			"sim0 host 0", sim0.(*SequenceNodeEpidemic).config,
+			"sim1 host 0", sim1.(*SequenceNodeEpidemic).config,
 		)
 	}
 	// Check is simulations have the same pointer
@@ -117,23 +117,23 @@ func TestEvoEpiConfig_NewSimulation_NewInstance(t *testing.T) {
 		)
 	}
 	// Check whether trees have the same pointer
-	sim0TreePtr := fmt.Sprintf("%p", sim0.(*evoEpiSimulation).tree)
-	sim1TreePtr := fmt.Sprintf("%p", sim1.(*evoEpiSimulation).tree)
+	sim0TreePtr := fmt.Sprintf("%p", sim0.(*SequenceNodeEpidemic).tree)
+	sim1TreePtr := fmt.Sprintf("%p", sim1.(*SequenceNodeEpidemic).tree)
 	if sim0TreePtr == sim1TreePtr {
 		t.Errorf(
 			IdenticalPointerError,
-			"sim0 tree", sim0.(*evoEpiSimulation).tree,
-			"sim1 tree", sim1.(*evoEpiSimulation).tree,
+			"sim0 tree", sim0.(*SequenceNodeEpidemic).tree,
+			"sim1 tree", sim1.(*SequenceNodeEpidemic).tree,
 		)
 	}
 	// Check whether adjacency matrices have the same pointer
-	sim0NetPtr := fmt.Sprintf("%p", sim0.(*evoEpiSimulation).hostNetwork)
-	sim1NetPtr := fmt.Sprintf("%p", sim1.(*evoEpiSimulation).hostNetwork)
+	sim0NetPtr := fmt.Sprintf("%p", sim0.(*SequenceNodeEpidemic).hostNetwork)
+	sim1NetPtr := fmt.Sprintf("%p", sim1.(*SequenceNodeEpidemic).hostNetwork)
 	if sim0NetPtr == sim1NetPtr {
 		t.Errorf(
 			IdenticalPointerError,
-			"sim0 host network", sim0.(*evoEpiSimulation).hostNetwork,
-			"sim1 host network", sim1.(*evoEpiSimulation).hostNetwork,
+			"sim0 host network", sim0.(*SequenceNodeEpidemic).hostNetwork,
+			"sim1 host network", sim1.(*SequenceNodeEpidemic).hostNetwork,
 		)
 	}
 }
@@ -145,7 +145,7 @@ func TestEvoEpiConfig_NewSimulation_InfectedProcess(t *testing.T) {
 		t.Error(err)
 	}
 	sim0, err := conf.NewSimulation()
-	sim := sim0.(*evoEpiSimulation)
+	sim := sim0.(*SequenceNodeEpidemic)
 	if err != nil {
 		t.Error(err)
 	}
