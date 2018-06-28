@@ -10,8 +10,6 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-// import "sync"
-
 // SISimulation creates and runs an SI epidemiological simulation.
 // Within this simulation, hosts may or may not run
 // independent genetic evolution simulations.
@@ -99,7 +97,7 @@ func (sim *SISimulation) Run(i int) {
 		sim.Process(sim.Time())
 		sim.Transmit(sim.Time())
 		// Check conditions before update
-		stop := sim.Epidemic.StopSimulation()
+		stop := sim.StopSimulation()
 		if stop {
 			sim.SetStopped(true)
 		}
@@ -119,7 +117,7 @@ func (sim *SISimulation) Run(i int) {
 	if !sim.Stopped() {
 		fmt.Printf(" \t\texpected time: %fms per generation\n", float64(maxElapsed)/1e6)
 	}
-	for sim.Time() < sim.numGenerations && !sim.Stopped() {
+	for sim.Time() < sim.NumGenerations() && !sim.Stopped() {
 		sim.SetTime(sim.Time() + 1)
 		// Print only every ten steps is time is short
 		if maxElapsed < 0.02e9 {
@@ -136,7 +134,7 @@ func (sim *SISimulation) Run(i int) {
 		sim.Process(sim.Time())
 		sim.Transmit(sim.Time())
 		// Check conditions before update
-		stop := sim.Epidemic.StopSimulation()
+		stop := sim.StopSimulation()
 		if stop {
 			sim.SetStopped(true)
 		}
@@ -153,7 +151,7 @@ func (sim *SISimulation) Run(i int) {
 	sim.Finalize()
 }
 
-// Init initializes the simulation and accepts 0 or more parameters.
+// Initialize initializes the simulation and accepts 0 or more parameters.
 // For example, creating datbases etc.
 func (sim *SISimulation) Initialize(params ...interface{}) {
 	err := sim.DataLogger.Init()

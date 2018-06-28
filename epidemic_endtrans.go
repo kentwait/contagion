@@ -9,8 +9,6 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-// import "sync"
-
 // EndTransSimulation creates and runs a modified version of the
 // SIR epidemiological simulation.
 // In the endtrans model, transmissions are allowed to occur only
