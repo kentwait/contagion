@@ -152,6 +152,8 @@ func (sim *SequenceNodeEpidemic) HostMap() map[int]Host {
 	return sim.hosts
 }
 
+// HostConnection returns the weight of a connection between two hosts
+// if it exists, returns 0 otherwise.
 func (sim *SequenceNodeEpidemic) HostConnection(a, b int) float64 {
 	return sim.hostNetwork.Connection(a, b)
 }
