@@ -227,8 +227,6 @@ func LoadFitnessMatrix(path string, valueType string) (map[int]map[uint8]float64
 
 // LoadAdjacencyMatrix creates a new 2D mapping based on a text file.
 func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
-	m := make(adjacencyMatrix)
-
 	/*
 		Parses text file for connection information between hosts.
 		Ignores lines that starts with #.
@@ -248,10 +246,11 @@ func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
 
 	*/
 	f, err := os.Open(path)
+	defer f.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer f.Close()
+	m := make(adjacencyMatrix)
 	re := regexp.MustCompile(`(\d+)\s+(\d+)\s+(\d*\.?\d+)`)
 	scanner := bufio.NewScanner(f)
 	i := 0
