@@ -299,15 +299,20 @@ func (sim *SISimulation) Transmit(t int) {
 		// that determines whether pathogens transmit or not
 		hostID := host.ID()
 		count := pathogenPopSizes[i]
+		numMigrants := host.GetTransmissionModel().TransmissionSize()
+		transmissionProb := host.GetTransmissionModel().TransmissionProb()
 		for _, neighbor := range sim.HostNeighbors(hostID) {
 			status := sim.HostStatus(neighbor.ID())
+			// Overrides default transmission prob set in the config file
+			if t := sim.HostConnection(hostID, neighbor.ID()); t > 0 {
+				transmissionProb = t
+			}
 			for _, infectableStatus := range sim.InfectableStatuses() {
 				if status == infectableStatus {
 					wg.Add(1)
-					go TransmitPathogens(sim.InstanceID(), t, host, neighbor, count, c, d, &wg)
+					go TransmitPathogens(sim.InstanceID(), t, host, neighbor, numMigrants, transmissionProb, count, c, d, &wg)
 				}
 			}
-
 		}
 	}
 	go func() {

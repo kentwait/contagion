@@ -238,7 +238,8 @@ func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
 		to create a directed edge between the source and recepient host
 		specified by the given UIDs.
 
-		If weight is missing, assumes a weight of 1.0.
+		If weight is missing, sets a weight of -1.0 to show that the weight
+		not specified.
 
 		If the edge is undirected, two declarations are expected per source-
 		recepient pair: one in the forward direction and the other in the
@@ -286,7 +287,7 @@ func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
 				return nil, fmt.Errorf("weight in line %d must have a non-negative value (%f) in line %d", i, wt)
 			}
 		} else {
-			wt = 1.0
+			wt = -1.0
 		}
 		m.AddWeightedConnection(a, b, wt)
 	}

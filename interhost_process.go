@@ -28,20 +28,20 @@ type ExchangeEvent struct {
 // If transmission occurs, sends transmitted node over the channel to
 // be added to the recepient. Also sends node information in order to
 // record the event.
-func TransmitPathogens(i, t int, src, dst Host, count int, c chan<- TransmissionEvent, d chan<- TransmissionPackage, wg *sync.WaitGroup) {
+func TransmitPathogens(i, t int, src, dst Host, numMigrants int, transmissionProb float64, count int, c chan<- TransmissionEvent, d chan<- TransmissionPackage, wg *sync.WaitGroup) {
 	defer wg.Done()
 	// Check if migration size if larger than the current population size
 	// If larger, make migrants equal to existing size
 	if count < 1 {
 		return
 	}
-	numMigrants := src.GetTransmissionModel().TransmissionSize()
+	// numMigrants := src.GetTransmissionModel().TransmissionSize()
 	if numMigrants > count {
 		numMigrants = count
 	}
 	// Determine if tranmission occurs or not based on source's
 	// transmission probability
-	transmissionProb := src.GetTransmissionModel().TransmissionProb()
+	// transmissionProb := src.GetTransmissionModel().TransmissionProb()
 	if rv.Binomial(1, transmissionProb) == 1.0 {
 		// If transmission occurs, randomly pick pathogens to transmit
 		for _, p := range src.PickPathogens(numMigrants) {

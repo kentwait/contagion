@@ -33,6 +33,9 @@ type Epidemic interface {
 	// HostMap returns the hosts in the simulation in the form of a map.
 	// The key is the host's ID and the value is the pointer to the host.
 	HostMap() map[int]Host
+	// HostConnection returns the weight of a connection between two hosts
+	// if it exists, returns 0 otherwise.
+	HostConnection(a, b int) float64
 	// HostNeighbors retrieves the directly connected hosts to the current
 	// host based on the supplied adjacency matrix.
 	HostNeighbors(id int) []Host
@@ -147,6 +150,10 @@ func (sim *SequenceNodeEpidemic) InfectableStatuses() []int {
 // The key is the host's ID and the value is the pointer to the host.
 func (sim *SequenceNodeEpidemic) HostMap() map[int]Host {
 	return sim.hosts
+}
+
+func (sim *SequenceNodeEpidemic) HostConnection(a, b int) float64 {
+	return sim.hostNetwork.Connection(a, b)
 }
 
 // HostNeighbors retrieves the directly connected hosts to the current
