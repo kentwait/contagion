@@ -52,18 +52,25 @@ const (
 )
 
 // Errors related to the adjacency matrix
-const (
-	// ConnectionExistsError indicates that a connection between
-	// the source host and the destination host exists and
-	// has the following value in float64.
-	ConnectionExistsError = "connection (%d,%d): %f already exists"
-	// ConnectionExistsError indicates that a connection between
-	// hosts a and b (int) does not exist.
-	ConnectionDoesNotExistError = "connection (%d,%d) does not exist"
-	// SelfLoopError indicates that the start and end host are the
-	// same based on host ID, which results in a self-loop.
-	SelfLoopError = "connection stats and ends at the same host (%d)"
-)
+
+// ConnectionExistsError indicates that a connection between
+// the source host and the destination host exists and
+// has the following value in float64.
+func ConnectionExistsError(a, b int, value float64) error {
+	return fmt.Errorf("connection (%d,%d): %f already exists", a, b, value)
+}
+
+// ConnectionDoesNotExistError indicates that a connection between
+// hosts a and b (int) does not exist but is expected to exist.
+func ConnectionDoesNotExistError(a, b int) error {
+	return fmt.Errorf("connection (%d,%d) does not exist", a, b)
+}
+
+// SelfLoopError indicates that the start and end host are the
+// same based on host ID, which results in a self-loop.
+func SelfLoopError(hostID int) error {
+	return fmt.Errorf("connection stats and ends at the same host (%d)", hostID)
+}
 
 // Errors related to the data logger
 
@@ -72,12 +79,21 @@ func FileExistsError(path string) error {
 	return fmt.Errorf("%s already exists", path)
 }
 
+// FileOpenError indicates that an error was encountered while
+// opening a file.
 func FileOpenError(err error) error {
 	return errors.Wrap(err, "opening file failed")
 }
+
+// FileWriteError indicates that an error was encountered while
+// writing to the file in memory.
 func FileWriteError(err error) error {
 	return errors.Wrap(err, "writing to file filed")
 }
+
+// FileSyncError indicates that an error was encountered while
+// the file was being flushed from memory and being written
+// to disk.
 func FileSyncError(err error) error {
 	return errors.Wrap(err, "commiting file to disk failed")
 }
