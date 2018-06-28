@@ -45,6 +45,10 @@ type HostNetwork interface {
 
 	// Dump serialized the adjacency matrix into a string stored as a byteslice.
 	Dump() []byte
+
+	// Connection returns the weight of a connection is it exists,
+	// returns 0 otherwise.
+	Connection(a, b int) float64
 }
 
 // AdjacencyMatrix is a 2D map that represents
@@ -144,6 +148,13 @@ func (m adjacencyMatrix) Dump() []byte {
 		}
 	}
 	return b.Bytes()
+}
+
+func (m adjacencyMatrix) Connection(a, b int) float64 {
+	if wt, exists := m[a][b]; exists {
+		return wt
+	}
+	return 0.0
 }
 
 // Following are convenience methods for bidirectional connections
