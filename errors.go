@@ -14,11 +14,6 @@ const (
 	// IntKeyExists is the message printed when a given key already exists
 	IntKeyExists = "key %d already exists"
 
-	// ModelExistsError is the message printed when an intrahost model
-	// has already been assigned to a host.
-	ModelExistsError = "model %s (%d) already exists"
-	EmptyModelError  = "model does not exist"
-
 	// GraphPathogenTypeAssertionError is the message printed when
 	// an GraphPathogen cannot be asserted for an interface
 	GraphPathogenTypeAssertionError = "error asserting PathogenNode interface"
@@ -49,6 +44,39 @@ const (
 	IdenticalPointerError    = "memory address of %s (%p) and %s (%p) are identical"
 	NotIdenticalPointerError = "memory address of %s (%p) and %s (%p) are not identical"
 )
+
+// Errors related to model assignment
+
+// ModelExistsError indicates that an existing model already exists
+// a new model cannot be assigned to replace it.
+func ModelExistsError(modelName string, modelID int) error {
+	return fmt.Errorf("model %s (%d) already exists", modelName, modelID)
+}
+
+// SetIntrahostModelExistsError indicates that an intrahost model
+// has already been assigned to a host.
+func SetIntrahostModelExistsError(modelName string, modelID int) error {
+	err := ModelExistsError(modelName, modelID)
+	return errors.Wrap(err, "setting intrahost model failed")
+}
+
+// SetFitnessModelExistsError indicates that a fitness model
+// has already been assigned to a host.
+func SetFitnessModelExistsError(modelName string, modelID int) error {
+	err := ModelExistsError(modelName, modelID)
+	return errors.Wrap(err, "setting fitness model failed")
+}
+
+// SetTransmissionModelExistsError indicates that a transmission model
+// has already been assigned to a host.
+func SetTransmissionModelExistsError(modelName string, modelID int) error {
+	err := ModelExistsError(modelName, modelID)
+	return errors.Wrap(err, "setting transmission model failed")
+}
+
+// func EmptyModelError() error {
+// 	return fmt.Errorf("model %s (%d) already exists", modelName, modelID)
+// }  = "model does not exist"
 
 // Errors related to reading and parsing files
 

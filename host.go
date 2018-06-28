@@ -1,7 +1,6 @@
 package contagiongo
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -132,7 +131,7 @@ func (h *sequenceHost) RemoveAllPathogens() {
 
 func (h *sequenceHost) SetIntrahostModel(model IntrahostModel) error {
 	if h.IntrahostModel != nil {
-		return fmt.Errorf("intrahost "+ModelExistsError, h.IntrahostModel.ModelName(), h.IntrahostModel.ModelID())
+		return SetIntrahostModelExistsError(h.IntrahostModel.ModelName(), h.IntrahostModel.ModelID())
 	}
 	h.IntrahostModel = model
 	return nil
@@ -140,7 +139,7 @@ func (h *sequenceHost) SetIntrahostModel(model IntrahostModel) error {
 
 func (h *sequenceHost) SetFitnessModel(model FitnessModel) error {
 	if h.FitnessModel != nil {
-		return fmt.Errorf("fitness "+ModelExistsError, h.FitnessModel.ModelName(), h.FitnessModel.ModelID())
+		return SetFitnessModelExistsError(h.FitnessModel.ModelName(), h.FitnessModel.ModelID())
 	}
 	h.FitnessModel = model
 	return nil
@@ -148,7 +147,7 @@ func (h *sequenceHost) SetFitnessModel(model FitnessModel) error {
 
 func (h *sequenceHost) SetTransmissionModel(model TransmissionModel) error {
 	if h.TransmissionModel != nil {
-		return fmt.Errorf("transmission "+ModelExistsError, h.TransmissionModel.ModelName(), h.TransmissionModel.ModelID())
+		return SetTransmissionModelExistsError(h.TransmissionModel.ModelName(), h.TransmissionModel.ModelID())
 	}
 	h.TransmissionModel = model
 	return nil
