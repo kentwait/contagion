@@ -52,13 +52,36 @@ func main() {
 		fmt.Println("Only one CSV basepath should be provided if using the -independent flag")
 		flag.Usage()
 	}
-	// make basepath each subdir if ind is specified
-	if flag.NArg() == 1 && ind {
-		basepaths, err := filepath.Glob(globString)
-	}
 	// Check if out Path is set
 	if outPath == "" {
 		fmt.Println("-out was not specified")
+	}
+	// make basepath each subdir if ind is specified
+	var csvDirPaths []string
+	if ind {
+		if flag.NArg() == 1 {
+			baseDirPath := filepath.Clean(flag.Arg(0))
+			_basepaths, err := filepath.Glob(baseDirPath)
+			if err != nil {
+				panic(err)
+			}
+			for _, path := range _basepaths {
+				fi, err := os.Stat(path)
+				if err != nil {
+					panic(err)
+				}
+				if fi.IsDir() {
+					csvDirPaths = append(csvDirPaths, path)
+				}
+			}
+		} else {
+			panic("only one directory can be set when the -independent flag is used")
+		}
+	} else {
+		for c := 0; c < flag.NArg(); c++ {
+			path := filepath.Clean(flag.Arg(c))
+			csvDirPaths = append(csvDirPaths, path)
+		}
 	}
 
 	// Open database connection
@@ -97,8 +120,7 @@ func main() {
 	// multiple independent runs each with its own config and pathogens file
 	fileCounter := 0
 	startTime := time.Now()
-	for c := 0; c < flag.NArg(); c++ {
-		csvDirPath := filepath.Clean(flag.Arg(c))
+	for c, csvDirPath := range csvDirPaths {
 
 		// Find all CSVs in the folder
 		globString := filepath.Join(csvDirPath, "*.csv")
