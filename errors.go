@@ -3,6 +3,8 @@ package contagiongo
 import (
 	"fmt"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -64,22 +66,53 @@ const (
 )
 
 // Errors related to the data logger
-const (
-	// FileExistsError indicates that a file exists at the
-	// given path (string).
-	FileExistsError = "error creating new file: %s already exists"
-	FileOpenError   = "error opening file: %v"
-	FileWriteError  = "error writing to file: %v"
-	FileSyncError   = "error commiting contents of the file to disk: %v"
-	// SQLOpenError indicates that an error was encountered while
-	// open a database connection. Includes the error returned
-	// by sql.Open.
-	SQLOpenError = "error opening SQL connection: %v"
-	// SQLExecError indicates that an error was encountered while executing
-	// an SQL statement. Returns the error raised by the database
-	// connection and the SQL statement that produced the error.
-	SQLExecError = "error executing SQL statement: %v (SQL statement: %s)"
-)
+
+// FileExistsError indicates that a file exists at the given path.
+func FileExistsError(path string) error {
+	return fmt.Errorf("%s already exists", path)
+}
+
+func FileOpenError(err error) error {
+	return errors.Wrap(err, "opening file failed")
+}
+func FileWriteError(err error) error {
+	return errors.Wrap(err, "writing to file filed")
+}
+func FileSyncError(err error) error {
+	return errors.Wrap(err, "commiting file to disk failed")
+}
+
+// SQLOpenError indicates that an error was encountered while
+// open a database connection. Includes the error returned
+// by sql.Open.
+func SQLOpenError(err error) error {
+	return errors.Wrap(err, "opening SQL connection failed")
+}
+
+// SQLExecError indicates that an error was encountered while executing
+// an SQL statement. Returns the error raised by the database
+// connection and the SQL statement that produced the error.
+func SQLExecError(err error, stmt string) error {
+	return errors.Wrapf(err, "executing SQL statement failed (%s)", stmt)
+}
+
+// SQLBeginTransactionError indicates that an error was encountered
+// while a transaction was being initialized.
+func SQLBeginTransactionError(err error) error {
+	return errors.Wrap(err, "creating SQL transaction failed")
+}
+
+// SQLPrepareStatementError indicates that an error was encountered
+// while a template SQL statement was being initialized.
+func SQLPrepareStatementError(err error, stmt string) error {
+	return errors.Wrapf(err, "preparing SQL template statement failed (%s)", stmt)
+}
+
+// SQLExecStatementError indicates that an error was encountered
+// while a template statement was being substituted with actual values.
+func SQLExecStatementError(err error) error {
+	return errors.Wrap(err, "executing SQL template statement failed")
+}
 
 // Errors related to the motif model
 

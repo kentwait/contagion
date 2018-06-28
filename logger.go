@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/segmentio/ksuid"
 	// sqlite3 driver
 	_ "github.com/mattn/go-sqlite3"
@@ -170,7 +171,10 @@ func (l *CSVLogger) WriteGenotypes(c <-chan Genotype) {
 		// TODO: log error
 		b.WriteString(row)
 	}
-	AppendToFile(l.genotypePath, b.Bytes())
+	err := AppendToFile(l.genotypePath, b.Bytes())
+	if err != nil {
+		log.Panicf("%+v\n", err)
+	}
 }
 
 // WriteGenotypeNodes records new genotype node's ID and
@@ -189,7 +193,10 @@ func (l *CSVLogger) WriteGenotypeNodes(c <-chan GenotypeNode) {
 		// TODO: log error
 		b.WriteString(row)
 	}
-	AppendToFile(l.genotypeNodePath, b.Bytes())
+	err := AppendToFile(l.genotypeNodePath, b.Bytes())
+	if err != nil {
+		log.Panicf("%+v\n", err)
+	}
 }
 
 // WriteGenotypeFreq records the count of unique genotype nodes
@@ -211,7 +218,10 @@ func (l *CSVLogger) WriteGenotypeFreq(c <-chan GenotypeFreqPackage) {
 		// TODO: log error
 		b.WriteString(row)
 	}
-	AppendToFile(l.genotypeFreqPath, b.Bytes())
+	err := AppendToFile(l.genotypeFreqPath, b.Bytes())
+	if err != nil {
+		log.Panicf("%+v\n", err)
+	}
 }
 
 // WriteMutations records every time a new genotype node is created.
@@ -233,7 +243,10 @@ func (l *CSVLogger) WriteMutations(c <-chan MutationPackage) {
 		// TODO: log error
 		b.WriteString(row)
 	}
-	AppendToFile(l.mutationPath, b.Bytes())
+	err := AppendToFile(l.mutationPath, b.Bytes())
+	if err != nil {
+		log.Panicf("%+v\n", err)
+	}
 }
 
 // WriteStatus records the status of each host every generation.
@@ -253,7 +266,10 @@ func (l *CSVLogger) WriteStatus(c <-chan StatusPackage) {
 		// TODO: log error
 		b.WriteString(row)
 	}
-	AppendToFile(l.statusPath, b.Bytes())
+	err := AppendToFile(l.statusPath, b.Bytes())
+	if err != nil {
+		log.Panicf("%+v\n", err)
+	}
 }
 
 // WriteTransmission records the ID's of genotype node that
@@ -275,7 +291,10 @@ func (l *CSVLogger) WriteTransmission(c <-chan TransmissionPackage) {
 		// TODO: log error
 		b.WriteString(row)
 	}
-	AppendToFile(l.transmissionPath, b.Bytes())
+	err := AppendToFile(l.transmissionPath, b.Bytes())
+	if err != nil {
+		log.Panicf("%+v\n", err)
+	}
 }
 
 // NewFile creates a new file on the given path if it does not exist.
@@ -283,21 +302,21 @@ func (l *CSVLogger) WriteTransmission(c <-chan TransmissionPackage) {
 func NewFile(path string, b []byte) error {
 	// Create file
 	if exists, _ := Exists(path); exists {
-		return fmt.Errorf(FileExistsError, path)
+		return errors.Wrap(FileExistsError(path), "creating new file failed")
 	}
 	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf(FileOpenError, err)
+		return errors.Wrap(FileOpenError(err), "creating new file failed")
 	}
 	defer f.Close()
 
 	_, err = f.Write(b)
 	if err != nil {
-		return fmt.Errorf(FileWriteError, err)
+		return errors.Wrap(FileWriteError(err), "creating new file failed")
 	}
 	err = f.Sync()
 	if err != nil {
-		return fmt.Errorf(FileSyncError, err)
+		return errors.Wrap(FileSyncError(err), "creating new file failed")
 	}
 	return nil
 }
@@ -308,17 +327,17 @@ func AppendToFile(path string, b []byte) error {
 	// Create file
 	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf(FileOpenError, err)
+		return errors.Wrap(FileOpenError(err), "appending to file failed")
 	}
 	defer f.Close()
 
 	_, err = f.Write(b)
 	if err != nil {
-		return fmt.Errorf(FileWriteError, err)
+		return errors.Wrap(FileWriteError(err), "appending to file failed")
 	}
 	err = f.Sync()
 	if err != nil {
-		return fmt.Errorf(FileSyncError, err)
+		return errors.Wrap(FileSyncError(err), "appending to file failed")
 	}
 	return nil
 }
@@ -368,7 +387,7 @@ func (l *SQLiteLogger) Init() error {
 	newTable := func(path, tableName, cols string) error {
 		db, err := OpenSQLiteDBOptimized(path)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Init failed")
 		}
 		defer db.Close()
 		// cols example:
@@ -381,35 +400,46 @@ func (l *SQLiteLogger) Init() error {
 		sqlStmt := fmt.Sprintf(_sqlStmt, fullTableName, cols, fullTableName)
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
-			return fmt.Errorf(SQLExecError, err, sqlStmt)
+			return errors.Wrap(SQLExecError(err, sqlStmt), "Init failed")
 		}
 		return nil
 	}
 
 	// Create tables
-	err := newTable(l.genotypePath, "Genotype", "(id integer not null primary key, genotypeID text, sequence text)")
+	tableName := "Genotype"
+	err := newTable(l.genotypePath, tableName, "(id integer not null primary key, genotypeID text, sequence text)")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "creating %s table failed", tableName)
 	}
-	err = newTable(l.genotypeNodePath, "Node", "(id integer not null primary key, nodeID text, genotypeID text)")
+
+	tableName = "Node"
+	err = newTable(l.genotypeNodePath, tableName, "(id integer not null primary key, nodeID text, genotypeID text)")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "creating %s table failed", tableName)
 	}
-	err = newTable(l.genotypeFreqPath, "GenotypeFreq", "(id integer not null primary key, generation int, hostID int, genotypeID text, freq int)")
+
+	tableName = "GenotypeFreq"
+	err = newTable(l.genotypeFreqPath, tableName, "(id integer not null primary key, generation int, hostID int, genotypeID text, freq int)")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "creating %s table failed", tableName)
 	}
-	err = newTable(l.mutationPath, "Tree", "(id integer not null primary key, generation int, hostID int, parentNodeID text, nodeID text)")
+
+	tableName = "Tree"
+	err = newTable(l.mutationPath, tableName, "(id integer not null primary key, generation int, hostID int, parentNodeID text, nodeID text)")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "creating %s table failed", tableName)
 	}
-	err = newTable(l.statusPath, "Status", "(id integer not null primary key, generation int, hostID int, status int)")
+
+	tableName = "Status"
+	err = newTable(l.statusPath, tableName, "(id integer not null primary key, generation int, hostID int, status int)")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "creating %s table failed", tableName)
 	}
-	err = newTable(l.transmissionPath, "Transmission", "(id integer not null primary key, generation int, fromHostID int, toHostID int, nodeID text)")
+
+	tableName = "Transmission"
+	err = newTable(l.transmissionPath, tableName, "(id integer not null primary key, generation int, fromHostID int, toHostID int, nodeID text)")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "creating %s table failed", tableName)
 	}
 	return nil
 }
@@ -422,19 +452,18 @@ func (l *SQLiteLogger) WriteGenotypes(c <-chan Genotype) {
 	// Database ops below
 	db, err := OpenSQLiteDBOptimized(path)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Panicf("%+v\n", err)
 	}
 	// Begin transaction
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLBeginTransactionError(err)
+		log.Panicf("%+v\n", err)
 	}
 	stmt, err := tx.Prepare(_stmt)
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLPrepareStatementError(err, _stmt)
+		log.Panicf("%+v\n", err)
 	}
 	defer stmt.Close()
 	for genotype := range c {
@@ -443,8 +472,8 @@ func (l *SQLiteLogger) WriteGenotypes(c <-chan Genotype) {
 			genotype.StringSequence(),
 		)
 		if err != nil {
-			log.Fatal(err)
-			return
+			err = SQLExecStatementError(err)
+			log.Panicf("%+v\n", err)
 		}
 	}
 	// Commit at the end
@@ -460,19 +489,18 @@ func (l *SQLiteLogger) WriteGenotypeNodes(c <-chan GenotypeNode) {
 	// Database ops below
 	db, err := OpenSQLiteDBOptimized(path)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Panicf("%+v\n", err)
 	}
 	// Begin transaction
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLBeginTransactionError(err)
+		log.Panicf("%+v\n", err)
 	}
 	stmt, err := tx.Prepare(_stmt)
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLPrepareStatementError(err, _stmt)
+		log.Panicf("%+v\n", err)
 	}
 	defer stmt.Close()
 	for node := range c {
@@ -481,8 +509,8 @@ func (l *SQLiteLogger) WriteGenotypeNodes(c <-chan GenotypeNode) {
 			node.GenotypeUID().String(),
 		)
 		if err != nil {
-			log.Fatal(err)
-			return
+			err = SQLExecStatementError(err)
+			log.Panicf("%+v\n", err)
 		}
 	}
 	// Commit at the end
@@ -498,19 +526,18 @@ func (l *SQLiteLogger) WriteGenotypeFreq(c <-chan GenotypeFreqPackage) {
 	// Database ops below
 	db, err := OpenSQLiteDBOptimized(path)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Panicf("%+v\n", err)
 	}
 	// Begin transaction
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLBeginTransactionError(err)
+		log.Panicf("%+v\n", err)
 	}
 	stmt, err := tx.Prepare(_stmt)
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLPrepareStatementError(err, _stmt)
+		log.Panicf("%+v\n", err)
 	}
 	defer stmt.Close()
 	for pack := range c {
@@ -521,8 +548,8 @@ func (l *SQLiteLogger) WriteGenotypeFreq(c <-chan GenotypeFreqPackage) {
 			pack.freq,
 		)
 		if err != nil {
-			log.Fatal(err)
-			return
+			err = SQLExecStatementError(err)
+			log.Panicf("%+v\n", err)
 		}
 	}
 	// Commit at the end
@@ -538,19 +565,18 @@ func (l *SQLiteLogger) WriteMutations(c <-chan MutationPackage) {
 	// Database ops below
 	db, err := OpenSQLiteDBOptimized(path)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Panicf("%+v\n", err)
 	}
 	// Begin transaction
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLBeginTransactionError(err)
+		log.Panicf("%+v\n", err)
 	}
 	stmt, err := tx.Prepare(_stmt)
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLPrepareStatementError(err, _stmt)
+		log.Panicf("%+v\n", err)
 	}
 	defer stmt.Close()
 	for pack := range c {
@@ -561,8 +587,8 @@ func (l *SQLiteLogger) WriteMutations(c <-chan MutationPackage) {
 			pack.nodeID.String(),
 		)
 		if err != nil {
-			log.Fatal(err)
-			return
+			err = SQLExecStatementError(err)
+			log.Panicf("%+v\n", err)
 		}
 	}
 	// Commit at the end
@@ -577,19 +603,18 @@ func (l *SQLiteLogger) WriteStatus(c <-chan StatusPackage) {
 	// Database ops below
 	db, err := OpenSQLiteDBOptimized(path)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Panicf("%+v\n", err)
 	}
 	// Begin transaction
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLBeginTransactionError(err)
+		log.Panicf("%+v\n", err)
 	}
 	stmt, err := tx.Prepare(_stmt)
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLPrepareStatementError(err, _stmt)
+		log.Panicf("%+v\n", err)
 	}
 	defer stmt.Close()
 	for pack := range c {
@@ -599,8 +624,8 @@ func (l *SQLiteLogger) WriteStatus(c <-chan StatusPackage) {
 			pack.status,
 		)
 		if err != nil {
-			log.Fatal(err)
-			return
+			err = SQLExecStatementError(err)
+			log.Panicf("%+v\n", err)
 		}
 	}
 	// Commit at the end
@@ -616,19 +641,18 @@ func (l *SQLiteLogger) WriteTransmission(c <-chan TransmissionPackage) {
 	// Database ops below
 	db, err := OpenSQLiteDBOptimized(path)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Panicf("%+v\n", err)
 	}
 	// Begin transaction
 	tx, err := db.Begin()
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLBeginTransactionError(err)
+		log.Panicf("%+v\n", err)
 	}
 	stmt, err := tx.Prepare(_stmt)
 	if err != nil {
-		log.Fatal(err)
-		return
+		err = SQLPrepareStatementError(err, _stmt)
+		log.Panicf("%+v\n", err)
 	}
 	defer stmt.Close()
 	for pack := range c {
@@ -639,8 +663,8 @@ func (l *SQLiteLogger) WriteTransmission(c <-chan TransmissionPackage) {
 			pack.nodeID.String(),
 		)
 		if err != nil {
-			log.Fatal(err)
-			return
+			err = SQLExecStatementError(err)
+			log.Panicf("%+v\n", err)
 		}
 	}
 	// Commit at the end
@@ -659,7 +683,7 @@ func OpenSQLiteDB(path, connectionString string) (*sql.DB, error) {
 	dsn := "file:%s%s"
 	db, err := sql.Open("sqlite3", fmt.Sprintf(dsn, path, connectionString))
 	if err != nil {
-		return nil, fmt.Errorf(SQLOpenError, err)
+		return nil, SQLOpenError(err)
 	}
 	return db, nil
 }
