@@ -43,13 +43,43 @@ const (
 	UnexpectedErrorWhileError = "encountered error while %s: %s"
 	ExpectedErrorWhileError   = "expected an error while %s, instead got none"
 	UnrecognizedKeywordError  = "%s is not a valid keyword for %s"
-	FileParsingError          = "error in line %d: %s"
 )
 
 const (
 	IdenticalPointerError    = "memory address of %s (%p) and %s (%p) are identical"
 	NotIdenticalPointerError = "memory address of %s (%p) and %s (%p) are not identical"
 )
+
+// Errors related to reading and parsing files
+
+// FileParsingError indicates a parsing error was encountered
+// at a particular line in the file. Most likely the file
+// was not properly formatted.
+func FileParsingError(err error, lineNum int) error {
+	return errors.Wrapf(err, "error in line %d", lineNum)
+}
+
+// DuplicateSitePositionError indicates that the site in the
+// file is not unique and has been included more than once.
+func DuplicateSitePositionError(pos int, lineNum int) error {
+	err := fmt.Errorf("duplicate position index (%d)", pos)
+	return FileParsingError(err, lineNum)
+}
+
+// UnequalNumStatesError indicates that the number of states
+// specified in a site does not match the number of states
+// in another site.
+func UnequalNumStatesError(numStates, prevNumStates int, site int, lineNum int) error {
+	err := fmt.Errorf("site %d has %d states instead of %d", site, numStates, prevNumStates)
+	return FileParsingError(err, lineNum)
+}
+
+// InvalidConnectionWeightError indicates that the given connection
+// weight is less than 0.
+func InvalidConnectionWeightError(wt float64, lineNum int) error {
+	err := fmt.Errorf("weight must be non-negative value: %f", wt)
+	return FileParsingError(err, lineNum)
+}
 
 // Errors related to the adjacency matrix
 

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/pkg/errors"
 )
 
 // LoadSingleHostConfig parses a TOML config file and
@@ -78,7 +79,7 @@ func LoadSequences(path string) (map[int][][]uint8, error) {
 				if len(match[1]) > 0 && len(match[2]) > 0 {
 					encoded, err := strconv.Atoi(match[2])
 					if err != nil {
-						return nil, fmt.Errorf(FileParsingError, lineNum, err)
+						return nil, errors.Wrap(FileParsingError(err, lineNum), "cannot parse encoding line")
 					}
 					translationMap[match[1]] = uint8(encoded)
 				}
@@ -92,7 +93,7 @@ func LoadSequences(path string) (map[int][][]uint8, error) {
 			res := reHostID.FindStringSubmatch(line)
 			hostID, err := strconv.Atoi(res[1])
 			if err != nil {
-				return nil, fmt.Errorf(FileParsingError, lineNum, err)
+				return nil, errors.Wrap(FileParsingError(err, lineNum), "cannot parse definition line")
 			}
 			currentHostID = hostID
 		} else {
@@ -173,7 +174,8 @@ func LoadFitnessMatrix(path string, valueType string) (map[int]map[uint8]float64
 			// Load site fitness values
 			splittedLine := strings.Split(line, ":")
 			if len(splittedLine) != 2 {
-				return nil, fmt.Errorf("missing colon delimiter in line %d", i)
+				err := fmt.Errorf("missing colon delimiter")
+				return nil, FileParsingError(err, i)
 			}
 			prefix, valuesStr := splittedLine[0], splittedLine[1]
 			// get position
@@ -196,8 +198,8 @@ func LoadFitnessMatrix(path string, valueType string) (map[int]map[uint8]float64
 				}
 				values = append(values, v)
 			}
-			if _, ok := fitnessMap[pos]; ok {
-				return nil, fmt.Errorf("duplicate position index (%d)", pos)
+			if _, exists := fitnessMap[pos]; exists {
+				return nil, DuplicateSitePositionError(pos, i)
 			}
 			fitnessMap[pos] = values
 			if lastPos < pos {
@@ -206,7 +208,7 @@ func LoadFitnessMatrix(path string, valueType string) (map[int]map[uint8]float64
 			if alleles == 0 {
 				alleles = len(values)
 			} else if alleles != len(values) {
-				return nil, fmt.Errorf("number of alleles in site %d (%d) is not equal to the previous count (%d)", pos, len(values), alleles)
+				return nil, UnequalNumStatesError(len(values), alleles, pos, i)
 			}
 		}
 	}
@@ -267,24 +269,25 @@ func LoadAdjacencyMatrix(path string) (HostNetwork, error) {
 			continue
 		}
 		if len(res) < 3 {
-			return nil, fmt.Errorf("invalid format in line %d", i)
+			err := fmt.Errorf("adjacency list entry must have 2 values (source and destination IDs) or 3 values (source and destination IDs, connection weight)")
+			return nil, FileParsingError(err, i)
 		}
 		a, err := strconv.Atoi(res[1])
 		if err != nil {
-			return nil, fmt.Errorf("%s in line %d", err, i)
+			return nil, FileParsingError(err, i)
 		}
 		b, err := strconv.Atoi(res[2])
 		if err != nil {
-			return nil, fmt.Errorf("%s in line %d", err, i)
+			return nil, FileParsingError(err, i)
 		}
 		var wt float64
 		if len(res) == 4 {
 			wt, err = strconv.ParseFloat(res[3], 64)
 			if err != nil {
-				return nil, fmt.Errorf("%s in line %d", err, i)
+				return nil, FileParsingError(err, i)
 			}
 			if wt < 0 {
-				return nil, fmt.Errorf("weight in line %d must have a non-negative value (%f) in line %d", i, wt)
+				return nil, InvalidConnectionWeightError(wt, i)
 			}
 		} else {
 			wt = -1.0
