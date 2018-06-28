@@ -99,7 +99,7 @@ func (sim *SISimulation) Run(i int) {
 		sim.Process(sim.Time())
 		sim.Transmit(sim.Time())
 		// Check conditions before update
-		stop := !sim.Epidemic.CheckConditions()
+		stop := sim.Epidemic.StopSimulation()
 		if stop {
 			sim.SetStopped(true)
 		}
@@ -136,7 +136,7 @@ func (sim *SISimulation) Run(i int) {
 		sim.Process(sim.Time())
 		sim.Transmit(sim.Time())
 		// Check conditions before update
-		stop := !sim.Epidemic.CheckConditions()
+		stop := sim.Epidemic.StopSimulation()
 		if stop {
 			sim.SetStopped(true)
 		}

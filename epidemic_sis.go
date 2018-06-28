@@ -44,7 +44,7 @@ func (sim *SISSimulation) Run(i int) {
 		sim.Process(sim.Time())
 		sim.Transmit(sim.Time())
 		// Check conditions before update
-		stop := !sim.CheckConditions()
+		stop := sim.StopSimulation()
 		if stop {
 			sim.SetStopped(true)
 		}
@@ -81,7 +81,7 @@ func (sim *SISSimulation) Run(i int) {
 		sim.Process(sim.Time())
 		sim.Transmit(sim.Time())
 		// Check conditions before update
-		stop := !sim.CheckConditions()
+		stop := sim.StopSimulation()
 		if stop {
 			sim.SetStopped(true)
 		}

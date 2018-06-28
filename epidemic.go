@@ -20,7 +20,7 @@ type Epidemic interface {
 	// SetHostStatus sets the current status of the selected host
 	// to a given status code.
 	SetHostStatus(id, status int)
-	// HostTime returns the current number of generations remaining
+	// HostTimer returns the current number of generations remaining
 	// before the host changes status.
 	HostTimer(id int) int
 	// SetHostTimer sets the number of generations for the host to
@@ -37,13 +37,20 @@ type Epidemic interface {
 	// host based on the supplied adjacency matrix.
 	HostNeighbors(id int) []Host
 
-	// NewInstance creates a NewInstancete a new instance from
-	// the stored configuration
+	// NewInstance creates a new instance from the stored configuration
 	NewInstance() (Epidemic, error)
 
+	// GenotypeNodeMap returns the set of all GenotypeNodes seen since the
+	// start of the simulation.
 	GenotypeNodeMap() map[ksuid.KSUID]GenotypeNode
+
+	// GenotypeSet returns the set of all Genotypes seen since the
+	// start of the simulation.
 	GenotypeSet() GenotypeSet
-	CheckConditions() bool
+
+	// StopSimulation check whether the simulation has satisfied at least one
+	// of the conditions that will halt the simulation in the current interation.
+	StopSimulation() bool
 
 	// The following methods perform intrahost processes associated with
 	// the status. For every generation, one of the following is called for
@@ -94,59 +101,81 @@ type SequenceNodeEpidemic struct {
 	stopConditions []StopCondition
 }
 
+// Host returns the selected host in the simulation.
 func (sim *SequenceNodeEpidemic) Host(id int) Host {
 	return sim.hosts[id]
 }
 
+// HostStatus retrieves the current status of the selected host.
 func (sim *SequenceNodeEpidemic) HostStatus(id int) int {
 	sim.RLock()
 	defer sim.RUnlock()
 	return sim.statuses[id]
 }
 
+// SetHostStatus sets the current status of the selected host
+// to a given status code.
 func (sim *SequenceNodeEpidemic) SetHostStatus(id, status int) {
 	sim.Lock()
 	defer sim.Unlock()
 	sim.statuses[id] = status
 }
 
+// HostTimer returns the current number of generations remaining
+// before the host changes status.
 func (sim *SequenceNodeEpidemic) HostTimer(id int) int {
 	sim.RLock()
 	defer sim.RUnlock()
 	return sim.timers[id]
 }
 
+// SetHostTimer sets the number of generations for the host to
+// remain in its current status.
 func (sim *SequenceNodeEpidemic) SetHostTimer(id, interval int) {
 	sim.Lock()
 	defer sim.Unlock()
 	sim.timers[id] = interval
 }
 
+// InfectableStatuses returns the list of statuses that infected
+// hosts can transmit to.
 func (sim *SequenceNodeEpidemic) InfectableStatuses() []int {
 	return sim.infectableStatuses
 }
 
+// HostMap returns the hosts in the simulation in the form of a map.
+// The key is the host's ID and the value is the pointer to the host.
 func (sim *SequenceNodeEpidemic) HostMap() map[int]Host {
 	return sim.hosts
 }
 
+// HostNeighbors retrieves the directly connected hosts to the current
+// host based on the supplied adjacency matrix.
 func (sim *SequenceNodeEpidemic) HostNeighbors(id int) []Host {
 	return sim.hostNeighborhoods[id]
 }
 
-func (sim *SequenceNodeEpidemic) GenotypeNodeMap() map[ksuid.KSUID]GenotypeNode {
-	return sim.tree.NodeMap()
-}
-
-func (sim *SequenceNodeEpidemic) GenotypeSet() GenotypeSet {
-	return sim.tree.Set()
-}
-
+// NewInstance creates a new instance from the stored configuration
 func (sim *SequenceNodeEpidemic) NewInstance() (Epidemic, error) {
 	return sim.config.NewSimulation()
 }
 
-func (sim *SequenceNodeEpidemic) CheckConditions() bool {
+// GenotypeNodeMap returns the set of all GenotypeNodes seen since the
+// start of the simulation.
+func (sim *SequenceNodeEpidemic) GenotypeNodeMap() map[ksuid.KSUID]GenotypeNode {
+	return sim.tree.NodeMap()
+}
+
+// GenotypeSet returns the set of all Genotypes seen since the
+// start of the simulation.
+func (sim *SequenceNodeEpidemic) GenotypeSet() GenotypeSet {
+	return sim.tree.Set()
+}
+
+// StopSimulation check whether the simulation has satisfied at least one
+// of the conditions that will halt the simulation in the current
+// interation. Returns true is the simulation should stop, false otherwise.
+func (sim *SequenceNodeEpidemic) StopSimulation() bool {
 	continueSim := true
 	for _, cond := range sim.stopConditions {
 		continueSim = cond.Check(sim)
