@@ -36,7 +36,8 @@ func (cond *alleleExists) Reason() string {
 	return "allele lost"
 }
 
-// Check looks at the
+// Check looks at the simulation to determine if the allele
+// still exists.
 func (cond *alleleExists) Check(sim Epidemic) bool {
 	c := make(chan bool)
 	var wg sync.WaitGroup
