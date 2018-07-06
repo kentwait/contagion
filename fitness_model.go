@@ -139,12 +139,16 @@ func (fm *additiveFM) ComputeFitness(chars ...uint8) (fitness float64, err error
 	// Assume coords are sequence of ints representing a sequence
 	// Matrix values are in decimal
 	// Returns decimal fitness total
-	if len(chars) < 0 {
+	if len(chars) < 1 {
 		return 0, errors.Wrap(ZeroItemsError(), "computing additive fitness failed")
 	}
 	var decFitness float64
 	for i, v := range chars {
-		decFitness += fm.matrix[i][uint8(v)]
+		if f, ok := fm.matrix[i][v]; ok {
+			decFitness += f
+		} else {
+			return 0, InvalidCharError(i, v)
+		}
 	}
 	if decFitness < 0 {
 		decFitness = 0.0
