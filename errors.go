@@ -139,7 +139,7 @@ func EmptyModelError() error {
 // InvalidStateCharError indicates that a character encountered is
 // not in the set of expected characters.
 func InvalidStateCharError(char string, pos int) error {
-	return fmt.Errorf("char %s at position %d is not in the set of expected characters")
+	return fmt.Errorf("char %s at position %d is not in the set of expected characters", char, pos)
 }
 
 // Errors related to reading and parsing files
@@ -192,6 +192,16 @@ func ConnectionDoesNotExistError(a, b int) error {
 // same based on host ID, which results in a self-loop.
 func SelfLoopError(hostID int) error {
 	return fmt.Errorf("connection stats and ends at the same host (%d)", hostID)
+}
+
+func EmptyMatrixError() error {
+	return fmt.Errorf("cannot create new fitness matrix from an empty map")
+}
+func InvalidRowError() error {
+	return fmt.Errorf("cannot create new fitness matrix: invalid row size")
+}
+func InvalidCharError(pos int, enc uint8) error {
+	return fmt.Errorf("cannot compute fitness: invalid character encoding %d at position %d", enc, pos)
 }
 
 // Errors related to the data logger

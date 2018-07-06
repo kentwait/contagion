@@ -53,7 +53,10 @@ type multiplicativeFM struct {
 
 // NewMultiplicativeFM create a new multiplicative fitness matrix using
 // a map of maps. Assumes that the values are in log form.
-func NewMultiplicativeFM(id int, name string, matrix map[int]map[uint8]float64) FitnessMatrix {
+func NewMultiplicativeFM(id int, name string, matrix map[int]map[uint8]float64) (FitnessMatrix, error) {
+	if matrix == nil || len(matrix) < 1 {
+		return nil, EmptyMatrixError()
+	}
 	// Copy map of maps
 	fm := new(multiplicativeFM)
 	fm.id = id
@@ -61,12 +64,15 @@ func NewMultiplicativeFM(id int, name string, matrix map[int]map[uint8]float64) 
 	fm.matrix = make(map[int]map[uint8]float64)
 	// Each row lists the fitness of alternative characters for that site
 	for k1, row := range matrix {
+		if row == nil || len(row) < 1 {
+			return nil, InvalidRowError()
+		}
 		fm.matrix[k1] = make(map[uint8]float64)
 		for k2, v := range row {
 			fm.matrix[k1][uint8(k2)] = v
 		}
 	}
-	return fm
+	return fm, nil
 }
 
 // ComputeFitness takes a sequence of characters and gets the log-sum of
@@ -76,12 +82,16 @@ func (fm *multiplicativeFM) ComputeFitness(chars ...uint8) (fitness float64, err
 	// Assume coords are sequence of ints representing a sequence
 	// Matrix values are in log
 	// Returns log fitness total
-	if len(chars) < 0 {
+	if len(chars) < 1 {
 		return 0, errors.Wrap(ZeroItemsError(), "computing multiplicative fitness failed")
 	}
 	var logFitness float64
 	for i, v := range chars {
-		logFitness += fm.matrix[i][v]
+		if f, ok := fm.matrix[i][v]; ok {
+			logFitness += f
+		} else {
+			return 0, InvalidCharError(i, v)
+		}
 	}
 	return logFitness, nil
 }
@@ -104,19 +114,25 @@ type additiveFM struct {
 
 // NewAdditiveFM create a new additive fitness matrix using a map of maps.
 // Assumes that the values are in decimal form.
-func NewAdditiveFM(id int, name string, matrix map[int]map[uint8]float64) FitnessMatrix {
+func NewAdditiveFM(id int, name string, matrix map[int]map[uint8]float64) (FitnessMatrix, error) {
+	if matrix == nil || len(matrix) < 1 {
+		return nil, EmptyMatrixError()
+	}
 	// Copy map of maps
 	fm := new(additiveFM)
 	fm.id = id
 	fm.name = name
 	fm.matrix = make(map[int]map[uint8]float64)
 	for k1, row := range matrix {
+		if row == nil || len(row) < 1 {
+			return nil, InvalidRowError()
+		}
 		fm.matrix[k1] = make(map[uint8]float64)
 		for k2, v := range row {
 			fm.matrix[k1][uint8(k2)] = v
 		}
 	}
-	return fm
+	return fm, nil
 }
 
 func (fm *additiveFM) ComputeFitness(chars ...uint8) (fitness float64, err error) {
@@ -147,7 +163,7 @@ func (fm *additiveFM) Log() bool {
 // NeutralMultiplicativeFM returns a multiplicative fitness matrix
 // where all the values are 0 (ln 1) such that all changes have no effect
 // and are therefore neutral.
-func NeutralMultiplicativeFM(id int, name string, sites, alleles int) FitnessMatrix {
+func NeutralMultiplicativeFM(id int, name string, sites, alleles int) (FitnessMatrix, error) {
 	fm := new(multiplicativeFM)
 	fm.id = id
 	fm.name = name
@@ -158,12 +174,12 @@ func NeutralMultiplicativeFM(id int, name string, sites, alleles int) FitnessMat
 			fm.matrix[i][uint8(j)] = 0.0
 		}
 	}
-	return fm
+	return fm, nil
 }
 
 // NeutralAdditiveFM returns a additive fitness matrix where the sum of
 // all sites using any allele combination is equal to the growth rate.
-func NeutralAdditiveFM(id int, name string, sites, alleles, growthRate int) FitnessMatrix {
+func NeutralAdditiveFM(id int, name string, sites, alleles, growthRate int) (FitnessMatrix, error) {
 	fm := new(additiveFM)
 	fm.id = id
 	fm.name = name
@@ -174,7 +190,7 @@ func NeutralAdditiveFM(id int, name string, sites, alleles, growthRate int) Fitn
 			fm.matrix[i][uint8(j)] = float64(growthRate) / float64(sites)
 		}
 	}
-	return fm
+	return fm, nil
 }
 
 // MotifModel is a type of FitnessModel where the fitness of a sequence

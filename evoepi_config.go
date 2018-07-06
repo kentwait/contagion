@@ -792,15 +792,13 @@ func (c *fitnessModelConfig) CreateModel(id int) (FitnessModel, error) {
 		if err != nil {
 			return nil, err
 		}
-		fm := NewMultiplicativeFM(id, "multiplicative", matrix)
-		return fm, nil
+		return NewMultiplicativeFM(id, "multiplicative", matrix)
 	case "additive":
 		matrix, err := LoadFitnessMatrix(c.FitnessModelPath, "dec")
 		if err != nil {
 			return nil, err
 		}
-		fm := NewAdditiveFM(id, "additive", matrix)
-		return fm, nil
+		return NewAdditiveFM(id, "additive", matrix)
 	}
 	// additive_motif
 	return nil, fmt.Errorf("additive_motif not yet implemented")
