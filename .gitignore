@@ -151,3 +151,5 @@ contagion_win_amd64
 
 # Do not track
 data/
+scripts/
+examples/
