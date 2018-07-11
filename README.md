@@ -10,3 +10,7 @@ If encounter problems or have questions or feature requests, please feel email m
 
 Kent Kawashima
 kentkawashima@nig.ac.jp
+
+## License
+Apache License, Version 2.0
+Copyright 2018 Kent Kawashima
