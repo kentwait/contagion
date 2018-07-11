@@ -6,10 +6,11 @@ Contagion is a new type of forward genetic simulator and disease outbreak simula
 Contagion is currently under development and APIs may change.
 
 ### Contact
-If encounter problems or have questions or feature requests, please feel email me - 
+If encounter problems or have questions or feature requests, please feel contact me - 
 
-Kent Kawashima
-kentkawashima@nig.ac.jp
+Kent Kawashima  
+Email: kentkawashima@nig.ac.jp  
+Twitter: [@kent](https://twitter.com/Kent)
 
 ## License
 Apache License, Version 2.0
