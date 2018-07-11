@@ -144,6 +144,9 @@ venv.bak/
 # Binaries
 contagion
 contagion_linux_amd64
+contagion_macos_amd64
+contagion_win_amd64
 
-# Data
+# Do not upload to public repo
 data/
+scripts/
