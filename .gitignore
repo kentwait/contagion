@@ -148,5 +148,6 @@ contagion_macos_amd64
 contagion_win_amd64
 
 # Do not upload to public repo
+
+# Do not track
 data/
-scripts/
