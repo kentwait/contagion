@@ -1,8 +1,0 @@
-# Multiplicative fitness matrix for test1.sir.toml
-# This test models 100 sites (index 0 to 99).
-# This test uses 2 alleles per site.
-# This test mimicks neutral evolution.
-# Fitness values are in log form, ie. ln 1.0 = 0.0
-default->0.0, 0.0
-0: 0.0, 0.0
-99: 0.0, 0.0

@@ -151,3 +151,5 @@ venv.bak/
 
 # Do not track
 data/
+scripts/
+examples/
