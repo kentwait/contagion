@@ -21,7 +21,7 @@ package contagiongo
 // 	if p := h.Pathogen(0); p != nil {
 // 		t.Errorf(UnequalIntParameterError, "number of pathogens", 0, 1)
 // 	}
-// }å
+// }
 
 // func TestSequenceHost_Infected_Getters(t *testing.T) {
 // 	id := 1
